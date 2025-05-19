@@ -14,8 +14,7 @@ const PrintScreenTable = ({ batchNo, calculatedData }) => {
       { title: 'pcs', rowSpan: 1 },
       { title: 'Screen T', rowSpan: 1 },
       { title: 'pcs', rowSpan: 1 },
-      { title: 'Color', rowSpan: 1 },
-      { title: 'ID', rowSpan: 1 }
+      { title: 'Color', rowSpan: 1 }
     ],
     []
   ];
@@ -25,14 +24,13 @@ const PrintScreenTable = ({ batchNo, calculatedData }) => {
     <tr key={index}>
       <td>{batchNo}</td>
       <td>{row.Customer || ''}</td>
-      <td>{row.ID || index + 1}</td>
+      <td>{row.ID || ''}</td>
       <td>{row.Style || ''}</td>
       <td>{row.screenSize || ''}</td>
       <td>{row.screenPcs || ''}</td>
       <td>{row.screenT || ''}</td>
       <td>{row.screenTPcs || ''}</td>
       <td>{row.Color || ''}</td>
-      <td>{row.ID || index + 1}</td>
     </tr>
   );
 

@@ -16,7 +16,6 @@ const PrintLabelTable = ({ batchNo, calculatedData }) => {
       { title: 'Grid', rowSpan: 1 },
       { title: 'P.O', rowSpan: 1 },
       { title: 'Invoices Num. Batch NO.', rowSpan: 1 },
-      { title: 'ID', rowSpan: 1 }
     ],
     []
   ];
@@ -26,7 +25,7 @@ const PrintLabelTable = ({ batchNo, calculatedData }) => {
     <tr key={index}>
       <td>{batchNo}</td>
       <td>{row.Customer || ''}</td>
-      <td>{row.ID || index + 1}</td>
+      <td>{row.ID}</td>
       <td>{row.Style || ''}</td>
       <td>{row.W && row.H ? `${row.W}x${row.H}` : ''}</td>
       <td>{row.Frame || ''}</td>
@@ -34,7 +33,6 @@ const PrintLabelTable = ({ batchNo, calculatedData }) => {
       <td>{row.Grid || ''}</td>
       <td>{row.PO || ''}</td>
       <td>{batchNo}</td>
-      <td>{row.ID || index + 1}</td>
     </tr>
   );
 

@@ -23,10 +23,19 @@ class WindowCalculator {
       grid: [], // Grid data
       order: [], // Glass order data
       label: [], // Label data
+      sashWelding: [] // Added for sash welding data
     };
     
     // 调试选项
     this.debug = true; // 设置为true启用日志，设置为false禁用
+  }
+
+  resetData() { // New method to explicitly reset
+    this.data = {
+      info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [],
+      sashWelding: [] // Added for sash welding data
+    };
+    this.log("Calculator data reset.");
   }
 
   // 日志函数
@@ -36,27 +45,55 @@ class WindowCalculator {
     }
   }
 
+  writeSashWeldingEntry(data) {
+    const sashw = data.sashw;
+    const sashh = data.sashh;
+
+    console.log('sashw', sashw);
+    const id = data.ID;
+    const customer = data.Customer;
+    const style = data.Style;
+
+    const baseSashW_inches = parseFloat(sashw) || 0;
+    const baseSashH_inches = parseFloat(sashh) || 0;
+
+    let weldingCutW = '';
+    if (baseSashW_inches > 0) {
+      weldingCutW = (((baseSashW_inches * 25.4) - 6) / 25.4).toFixed(2);
+    }
+
+    let weldingCutH = '';
+    if (baseSashH_inches > 0) {
+      weldingCutH = (((baseSashH_inches * 25.4) - 6) / 25.4).toFixed(2);
+    }
+
+    const weldingEntry = {
+      ID: id,
+      Customer: customer || '',
+      Style: style || '',
+      SashW: sashw,   // Finished sash panel width
+      SashH: sashh,    // Finished sash panel height
+      WeldingCutW: weldingCutW,       // Calculated cut width for welding
+      WeldingCutH: weldingCutH,       // Calculated cut height for welding
+      Pcs: 1
+    };
+    this.data.sashWelding.push(weldingEntry);
+    this.log(`写入窗扇焊接数据 - ID: ${id}, Style: ${style}, 基础窗扇 WxH: ${sashw}x${sashh}, 焊接切割 WxH: ${weldingCutW}x${weldingCutH}, Pcs: 1`);
+  }
+
   // Process a window and generate all required data
   processWindow(windowData) {
-    // Reset data before processing
-    this.data = {
-      info: [],
-      frame: [],
-      sash: [],
-      glass: [],
-      screen: [],
-      parts: [],
-      grid: [],
-      order: [],
-      label: [],
-    };
+    // DO NOT Reset data here anymore
+    // this.data = { ... }; 
 
-    // 确保窗口数据有ID
-    const id = windowData.ID || 'unknown';
-    
+    // windowData.ID is now the sequential display ID from App.js
+    // windowData.originalId is the stable underlying ID from Excel/manual add
+    const displaySequentialId = windowData.ID; 
+    const originalStableId = windowData.originalId || displaySequentialId; // Fallback if originalId is somehow missing
+
     // 记录开始处理窗户的日志
     this.log('\n========================================');
-    this.log(`开始处理窗口 ID: ${id}`);
+    this.log(`开始处理窗口 DisplayID: ${displaySequentialId} (OriginalID: ${originalStableId})`);
     this.log(`数据: 样式=${windowData.Style}, 尺寸=${windowData.W}x${windowData.H}, 框架=${windowData.Frame}, 玻璃=${windowData.Glass}`);
     this.log('========================================');
 
@@ -83,9 +120,9 @@ class WindowCalculator {
     Object.keys(this.data).forEach(key => {
       const tableData = this.data[key];
       if (tableData.length > 0) {
-        const missingIds = tableData.filter(item => !item.ID || item.ID !== id);
+        const missingIds = tableData.filter(item => !item.ID || item.ID !== displaySequentialId);
         if (missingIds.length > 0) {
-          this.log(`警告: ${key}表中有${missingIds.length}条记录ID不正确`);
+          this.log(`警告: ${key}表中有${missingIds.length}条记录ID不正确 (expected displaySequentialId: ${displaySequentialId})`);
         }
       }
     });
@@ -104,6 +141,10 @@ class WindowCalculator {
     this.log(`标签: ${this.data.label.length}条`);
     this.log('========================================\n');
 
+    return this.data; // This still returns the cumulative data, but processWindow is called for its side effect of appending
+  }
+
+  getAllData() { // Ensure this method exists
     return this.data;
   }
 
@@ -111,7 +152,8 @@ class WindowCalculator {
   writeInfo(data) {
     const infoRow = {
       Customer: data.Customer || '',
-      ID: data.ID || '',
+      ID: data.ID, // This IS the sequential display ID from App.js
+      originalId: data.originalId, // Preserve original for reference if needed
       Style: data.Style || '',
       W: data.W || '',
       H: data.H || '',
@@ -131,7 +173,7 @@ class WindowCalculator {
   // Write frame data
   writeFrame(id, style, retroH, retroHQ, retroV, retroVQ, nailonH, nailonHQ, nailonV, nailonVQ, blockH, blockHQ, blockV, blockVQ, color) {
     const frameRow = {
-      ID: id,
+      ID: id, // This is the sequential display ID
       Style: style,
       '82-02B-H': retroH,
       '82-02B-H-Pcs': retroHQ,
@@ -166,7 +208,7 @@ class WindowCalculator {
   // Write sash data
   writeSash(id, style, sliderH, sliderHQ, sliderV, sliderVQ, handle, handleQ, shH, shHQ, shV, shVQ, color) {
     const sashRow = {
-      ID: id,
+      ID: id, // This is the sequential display ID
       Style: style,
       '82-03-H': sliderH,
       '82-03-H-Pcs': sliderHQ,
@@ -200,7 +242,7 @@ class WindowCalculator {
       W: w,
       H: h,
       FH: fh,
-      ID: id,
+      ID: id, // This is the sequential display ID
       line: line,
       quantity: quantity,
       glassType: glassType,
@@ -217,7 +259,7 @@ class WindowCalculator {
     
     // If glass needs tempered and certain size thresholds are met, add to order
     if (!aOrT && ((glassArea > 21 && glassArea <= 26) || (glassArea > 26 && glassArea <= 46))) {
-      this.writeOrder(customer, style, w, h, fh, id, line, quantity, glassType, "Annealed", width, height);
+      this.writeOrder(customer, style, w, h, fh, id, line, quantity, glassType, "Annealed", width, height); // id is sequential here
     }
   }
 
@@ -236,7 +278,7 @@ class WindowCalculator {
       W: w,
       H: h,
       FH: fh,
-      ID: id,
+      ID: id, // This is the sequential display ID
       line: line,
       Quantity: quantity,
       'Glass Type': this.mapGlassType(glassType),
@@ -266,7 +308,7 @@ class WindowCalculator {
   writeScreen(customer, id, style, screenH, screenHQ, screenV, screenVQ, color) {
     const screenRow = {
       Customer: customer,
-      ID: id,
+      ID: id, // This is the sequential display ID
       Style: style,
       screenSize: screenH,
       screenPcs: screenHQ,
@@ -282,7 +324,7 @@ class WindowCalculator {
   // Write parts data
   writeParts(id, style, mullion, mullionA, handleA, quantity, track, coverH, coverV, bigMu1, bigMu1Q, bigMu2, bigMu2Q, slop, color) {
     const partsRow = {
-      ID: id,
+      ID: id, // This is the sequential display ID
       Style: style,
       mullion: mullion,
       mullionA: mullionA,
@@ -306,7 +348,7 @@ class WindowCalculator {
   // Write grid data
   writeGrid(id, style, gridType, sashW, sashWq, holeW1, sashH, sashHq, holeH1, fixW, fixWq, holeW2, fixH, fixHq, holeH2, gridNote, color) {
     const gridRow = {
-      ID: id,
+      ID: id, // This is the sequential display ID
       Style: style,
       Grid: gridType,
       sashW: sashW,
@@ -333,7 +375,8 @@ class WindowCalculator {
   writeLabel(data) {
     const labelRow = {
       Customer: data.Customer || '',
-      ID: data.ID || '',
+      ID: data.ID, // This IS the sequential display ID from App.js
+      originalId: data.originalId, // Preserve original for reference if needed
       Style: data.Style || '',
       Size: data.W && data.H ? `${data.W}x${data.H}` : '',
       Frame: data.Frame || '',
@@ -350,4 +393,4 @@ class WindowCalculator {
   }
 }
 
-export default new WindowCalculator(); 
+export default WindowCalculator; 

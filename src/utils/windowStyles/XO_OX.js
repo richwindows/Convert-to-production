@@ -76,6 +76,7 @@ const processXO_OX = (windowData, calculator) => {
     sashh = round((h - 46 - 15 * 2 - 2 - 1) / 25.4);
     calculator.writeSash(id, style, String(sashw), "2", String(sashh), "1", String(sashh), "1", "", "", "", "", color);
     console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
+    calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
     
     // Screen calculations
     screenw = roundInt(w / 2 - 75 - 15 - 2);
@@ -105,7 +106,7 @@ const processXO_OX = (windowData, calculator) => {
     fixedgridh = roundInt(fixedglassh - 18 - 2);
     
     // Handle different grid types
-    if (grid === 'Standard' && gridW > 0 && gridH > 0) {
+    if ( gridW > 0 && gridH > 0) {
       SashWq = gridH - 1;
       holeW1 = sashgridw / (gridW / 2);
       SashHq = gridW / 2 - 1;
@@ -163,6 +164,7 @@ const processXO_OX = (windowData, calculator) => {
     sashh = round((h - 46 - 2 - 1) / 25.4);
     calculator.writeSash(id, style, String(sashw), "2", String(sashh), "1", String(sashh), "1", "", "", "", "", color);
     console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
+    calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
     
     screenw = roundInt(w / 2 - 75 - 2);
     screenh = roundInt(h - 87 - 4);

@@ -18,8 +18,7 @@ const PrintTable = ({ batchNo, calculatedData }) => {
       { title: 'Argon', rowSpan: 2 },
       { title: 'Grid', rowSpan: 2 },
       { title: 'Color', rowSpan: 2 },
-      { title: 'Note', rowSpan: 2 },
-      { title: 'ID', rowSpan: 2 }
+      { title: 'Note', rowSpan: 2 }
     ],
     []
   ];
@@ -29,7 +28,7 @@ const PrintTable = ({ batchNo, calculatedData }) => {
     <tr key={index}>
       <td>{batchNo}</td>
       <td>{row.Customer || ''}</td>
-      <td>{row.ID || index + 1}</td>
+      <td>{row.ID || ''}</td>
       <td>{row.Style || ''}</td>
       <td>{row.W || ''}</td>
       <td>{row.H || ''}</td>
@@ -40,7 +39,6 @@ const PrintTable = ({ batchNo, calculatedData }) => {
       <td>{row.Grid || ''}</td>
       <td>{row.Color || ''}</td>
       <td>{row.Note || ''}</td>
-      <td>{row.ID || index + 1}</td>
     </tr>
   );
 

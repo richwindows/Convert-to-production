@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Layout, Upload, Button, Input, Table, message, Space, Card, Tabs } from 'antd';
-import { UploadOutlined, PrinterOutlined, SettingOutlined } from '@ant-design/icons';
+import { UploadOutlined, PrinterOutlined, SettingOutlined, FileExcelOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import 'antd/dist/antd.css';
 import './App.css';
@@ -14,6 +14,7 @@ import PrintPartsTable from './components/PrintPartsTable';
 import PrintGridTable from './components/PrintGridTable';
 import PrintGlassOrderTable from './components/PrintGlassOrderTable';
 import PrintLabelTable from './components/PrintLabelTable';
+import PrintSashWeldingTable from './components/PrintSashWeldingTable';
 import WindowForm from './components/WindowForm';
 import WindowCalculator from './utils/WindowCalculator';
 import DataMapper from './utils/DataMapper';
@@ -42,6 +43,7 @@ function App() {
   const [showMappingTool, setShowMappingTool] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [calculatedData, setCalculatedData] = useState({
     info: [],
     frame: [],
@@ -52,6 +54,7 @@ function App() {
     grid: [],
     order: [],
     label: [],
+    sashWelding: [],
   });
 
   // Process the Excel file
@@ -92,7 +95,7 @@ function App() {
       
       // Reset all calculated data, as it's derived from selection
       setCalculatedData({ 
-        info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [] 
+        info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: []
       });
       
       setIsDataLoaded(true);
@@ -104,8 +107,21 @@ function App() {
 
   // Columns for the data table
   const columns = [
+    {
+      title: 'ID',
+      dataIndex: 'ID',
+      key: 'id',
+      render: (text, record) => {
+        const recordIdStr = record.ID.toString();
+        const selectionIndex = selectedRowKeys.indexOf(recordIdStr);
+        if (selectionIndex !== -1) {
+          return selectionIndex + 1; // Display 1-based selection order
+        } else {
+          return '-'; // Display '-' if not selected
+        }
+      }
+    },
     { title: 'Customer', dataIndex: 'Customer', key: 'customer' },
-    { title: 'ID', dataIndex: 'ID', key: 'id' },
     { title: 'Style', dataIndex: 'Style', key: 'style' },
     { title: 'W', dataIndex: 'W', key: 'w' },
     { title: 'H', dataIndex: 'H', key: 'h' },
@@ -128,6 +144,159 @@ function App() {
   // Handle printing
   const handlePrint = () => {
     window.print();
+  };
+
+  // Function to export data to Excel
+  const exportToExcel = () => {
+    if (!isDataLoaded || Object.values(calculatedData).every(arr => arr.length === 0 && arr !== calculatedData.info && arr !== calculatedData.sashWelding)) {
+      // Check if info or sashWelding has data even if others don't
+      if ((!calculatedData.info || calculatedData.info.length === 0) && (!calculatedData.sashWelding || calculatedData.sashWelding.length === 0 )) {
+        message.error('No data available to export.');
+        return;
+      }
+    }
+    setIsExporting(true);
+    message.loading({ content: 'Generating Excel file...', key: 'exporting' });
+
+    const wb = XLSX.utils.book_new();
+    const currentBatchNo = batchNo || 'N/A';
+
+    const defaultCellStyle = {
+      font: { name: 'Calibri', sz: 12 },
+      border: {
+        top: { style: 'thin', color: { rgb: "000000" } },
+        bottom: { style: 'thin', color: { rgb: "000000" } },
+        left: { style: 'thin', color: { rgb: "000000" } },
+        right: { style: 'thin', color: { rgb: "000000" } }
+      }
+    };
+    
+    const headerCellStyle = {
+      ...defaultCellStyle,
+      font: { ...defaultCellStyle.font, bold: true },
+      fill: { fgColor: { rgb: "FFFF00" } } // Example: Yellow fill for headers
+    };
+
+    // Sheet definitions: name, dataKey, headers, mapFn
+    const sheetDefinitions = [
+      {
+        name: 'General Info',
+        dataKey: 'info',
+        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'W', 'H', 'FH', 'Frame', 'Glass', 'Argon', 'Grid', 'Color', 'Note', 'Quantity', 'Original ID'],
+        mapFn: (row) => [currentBatchNo, row.Customer, row.ID, row.Style, row.W, row.H, row.FH, row.Frame, row.Glass, row.Argon, row.Grid, row.Color, row.Note, row.Quantity, row.originalId]
+      },
+      {
+        name: 'Frame',
+        dataKey: 'frame',
+        headers: ['Batch NO.', 'ID', 'Style', '82-02B —', 'Pcs', '82-02B |', 'Pcs', '82-10 —', 'Pcs', '82-10 |', 'Pcs', '82-01 —', 'Pcs', '82-01 |', 'Pcs', 'Color'],
+        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row['82-02B-H'] || '', row['82-02B-H-Pcs'] || '', row['82-02B-V'] || '', row['82-02B-V-Pcs'] || '', row['82-10-H'] || '', row['82-10-H-Pcs'] || '', row['82-10-V'] || '', row['82-10-V-Pcs'] || '', row['82-01-H'] || '', row['82-01-H-Pcs'] || '', row['82-01-V'] || '', row['82-01-V-Pcs'] || '', row.Color || '']
+      },
+      {
+        name: 'Sash',
+        dataKey: 'sash',
+        headers: ['Batch NO.', 'ID', 'Style', '82-03--', 'Pcs', '82-03 |', 'Pcs', '82-05', 'Pcs', '82-04--', 'Pcs', '82-04|', 'Pcs', 'Color'],
+        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row['82-03-H'] || '', row['82-03-H-Pcs'] || '', row['82-03-V'] || '', row['82-03-V-Pcs'] || '', row['82-05'] || '', row['82-05-Pcs'] || '', row['82-04-H'] || '', row['82-04-H-Pcs'] || '', row['82-04-V'] || '', row['82-04-V-Pcs'] || '', row.Color || '']
+      },
+      {
+        name: 'Sash Welding',
+        dataKey: 'sashWelding',
+        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'Sash W (Panel)', 'Sash H (Panel)', 'Welding Cut W', 'Welding Cut H', 'Pcs', 'No.'],
+        mapFn: (row, index) => [currentBatchNo, row.Customer, row.ID, row.Style, row.BaseSashW, row.BaseSashH, row.WeldingCutW, row.WeldingCutH, row.Pcs, index + 1]
+      },
+      {
+        name: 'Glass',
+        dataKey: 'glass',
+        headers: ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Tempered', 'Thickness', 'Width', 'Height', 'Grid', 'Argon'],
+        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.quantity, row.glassType, row.tempered, row.thickness, row.width, row.height, row.grid, row.argon]
+      },
+      {
+        name: 'Screen',
+        dataKey: 'screen',
+        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color'],
+        mapFn: (row) => [currentBatchNo, row.Customer, row.ID, row.Style, row.screenSize || '', row.screenPcs || '', row.screenT || '', row.screenTPcs || '', row.Color || '']
+      },
+      {
+        name: 'Parts',
+        dataKey: 'parts',
+        headers: ['Batch NO.', 'ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track', 'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color'],
+        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row.mullion || '', row.mullionA || '', row.handleA || '', row.quantity || '', row.track || '', row.coverH || '', row.coverV || '', row.bigMu1 || '', row.bigMu1Q || '', row.bigMu2 || '', row.bigMu2Q || '', row.slop || '', row.Color || '']
+      },
+      {
+        name: 'Grid',
+        dataKey: 'grid',
+        headers: ['Batch NO.', 'ID', 'Style', 'Grid Style', 'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀', 'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀', 'Note', 'Color'],
+        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row.Grid || '', row.sashW || '', row.sashWq || '', row.holeW1 || '', row.sashH || '', row.sashHq || '', row.holeH1 || '', row.fixW || '', row.fixWq || '', row.holeW2 || '', row.fixH || '', row.fixHq || '', row.holeH2 || '', row.Note || '', row.Color || '']
+      },
+      {
+        name: 'Glass Order',
+        dataKey: 'order',
+        headers: ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'],
+        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.Line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row['Glass Width'], row['Glass Height'], row.Notes]
+      },
+      { // Label data comes from calculatedData.info
+        name: 'Label',
+        dataKey: 'info', // Source from 'info'
+        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.'],
+        mapFn: (row) => [
+          currentBatchNo,
+          row.Customer,
+          row.ID,
+          row.Style,
+          (row.W && row.H) ? `${row.W}x${row.H}` : '',
+          row.Frame,
+          (row.Glass ? (row.Argon && row.Argon !== 'None' ? `${row.Glass}+${row.Argon}` : row.Glass) : ''),
+          row.Grid,
+          row.Note || (row.PO || ''), // Use Note as fallback for P.O.
+          currentBatchNo // 'Invoice Num. Batch NO.' is the same as currentBatchNo
+        ]
+      }
+    ];
+
+    sheetDefinitions.forEach(def => {
+      const dataToExport = calculatedData[def.dataKey];
+      let ws;
+      if (dataToExport && dataToExport.length > 0) {
+        const sheetRows = dataToExport.map((row, index) => def.mapFn(row, index)); // Pass index to mapFn
+        const aoaData = [def.headers, ...sheetRows];
+        ws = XLSX.utils.aoa_to_sheet(aoaData);
+
+        // Apply styles
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+          for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_address = { c: C, r: R };
+            const cell_ref = XLSX.utils.encode_cell(cell_address);
+            if (!ws[cell_ref]) continue; // Create cell if it doesn't exist (should not happen with aoa_to_sheet for full data)
+            ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle; // Header style for first row
+          }
+        }
+        
+        // Attempt to set column widths (basic example: all columns 15 wide)
+        // More sophisticated width calculation might be needed based on content.
+        const colWidths = def.headers.map(() => ({ wch: 15 })); // or {width: 15} in some versions
+        ws['!cols'] = colWidths;
+
+      } else {
+        // Create sheet with only headers if no data
+        ws = XLSX.utils.aoa_to_sheet([def.headers]);
+        // Apply styles to header row
+         const range = XLSX.utils.decode_range(ws['!ref']);
+         for (let C = range.s.c; C <= range.e.c; ++C) {
+            const cell_address = { c: C, r: 0 }; // Only header row
+            const cell_ref = XLSX.utils.encode_cell(cell_address);
+            if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: def.headers[C]}; // create cell if it doesn't exist
+            ws[cell_ref].s = headerCellStyle;
+         }
+        const colWidths = def.headers.map(() => ({ wch: 15 }));
+        ws['!cols'] = colWidths;
+      }
+      XLSX.utils.book_append_sheet(wb, ws, def.name);
+    });
+    
+    const excelFileName = `ProductionData_${currentBatchNo === 'N/A' ? Date.now() : currentBatchNo.replace(/[^a-zA-Z0-9_\\-]/g, '_')}.xlsx`;
+    XLSX.writeFile(wb, excelFileName);
+    message.success({ content: 'Excel file generated successfully!', key: 'exporting', duration: 2 });
+    setIsExporting(false);
   };
 
   // Switch to print view
@@ -155,114 +324,67 @@ function App() {
 
     if (!selectedRowKeys || selectedRowKeys.length === 0) {
       message.info('Please select rows from the table to process detailed data.');
-      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [] });
+      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [] });
       return;
     }
     
     setIsProcessing(true);
+    message.loading({ content: 'Processing selected rows...', key: 'processing' });
 
-    const selectedExcelItems = excelData.filter(item => selectedRowKeys.includes(item.ID.toString()));
+    const selectedData = excelData.filter(item => selectedRowKeys.includes(item.ID.toString()));
 
-    if (selectedExcelItems.length === 0) {
-      message.warn('Selected rows not found in the dataset or ID mismatch. Please check selection.');
-      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [] });
+    if (selectedData.length === 0) {
+      message.error('No rows selected for processing.');
       setIsProcessing(false);
+      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [] });
       return;
     }
     
-    const itemsToProcessAndForInfo = selectedExcelItems.map(item => {
-      let frameType = item.Frame || '';
-      if (frameType in frameMapping) frameType = frameMapping[frameType];
+    const calculator = new WindowCalculator();
+    calculator.resetData(); // Reset before processing a new batch of selected rows
 
-      return {
-        Customer: item.Customer || '',
-        ID: item.ID.toString(),
-        Style: item.Style || '',
-        W: parseFloat(item.W) || 0,
-        H: parseFloat(item.H) || 0,
-        FH: parseFloat(item.FH) || 0,
-        Frame: frameType, // Mapped frame type for calculation and display in 'info'
-        OriginalFrame: item.Frame || '', // Store original for reference if needed
-        Glass: item.Glass || '',
-        Argon: item.Argon || '',
-        Grid: item.Grid || '',
-        Color: item.Color || '',
-        Note: item.Note || '',
-        BatchNO: batchNo, 
-        Quantity: parseInt(item.Quantity) || 1
-      };
-    });
+    selectedData.forEach((windowData, index) => {
+      const sequentialId = index + 1;
+      const originalId = windowData.ID;
 
-    const newCalculatedData = {
-      info: itemsToProcessAndForInfo,
-      frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [],
-    };
-
-    const styleCount = {};
-
-    itemsToProcessAndForInfo.forEach((windowData) => {
-      const style = windowData.Style || 'Unknown';
-      styleCount[style] = (styleCount[style] || 0) + 1;
-      const currentBatchNo = batchNo || windowData.BatchNO || '';
-      let frameType = windowData.Frame || '';
-      if (frameType in frameMapping) frameType = frameMapping[frameType];
-      
-      const mappedWindow = {
-        ...windowData, // This already has Customer, ID, Style, W, H, FH, Frame, Glass, Argon, Grid, Color, Note
-        BatchNO: currentBatchNo,
-        Frame: frameType,
-        W: parseFloat(windowData.W) || 0,
-        H: parseFloat(windowData.H) || 0,
-        FH: parseFloat(windowData.FH) || 0,
-        Quantity: parseInt(windowData.Quantity) || 1 // Assuming Quantity might be in excel or default to 1
-      };
-      const result = WindowCalculator.processWindow(mappedWindow);
-      Object.keys(result).forEach(key => {
-        if (key !== 'info') { 
-          newCalculatedData[key] = [...newCalculatedData[key], ...result[key]];
-        }
-      });
-    });
-    
-    console.log('===== Selected Window Style Count =====');
-    Object.keys(styleCount).forEach(style => console.log(`Style ${style}: ${styleCount[style]} windows`));
-    console.log('===== Generated Data Table Stats =====');
-    Object.keys(newCalculatedData).forEach(key => {
-      if (key !== 'info') {
-        console.log(`${key} table: ${newCalculatedData[key].length} records`);
+      let mappedFrameType = windowData.Frame || '';
+      if (mappedFrameType in frameMapping) {
+        mappedFrameType = frameMapping[mappedFrameType];
       }
+
+      const windowDataForCalc = {
+        ...windowData, 
+        ID: sequentialId,      
+        originalId: originalId, 
+        Frame: mappedFrameType, 
+        BatchNO: batchNo        
+      };
+      
+      calculator.processWindow(windowDataForCalc);
     });
 
-    setCalculatedData(newCalculatedData);
-    message.success(`Processed ${selectedExcelItems.length} selected rows. Detailed tables generated!`);
+    const allCalculatedData = calculator.getAllData();
+    const finalInfoData = allCalculatedData.info || [];
+    
+    // Sash Welding Data is now directly from the calculator
+    const sashWeldingDataFromCalc = allCalculatedData.sashWelding || [];
+
+    setCalculatedData({
+      info: finalInfoData,
+      frame: allCalculatedData.frame || [],
+      sash: allCalculatedData.sash || [],
+      glass: allCalculatedData.glass || [],
+      screen: allCalculatedData.screen || [],
+      parts: allCalculatedData.parts || [],
+      grid: allCalculatedData.grid || [],
+      order: allCalculatedData.order || [],
+      label: allCalculatedData.label || [],
+      sashWelding: sashWeldingDataFromCalc, // Use directly from calculator
+    });
+    message.success(`Processed ${selectedData.length} selected rows. Detailed tables generated!`);
     console.log('===== Selective calculation complete =====');
     setIsProcessing(false);
   };
-
-  // useEffect(() => {
-  //   if (!isDataLoaded || !excelData || excelData.length === 0) {
-  //     // Not ready, or no base data from Excel yet
-  //     setCalculatedData(prev => ({ ...prev, frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [] }));
-  //     return;
-  //   }
-
-  //   if (selectedRowKeys.length === 0) {
-  //     // If data is loaded but no rows are selected, clear derived data and prompt
-  //     console.log("useEffect detected no selected rows. Clearing derived data.");
-  //     setCalculatedData(prev => ({
-  //       ...prev,
-  //       frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: []
-  //     }));
-  //     // message.info(\'Please select rows from the preview table to generate detailed data.\'); // Message might be too frequent here
-  //     return;
-  //   }
-    
-  //   // Only proceed if data is loaded and there are selected rows
-  //   console.log("useEffect triggering generateDetailedDataAndNotify due to selectedRowKeys change.");
-  //   setIsProcessing(true);
-  //   generateDetailedDataAndNotify();
-  //   // setShowLogs(true); // Optional: show logs after processing
-  // }, [selectedRowKeys, calculatedData.info, isDataLoaded]); // Ensure calculatedData.info is stable or handled
 
   // Add a new function to handle adding a window manually
   const handleAddWindow = (windowDataFromForm) => {
@@ -291,7 +413,7 @@ function App() {
 
     // Reset all calculated data
     setCalculatedData({ 
-      info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [] 
+      info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: []
     });
 
     setIsDataLoaded(true); // excelData has content
@@ -320,6 +442,9 @@ function App() {
       case 'sash':
         console.log("正在渲染sash表格，数据:", calculatedData.sash);
         return <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} />;
+      case 'sashWelding':
+        console.log("正在渲染sashWelding表格，数据:", calculatedData.sashWelding);
+        return <PrintSashWeldingTable batchNo={batchNo} calculatedData={calculatedData.sashWelding} />;
       case 'glass':
         console.log("正在渲染glass表格，数据:", calculatedData.glass);
         return <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} />;
@@ -343,6 +468,43 @@ function App() {
     }
   };
 
+  // Add a new function to handle clearing form and data (if not fully covered by processExcelFile reset)
+  const handleClearAllData = () => {
+    setExcelData([]);
+    setSelectedRowKeys([]);
+    setCalculatedData({
+      info: [],
+      frame: [],
+      sash: [],
+      glass: [],
+      screen: [],
+      parts: [],
+      grid: [],
+      order: [],
+      label: [],
+      sashWelding: [] // Ensure sashWelding is cleared
+    });
+    setIsDataLoaded(false);
+    setBatchNo('');
+    // Optionally clear logs or other states if needed
+    // setLogs([]);
+    message.info('All data cleared.');
+  };
+
+  // Adjust TabsComponent to include Sash Welding if tabs are used for print sections
+  const printTabs = [
+    { key: 'general', title: 'General Info' },
+    { key: 'frame', title: 'Frame' },
+    { key: 'sash', title: 'Sash' },
+    { key: 'sashWelding', title: 'Sash Welding' }, // Added Sash Welding Tab
+    { key: 'glass', title: 'Glass' },
+    { key: 'screen', title: 'Screen' },
+    { key: 'parts', title: 'Parts' },
+    { key: 'grid', title: 'Grid' },
+    { key: 'order', title: 'Glass Order' },
+    { key: 'label', title: 'Label' },
+  ];
+
   return (
     <Layout className="layout">
       <Header className="header">
@@ -357,9 +519,17 @@ function App() {
           <Button 
             icon={<PrinterOutlined />} 
             onClick={handlePrint}
-            disabled={!isDataLoaded}
+            disabled={!isDataLoaded || calculatedData.info.length === 0}
           >
             打印
+          </Button>
+          <Button 
+            icon={<FileExcelOutlined />} 
+            onClick={exportToExcel}
+            disabled={!isDataLoaded || calculatedData.info.length === 0 || isExporting}
+            loading={isExporting}
+          >
+            导出Excel
           </Button>
           <Button onClick={() => setShowForm(true)}>添加窗户</Button>
           <Button onClick={() => setShowMappingTool(true)}>数据映射工具</Button>
@@ -403,6 +573,7 @@ function App() {
                 <TabPane tab="General Information" key="general" />
                 <TabPane tab="Frame" key="frame" />
                 <TabPane tab="Sash" key="sash" />
+                <TabPane tab="Sash Welding" key="sashWelding" />
                 <TabPane tab="Glass" key="glass" />
                 <TabPane tab="Screen" key="screen" />
                 <TabPane tab="Parts" key="parts" />

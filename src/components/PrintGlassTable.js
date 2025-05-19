@@ -15,7 +15,7 @@ const PrintGlassTable = ({ batchNo, calculatedData }) => {
       { title: 'ID', rowSpan: 1 },
       { title: 'line #', rowSpan: 1 },
       { title: 'Quantity', rowSpan: 1 },
-      { title: 'Glass Tpye', rowSpan: 1 },
+      { title: 'Glass Type', rowSpan: 1 },
       { title: 'Tmprd', rowSpan: 1 },
       { title: 'Thick', rowSpan: 1 },
       { title: 'Width', rowSpan: 1 },
