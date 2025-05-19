@@ -1,0 +1,60 @@
+/* Label表格样式 */
+.label-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.label-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.label-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #000;
+}
+
+.label-table th,
+.label-table td {
+  border: 1px solid #000;
+  padding: 6px;
+  text-align: center;
+  height: 40px;
+}
+
+.label-table th {
+  font-weight: bold;
+  background-color: #f0f0f0;
+}
+
+/* 打印样式 */
+@media print {
+  .label-table, .label-table th, .label-table td {
+    border-color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.debug-info {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.debug-toggle {
+  margin-bottom: 10px;
+  cursor: pointer;
+  color: #1890ff;
+  font-size: 12px;
+} 
