@@ -5,7 +5,7 @@ import DebugPanel from './DebugPanel';
 // 通用打印表格组件
 const CommonPrintTable = ({ 
   title, // 表格标题
-  headerClass, // 表格头部CSS类
+  headerClass, // 表格头部CSS类 (will be unused for title rendering now)
   tableClass, // 表格CSS类
   columns, // 列定义
   data, // 数据
@@ -14,15 +14,17 @@ const CommonPrintTable = ({
   renderRow, // 自定义行渲染函数
   debugTitle // 调试标题
 }) => {
+  // Determine the colspan for the caption based on the last header row
+  const captionColSpan = Array.isArray(columns) && columns.length > 0 && Array.isArray(columns[columns.length - 1]) 
+    ? columns[columns.length - 1].reduce((acc, col) => acc + (col.colSpan || 1), 0)
+    : 1;
+
   return (
     <div className="print-container">
       <DebugPanel data={data} title={debugTitle || `${title}数据`} />
       
-      <div className={`print-header ${headerClass}`}>
-        <div className={`${headerClass.replace('header', 'title')}`}>{title}</div>
-      </div>
-      
-      <table className={tableClass}>
+      <table className={`${tableClass} bordered-print-table`}>
+        <caption className="table-print-title">{title}</caption>
         <thead>
           {Array.isArray(columns) && columns.map((headerRow, rowIndex) => (
             <tr key={`header-row-${rowIndex}`}>

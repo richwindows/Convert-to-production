@@ -8,7 +8,7 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
         <div className="glass-order-title">Glass Order</div>
       </div>
       
-      <table className="glass-order-table">
+      <table className="glass-order-table bordered-print-table">
         <thead>
           <tr>
             <th rowSpan="2">Batch NO.</th>

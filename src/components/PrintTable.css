@@ -57,4 +57,56 @@
   cursor: pointer;
   color: #1890ff;
   font-size: 12px;
+}
+
+/* Style for the new table caption title */
+.bordered-print-table > .table-print-title {
+  caption-side: top; /* Ensures caption is at the top */
+  text-align: center;
+  font-weight: bold;
+  font-size: 1.2em; /* Slightly larger text */
+  padding: 8px 0; /* Add some padding */
+  color: #333; /* Optional: specific color */
+}
+
+/* Common bordered table style */
+.bordered-print-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #333; /* Main table border */
+}
+
+.bordered-print-table th,
+.bordered-print-table td {
+  border: 1px solid #555; /* Cell borders */
+  padding: 6px;
+  text-align: left; /* Or center, as you prefer */
+}
+
+.bordered-print-table th {
+  background-color: #f0f0f0;
+  font-weight: bold;
+}
+
+/* Ensure borders are visible when printing */
+@media print {
+  .bordered-print-table, 
+  .bordered-print-table th, 
+  .bordered-print-table td {
+    border-color: #000 !important; /* Black borders for printing */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure caption styles are also applied for printing */
+  .bordered-print-table > .table-print-title {
+    color: #000 !important; /* Black color for printing title */
+    /* Other styles like font-size, weight, text-align should carry over */
+  }
+
+  /* Hide debug panel elements during print */
+  .debug-toggle,
+  .debug-info {
+    display: none !important;
+  }
 } 

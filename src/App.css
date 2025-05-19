@@ -1,27 +1,99 @@
 /* App.css */
+:root {
+  --primary-dark-blue: #2c3e50;
+  --primary-accent-blue: #3498db;
+  --header-text-color: #ecf0f1;
+  --content-background: #ffffff;
+  --content-text-color: #333333;
+  --light-background: #f7f9fa; /* Lighter than previous #f5f5f5 */
+  --border-color: #dde3e8;
+}
+
+body {
+  color: var(--content-text-color);
+}
+
 .layout {
   min-height: 100vh;
+  background-color: var(--light-background); /* Apply light background to the whole layout */
 }
 
 .header {
   display: flex;
   align-items: center;
+  background-color: var(--primary-dark-blue);
+  padding: 0 24px; /* Reduced padding slightly from default antd 0 50px */
+  color: var(--header-text-color); /* For .logo text */
+}
+
+/* Style for Ant Design components in the header */
+.header .ant-input,
+.header .ant-btn {
+  color: var(--header-text-color) !important; /* Default text color */
+  border-color: var(--header-text-color) !important; /* Border for input and default/ghost buttons */
+}
+
+.header .ant-input::placeholder {
+  color: #bdc3c7 !important; /* Lighter placeholder text */
+}
+
+.header .ant-btn:not(.ant-btn-primary):not(.ant-btn-link) {
+  background-color: transparent !important; /* Make default buttons ghost-like */
+}
+.header .ant-btn:not(.ant-btn-primary):not(.ant-btn-link):hover,
+.header .ant-btn:not(.ant-btn-primary):not(.ant-btn-link):focus {
+  color: var(--primary-accent-blue) !important;
+  border-color: var(--primary-accent-blue) !important;
+  background-color: rgba(52, 152, 219, 0.1) !important; /* Subtle hover background */
+}
+
+.header .ant-btn-primary { /* If we ever add a primary button in header */
+  background-color: var(--primary-accent-blue) !important;
+  border-color: var(--primary-accent-blue) !important;
+  color: white !important;
+}
+.header .ant-btn-primary:hover,
+.header .ant-btn-primary:focus {
+  background-color: #2980b9 !important; /* Darker shade for hover/focus */
+  border-color: #2980b9 !important;
 }
 
 .content {
-  padding: 20px 50px;
-  background: #fff;
+  padding: 24px; /* Consistent padding */
+  background: var(--content-background);
+  margin: 16px; /* Add margin around content area */
+  border-radius: 8px; /* Rounded corners for content area */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09); /* Subtle shadow */
 }
 
 .upload-section {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 20px;
-  margin-bottom: 20px;
-  padding: 20px;
-  background: #f5f5f5;
-  border-radius: 4px;
+  gap: 16px; /* Adjusted gap */
+  margin-bottom: 24px; /* Consistent margin */
+  padding: 16px; /* Adjusted padding */
+  background: var(--light-background);
+  border: 1px solid var(--border-color);
+  border-radius: 6px; /* Slightly rounded corners */
+}
+
+/* General primary button styling */
+.ant-btn-primary {
+  background-color: var(--primary-accent-blue);
+  border-color: var(--primary-accent-blue);
+}
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background-color: #2980b9; /* Darker shade */
+  border-color: #2980b9;
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary-accent-blue);
+}
+.ant-tabs-ink-bar {
+  background: var(--primary-accent-blue);
 }
 
 .batch-input {
@@ -66,44 +138,63 @@
 
 /* Print specific styles */
 @media print {
-  .upload-section {
-    display: none;
+  body * {
+    visibility: hidden; /* Hide everything by default */
+  }
+
+  .print-container,
+  .print-container * {
+    visibility: visible; /* Make only the print container and its children visible */
+  }
+
+  .print-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 20px; /* Add some padding for the print content */
+    margin: 0;
+  }
+
+  /* Explicitly hide elements that should absolutely not print, even if they were somehow in print-container */
+  .upload-section,
+  .header, 
+  .footer,
+  button,
+  .ant-tabs-nav,
+  .print-selector,
+  .debug-toggle, /* From PrintTable.css, but good to reinforce */
+  .debug-info    /* From PrintTable.css */
+  {
+    display: none !important; 
+    visibility: hidden !important; /* Belt and suspenders */
+  }
+
+  /* Styles for elements within the .print-container that might have been hidden by body * */
+  .print-container .bordered-print-table,
+  .print-container .bordered-print-table *,
+  .print-container .table-print-title {
+    visibility: visible !important; /* Ensure table and title are visible */
+  }
+
+  /* Remove padding/margins from main layout elements if they are part of the structure leading to print-container */
+  .layout, .content, .ant-tabs-content, .ant-tabs-tabpane {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: none !important;
   }
   
-  .header, .footer {
-    display: none;
+  /* Ensure cards inside print view don't add extra borders/padding if .print-container is a card */
+  .print-container .ant-card-head {
+    display: none !important;
   }
-  
-  .content {
-    padding: 0;
+  .print-container .ant-card-body {
+    padding: 0 !important;
   }
-  
-  button {
-    display: none;
-  }
-  
-  .ant-card-head {
-    display: none;
-  }
-  
-  .ant-card-body {
-    padding: 0;
-  }
-  
-  .ant-tabs-nav {
-    display: none;
-  }
-  
-  .ant-card {
-    border: none;
-    box-shadow: none;
-  }
-  
-  .print-view {
-    padding: 0;
-  }
-  
-  .print-selector {
-    display: none;
+  .print-container .ant-card {
+    border: none !important;
+    box-shadow: none !important;
   }
 }
