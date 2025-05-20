@@ -44,6 +44,7 @@ function App() {
   const [showLogs, setShowLogs] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExportingSashWelding, setIsExportingSashWelding] = useState(false);
   const [calculatedData, setCalculatedData] = useState({
     info: [],
     frame: [],
@@ -168,7 +169,8 @@ function App() {
         bottom: { style: 'thin', color: { rgb: "000000" } },
         left: { style: 'thin', color: { rgb: "000000" } },
         right: { style: 'thin', color: { rgb: "000000" } }
-      }
+      },
+      alignment: { horizontal: "center", vertical: "center" }
     };
     
     const headerCellStyle = {
@@ -200,8 +202,8 @@ function App() {
       {
         name: 'Sash Welding',
         dataKey: 'sashWelding',
-        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'Sash W (Panel)', 'Sash H (Panel)', 'Welding Cut W', 'Welding Cut H', 'Pcs', 'No.'],
-        mapFn: (row, index) => [currentBatchNo, row.Customer, row.ID, row.Style, row.BaseSashW, row.BaseSashH, row.WeldingCutW, row.WeldingCutH, row.Pcs, index + 1]
+        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'W', 'H', 'Sashw', 'Sashh', 'Pcs'],
+        mapFn: (row) => [currentBatchNo, row.Customer, row.ID, row.Style,row.SashW, row.SashH,row.WeldingCutW, row.WeldingCutH,row.Pcs]
       },
       {
         name: 'Glass',
@@ -297,6 +299,75 @@ function App() {
     XLSX.writeFile(wb, excelFileName);
     message.success({ content: 'Excel file generated successfully!', key: 'exporting', duration: 2 });
     setIsExporting(false);
+  };
+
+  // New function to export Sash Welding data to a separate Excel file
+  const exportSashWeldingToExcel = () => {
+    if (!calculatedData.sashWelding || calculatedData.sashWelding.length === 0) {
+      message.error('No Sash Welding data available to export.');
+      return;
+    }
+    setIsExportingSashWelding(true);
+    message.loading({ content: 'Generating Sash Welding Excel file...', key: 'exportingSashWelding' });
+
+    const wb = XLSX.utils.book_new();
+    const currentBatchNo = batchNo || 'N/A';
+
+    const defaultCellStyle = {
+      font: { name: 'Calibri', sz: 12 },
+      border: {
+        top: { style: 'thin', color: { rgb: "000000" } },
+        bottom: { style: 'thin', color: { rgb: "000000" } },
+        left: { style: 'thin', color: { rgb: "000000" } },
+        right: { style: 'thin', color: { rgb: "000000" } }
+      },
+      alignment: { horizontal: "center", vertical: "center" }
+    };
+    
+    const headerCellStyle = {
+      ...defaultCellStyle,
+      font: { ...defaultCellStyle.font, bold: true },
+      fill: { fgColor: { rgb: "FFFF00" } } 
+    };
+
+    const headers = ['Batch NO.-ID', 'Customer-ID', 'Style', 'W', 'H', 'Sash W', 'Sash H', 'Pcs'];
+    
+    const dataForSheet = calculatedData.sashWelding.map((row, index) => [
+      `${currentBatchNo}-${row.ID}`,
+      `${row.Customer || 'N/A'}-${row.ID}`,
+      row.Style,
+      row.SashW, // Assuming SashW from writeSashWeldingEntry is BaseSashW
+      row.SashH, // Assuming SashH from writeSashWeldingEntry is BaseSashH
+      row.WeldingCutW,
+      row.WeldingCutH,
+      row.Pcs
+    ]);
+
+    const ws_data = [headers, ...dataForSheet];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+
+    // Apply styles
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        if (!ws[cell_ref]) continue; 
+        ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle;
+      }
+    }
+    
+    // Set column widths (optional, but good for readability)
+    const colWidths = headers.map(() => ({ wch: 15 })); // Default width
+    colWidths[0] = { wch: 25 }; // Batch NO.-ID
+    colWidths[1] = { wch: 25 }; // Customer-ID
+    ws['!cols'] = colWidths;
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Sash Welding List');
+    const welderExcelFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_\-]/g, '_')}_welder.xlsx`;
+    XLSX.writeFile(wb, welderExcelFileName);
+    message.success({ content: 'Sash Welding Excel file generated successfully!', key: 'exportingSashWelding', duration: 2 });
+    setIsExportingSashWelding(false);
   };
 
   // Switch to print view
@@ -530,6 +601,9 @@ function App() {
             loading={isExporting}
           >
             导出Excel
+          </Button>
+          <Button icon={<FileExcelOutlined />} onClick={exportSashWeldingToExcel} loading={isExportingSashWelding} disabled={!isDataLoaded || !calculatedData.sashWelding || calculatedData.sashWelding.length === 0} style={{ marginLeft: 8 }}>
+            导出Sash Welding Excel
           </Button>
           <Button onClick={() => setShowForm(true)}>添加窗户</Button>
           <Button onClick={() => setShowMappingTool(true)}>数据映射工具</Button>
