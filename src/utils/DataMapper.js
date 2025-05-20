@@ -208,6 +208,48 @@ const glassMap = {
   'cl/lowe366': 'cl/le3',
   'Clear/Lowe270': 'cl/le2',
   'Clear/Lowe366': 'cl/le3',
+
+  // 添加含有特殊后缀的格式
+  'CL/LE3, B-TP': 'cl/le3 TP',
+  'CL/LE2, B-TP': 'cl/le2 TP',
+  'CL/LE3 B-TP': 'cl/le3 TP',
+  'CL/LE2 B-TP': 'cl/le2 TP',
+  'CL/LE3,B-TP': 'cl/le3 TP',
+  'CL/LE2,B-TP': 'cl/le2 TP',
+  'CL/CL, B-TP': 'cl/cl TP',
+  'CL/CL B-TP': 'cl/cl TP',
+  'CL/CL,B-TP': 'cl/cl TP',
+
+  'OBS/LE3, B-TP': 'OBS/le3 TP',
+  'OBS/LE2, B-TP': 'OBS/le2 TP',
+  'OBS/LE3 B-TP': 'OBS/le3 TP',
+  'OBS/LE2 B-TP': 'OBS/le2 TP',
+  'OBS/LE3,B-TP': 'OBS/le3 TP',
+  'OBS/LE2,B-TP': 'OBS/le2 TP',
+  'OBS/CL, B-TP': 'OBS/cl TP',
+  'OBS/CL B-TP': 'OBS/cl TP',
+  'OBS/CL,B-TP': 'OBS/cl TP',
+
+  // 添加含有X-TP格式
+  'CL/LE3, X-TP': 'cl/le3 TP',
+  'CL/LE2, X-TP': 'cl/le2 TP',
+  'CL/LE3 X-TP': 'cl/le3 TP',
+  'CL/LE2 X-TP': 'cl/le2 TP',
+  'CL/LE3,X-TP': 'cl/le3 TP',
+  'CL/LE2,X-TP': 'cl/le2 TP',
+  'CL/CL, X-TP': 'cl/cl TP',
+  'CL/CL X-TP': 'cl/cl TP',
+  'CL/CL,X-TP': 'cl/cl TP',
+
+  'OBS/LE3, X-TP': 'OBS/le3 TP',
+  'OBS/LE2, X-TP': 'OBS/le2 TP',
+  'OBS/LE3 X-TP': 'OBS/le3 TP',
+  'OBS/LE2 X-TP': 'OBS/le2 TP',
+  'OBS/LE3,X-TP': 'OBS/le3 TP',
+  'OBS/LE2,X-TP': 'OBS/le2 TP',
+  'OBS/CL, X-TP': 'OBS/cl TP',
+  'OBS/CL X-TP': 'OBS/cl TP',
+  'OBS/CL,X-TP': 'OBS/cl TP',
 };
 
 // Argon mappings

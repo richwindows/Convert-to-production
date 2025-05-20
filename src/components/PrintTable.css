@@ -30,12 +30,38 @@
   background-color: #f0f0f0;
 }
 
+/* 单元格背景颜色 */
+.glass-table td[style*="background-color"],
+.glass-order-table td[style*="background-color"] {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
+/* 文字颜色设置 */
+.glass-table tr[style*="color"],
+.glass-order-table tr[style*="color"] {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+  color-adjust: exact !important;
+}
+
 /* 打印样式 */
 @media print {
   .label-table, .label-table th, .label-table td {
     border-color: #000 !important;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
+  }
+  
+  /* 确保有背景色的单元格在打印时显示 */
+  .glass-table td[style*="background-color"],
+  .glass-order-table td[style*="background-color"],
+  .glass-table tr[style*="color"],
+  .glass-order-table tr[style*="color"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }
 

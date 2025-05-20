@@ -340,9 +340,6 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
   else {
     // Default glass handling for unsupported types
     console.log(`未知玻璃类型: ${glassType} (映射后: ${standardGlassType})`);
-    // Use clear glass as default
-    calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "", sashglassw, sashglassh, grid, argon);
-    calculator.writeGlass("", "", "", "", "", id, id + "--02", 2 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
   }
 };
 

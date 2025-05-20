@@ -373,6 +373,7 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     console.log(`  移动扇: clear-TP ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${2*q}件)`);
     console.log(`  固定扇: clear-TP ${roundInt(fixedglassw)}x${roundInt(fixedglassh)}mm (${2*q}件)`);
   }
+  // Clear/Lowe2 TP
   else if (standardGlassType === 'cl/le2 TP') {
     calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "clear-TP", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--01", 1 * q, "lowe2-TP", "", sashglassw, sashglassh, grid, argon);
@@ -389,17 +390,76 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     console.log(`  移动扇: clear-TP+lowe2-TP ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
     console.log(`  固定扇: clear-TP+lowe2-TP ${roundInt(fixedglassw)}x${roundInt(fixedglassh)}mm (${q}件)`);
   }
-  else {
-    console.log(`未知玻璃类型: ${glassType} (映射后: ${standardGlassType})`);
-    // 默认使用清玻处理未识别的类型
-    calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "", sashglassw, sashglassh, grid, argon);
-    calculator.writeGlass("", "", "", "", "", id, id + "--02", 2 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
+  // Clear/Lowe3 TP (Tempered)
+  else if (standardGlassType === 'cl/le3 TP') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "clear", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--01", 1 * q, "lowe3", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "T", fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe3", "T", fixedglassw, fixedglassh, grid, argon);
     
     // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 2 * q, "clear", "Annealed", fixedglassw, fixedglassh);
+    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "Clear", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "Lowe366", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "Clear", "Tempered", fixedglassw, fixedglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "Lowe366", "Tempered", fixedglassw, fixedglassh);
     
-    console.log(`默认使用清玻处理 | ID: ${id}`);
+    console.log(`写入玻璃数据: cl/le3 TP | ID: ${id}`);
+    console.log(`  移动扇: clear-T+lowe3-T ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
+    console.log(`  固定扇: clear-T+lowe3-T ${roundInt(fixedglassw)}x${roundInt(fixedglassh)}mm (${q}件)`);
+  }
+  // OBS/Clear TP (Tempered)
+  else if (standardGlassType === 'OBS/cl TP') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "clear", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--01", 1 * q, "OBS", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "T", fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "T", fixedglassw, fixedglassh, grid, argon);
+    
+    // 直接添加Order数据
+    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "Clear", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "P516", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "Clear", "Tempered", fixedglassw, fixedglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "P516", "Tempered", fixedglassw, fixedglassh);
+    
+    console.log(`写入玻璃数据: OBS/cl TP | ID: ${id}`);
+    console.log(`  移动扇: clear-T+OBS-T ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
+    console.log(`  固定扇: clear-T+OBS-T ${roundInt(fixedglassw)}x${roundInt(fixedglassh)}mm (${q}件)`);
+  }
+  // OBS/Lowe2 TP (Tempered)
+  else if (standardGlassType === 'OBS/le2 TP') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "lowe2", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--01", 1 * q, "OBS", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe2", "T", fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "T", fixedglassw, fixedglassh, grid, argon);
+    
+    // 直接添加Order数据
+    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "Lowe270", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "P516", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "Lowe270", "Tempered", fixedglassw, fixedglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "P516", "Tempered", fixedglassw, fixedglassh);
+    
+    console.log(`写入玻璃数据: OBS/le2 TP | ID: ${id}`);
+    console.log(`  移动扇: lowe2-T+OBS-T ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
+    console.log(`  固定扇: lowe2-T+OBS-T ${roundInt(fixedglassw)}x${roundInt(fixedglassh)}mm (${q}件)`);
+  }
+  // OBS/Lowe3 TP (Tempered)
+  else if (standardGlassType === 'OBS/le3 TP') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "lowe3", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--01", 1 * q, "OBS", "T", sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe3", "T", fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "T", fixedglassw, fixedglassh, grid, argon);
+    
+    // 直接添加Order数据
+    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "Lowe366", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "P516", "Tempered", sashglassw, sashglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "Lowe366", "Tempered", fixedglassw, fixedglassh);
+    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "P516", "Tempered", fixedglassw, fixedglassh);
+    
+    console.log(`写入玻璃数据: OBS/le3 TP | ID: ${id}`);
+    console.log(`  移动扇: lowe3-T+OBS-T ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
+    console.log(`  固定扇: lowe3-T+OBS-T ${roundInt(fixedglassw)}x${roundInt(fixedglassh)}mm (${q}件)`);
+  }
+  else {
+    console.log(`未知玻璃类型: ${glassType} (映射后: ${standardGlassType})`);
   }
 };
 

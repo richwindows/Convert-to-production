@@ -209,7 +209,7 @@ function App() {
         name: 'Glass',
         dataKey: 'glass',
         headers: ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Tempered', 'Thickness', 'Width', 'Height', 'Grid', 'Argon'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.quantity, row.glassType, row.tempered, row.thickness, row.width, row.height, row.grid, row.argon]
+        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.quantity, row.glassType, row.Tmprd, row.thickness, row.width, row.height, row.grid, row.argon]
       },
       {
         name: 'Screen',

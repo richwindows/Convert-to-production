@@ -2,6 +2,36 @@ import React from 'react';
 import './PrintTable.css';
 
 const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
+  // 添加条件样式逻辑，根据各种条件为尺寸格子添加颜色
+  const getCellStyle = (row, field) => {
+    if (field === 'Width' || field === 'Height') {
+      // 只有钢化标记或厚度大于3时才改变背景色
+      if (row['Annealed/Tempered'] === 'Tempered' || (row.Thickness && parseFloat(row.Thickness) > 3)) {
+        return { backgroundColor: '#FFFF00' }; // 黄色背景
+      }
+    }
+    
+    return {};
+  };
+
+  // 添加文字颜色样式逻辑
+  const getTextStyle = (row) => {
+    // 根据玻璃类型设置不同的文字颜色
+    if (row['Glass Type'] === 'lowe2' || row['Glass Type'] === 'Lowe270') {
+      return { color: '#FF0000' }; // 红色文字
+    }
+    
+    if (row['Glass Type'] === 'lowe3' || row['Glass Type'] === 'Lowe366') {
+      return { color: '#800080' }; // 紫色文字
+    }
+    
+    if (row['Glass Type'] === 'OBS' || row['Glass Type'] === 'P516') {
+      return { color: '#008000' }; // 绿色文字
+    }
+    
+    return {};
+  };
+
   return (
     <div className="print-container">
       <div className="print-header glass-order-header">
@@ -32,7 +62,7 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
-              <tr key={index}>
+              <tr key={index} style={getTextStyle(row)}>
                 <td>{batchNo}</td>
                 <td>{row.Customer || ''}</td>
                 <td>{row.Style || ''}</td>
@@ -45,8 +75,8 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
                 <td>{row['Glass Type'] || ''}</td>
                 <td>{row['Annealed/Tempered'] || ''}</td>
                 <td>{row.Thickness || ''}</td>
-                <td>{row.Width || ''}</td>
-                <td>{row.Height || ''}</td>
+                <td style={getCellStyle(row, 'Width')}>{row.Width || ''}</td>
+                <td style={getCellStyle(row, 'Height')}>{row.Height || ''}</td>
                 <td>{row.Notes || ''}</td>
               </tr>
             ))

@@ -45,6 +45,71 @@ class WindowCalculator {
     }
   }
 
+  standardizeGlassType(originalGlassType) {
+    if (!originalGlassType || typeof originalGlassType !== 'string' || originalGlassType.trim() === '') {
+      return { type: '', tempered: 'Annealed' };
+    }
+
+    let typeStr = originalGlassType.trim();
+    let isTempered = false;
+
+    // Detect and temporarily remove "TP" and associated junk, set tempered flag
+    // Handles complex suffixes like ", B-TP", ", X-TP" and simple " TP"
+    // Order matters: check for complex suffix first.
+    const complexTpSuffixPattern = /(?:,\s*[A-Z]-)?\s*TP$/i; // e.g., ", B-TP" or " TP"
+    const simpleTpSuffixPattern = /\sTP$/i; // e.g., " TP"
+
+    if (complexTpSuffixPattern.test(typeStr)) {
+        isTempered = true;
+        typeStr = typeStr.replace(complexTpSuffixPattern, '').trim();
+    } else if (simpleTpSuffixPattern.test(typeStr)) {
+        isTempered = true;
+        typeStr = typeStr.replace(simpleTpSuffixPattern, '').trim();
+    }
+    // typeStr is now base type, e.g., "CL/LE3, B-", "OBS/le2"
+
+    // Clean up remaining non-TP related junk like ", B-", ", X-" that might not have been part of TP suffix
+    // This regex targets a comma, optional space, ANY single uppercase letter, then a hyphen.
+    typeStr = typeStr.replace(/,\s*[A-Z]-/g, '').trim();
+
+    // Standardize components
+    let components = typeStr.split('/');
+    let standardizedComponents = components.map(comp => {
+        const cTrimmed = comp.trim();
+        const cUpper = cTrimmed.toUpperCase();
+        if (cUpper === 'CL') return 'cl';
+        if (cUpper === 'LE2') return 'le2';
+        if (cUpper === 'LE3') return 'le3';
+        if (cUpper === 'OBS') return 'OBS';
+        return cTrimmed; // Return original trimmed component if not matched (e.g. "P516")
+    }).filter(c => c.length > 0); // Filter out empty components
+
+    let finalTypeString = standardizedComponents.join('/');
+
+    // Append " TP" back to the type string if it was originally tempered
+    if (isTempered) {
+        if (finalTypeString.length > 0) {
+            if (!finalTypeString.endsWith(' TP')) { // Avoid "type TP TP"
+                 finalTypeString += ' TP';
+            }
+        } else {
+            // If all components were junk and only TP was valid (e.g. input was just ", B-TP")
+            // This case should ideally result in an empty type or specific "TP only" type if that's valid.
+            // Based on the list "cl/cl TP", TP is always with a base type.
+            // If finalTypeString is empty here, it means no valid base type was found.
+            // For now, if no base type, don't just make it "TP". It will be empty, and status "Tempered".
+            // Or, if an empty base type with TP is invalid, clear isTempered.
+            // Given AddItem list, an empty base with TP is not listed. So, an empty type is fine.
+            // If finalTypeString is empty, it remains empty. " TP" is not appended to an empty string.
+        }
+    }
+    
+    const finalTemperedStatus = isTempered ? 'Tempered' : 'Annealed';
+
+    this.log(`Standardized glass: Original='${originalGlassType}', Standardized='${finalTypeString}', Tempered='${finalTemperedStatus}'`);
+    return { type: finalTypeString, tempered: finalTemperedStatus };
+  }
+
   writeSashWeldingEntry(data) {
     const sashw = data.sashw;
     const sashh = data.sashh;
@@ -228,8 +293,10 @@ class WindowCalculator {
   }
 
   // Write glass data
-  writeGlass(customer, style, w, h, fh, id, line, quantity, glassType, aOrT, width, height, grid, argon) {
-    const glassArea = width / 25.4 * height / 25.4 / 144;
+  writeGlass(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, grid, argon) {
+    const { type: finalGlassString } = this.standardizeGlassType(rawGlassType);
+    
+    const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144; // Assuming width and height are numeric here
     let thickness = '';
     
     if (glassArea <= 21) thickness = '3';
@@ -242,67 +309,80 @@ class WindowCalculator {
       W: w,
       H: h,
       FH: fh,
-      ID: id, // This is the sequential display ID
+      ID: id, 
       line: line,
       quantity: quantity,
-      glassType: glassType,
-      tempered: aOrT,
+      glassType: finalGlassString, // Use standardized string e.g. "cl/le2 TP"
       thickness: thickness,
       width: roundInt(width),
       height: roundInt(height),
-      grid: grid,
+      grid: grid, // Grid determination logic is separate
       argon: argon
     };
     
-    this.data.glass.push(glassRow);
-    this.log(`写入玻璃数据 - ID: ${id}, 行: ${line}, 类型: ${glassType}, 尺寸: ${roundInt(width)}x${roundInt(height)}, 厚度: ${thickness}`);
+    // 只使用incomingAorT参数来确定钢化状态
+    if (incomingAorT === "T") {
+      glassRow.tmprd = "T";
+      // 添加Tmprd字段（首字母大写），确保在表格中正确显示
+      glassRow.Tmprd = "T";
+    }
     
-    // If glass needs tempered and certain size thresholds are met, add to order
-    if (!aOrT && ((glassArea > 21 && glassArea <= 26) || (glassArea > 26 && glassArea <= 46))) {
-      this.writeOrder(customer, style, w, h, fh, id, line, quantity, glassType, "Annealed", width, height); // id is sequential here
+    this.data.glass.push(glassRow);
+    this.log(`写入玻璃数据 - ID: ${id}, 行: ${line}, 类型: ${finalGlassString}, 尺寸: ${roundInt(width)}x${roundInt(height)}, 厚度: ${thickness}${incomingAorT === "T" ? ", 钢化标记: T" : ""}`);
+    
+    // 检查面积来决定是否需要添加到订单
+    const needsOrder = (glassArea > 21 && glassArea <= 26) || (glassArea > 26 && glassArea <= 46);
+    if (needsOrder) {
+      // 传递钢化状态到writeOrder方法
+      this.writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height); 
     }
   }
 
   // Write glass order data
-  writeOrder(customer, style, w, h, fh, id, line, quantity, glassType, aOrT, width, height) {
-    const glassArea = width / 25.4 * height / 25.4 / 144;
-    let thickness = '';
+  writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height) {
+    const { type: finalGlassString } = this.standardizeGlassType(rawGlassType);
     
+    const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144;
+    let thickness = '';
+        
     if (glassArea <= 21) thickness = '3';
     else if (glassArea > 21 && glassArea <= 26) thickness = '3.9';
     else if (glassArea > 26 && glassArea <= 46) thickness = '4.7';
-    
+
     const orderRow = {
       Customer: customer,
       Style: style,
       W: w,
       H: h,
       FH: fh,
-      ID: id, // This is the sequential display ID
-      line: line,
+      ID: id, 
+      line: line, // Corrected from 'Line' to 'line' if data uses 'line' consistently
       Quantity: quantity,
-      'Glass Type': this.mapGlassType(glassType),
-      'Annealed/Tempered': aOrT,
-      Thickness: thickness,
-      Width: round(width / 25.4),
+      'Glass Type': finalGlassString, // Use standardized string e.g. "cl/le3 TP"
+      'Annealed/Tempered': incomingAorT === "Tempered" ? "Tempered" : "Annealed", // Use incomingAorT to determine status
+      Thickness: thickness, 
+      Width: round(width / 25.4), // Assuming these are final glass dimensions in mm, converting to inches for order
       Height: round(height / 25.4),
-      Notes: customer
+      Notes: customer // Or other relevant notes
     };
     
+   
+    
     this.data.order.push(orderRow);
-    this.log(`写入订单数据 - ID: ${id}, 行: ${line}, 玻璃类型: ${this.mapGlassType(glassType)}, 尺寸: ${round(width / 25.4)}x${round(height / 25.4)}`);
+    this.log(`写入订单数据 - ID: ${id}, 行: ${line}, 类型: ${finalGlassString}, 回火: ${incomingAorT === "Tempered" ? "Tempered" : "Annealed"}, 尺寸: ${orderRow.Width}x${orderRow.Height}${incomingAorT === "Tempered" ? ", 钢化标记: T" : ""}`);
   }
 
   // Map internal glass type to order glass type names
-  mapGlassType(type) {
-    switch(type) {
-      case 'clear': return 'Clear';
-      case 'lowe2': return 'Lowe270';
-      case 'lowe3': return 'Lowe366';
-      case 'OBS': return 'P516';
-      default: return type;
-    }
-  }
+  // This function is now OBSOLETE if standardizeGlassType produces the final display strings.
+  // mapGlassType(type) {
+  //   switch(type) {
+  //     case 'clear': return 'Clear';
+  //     case 'lowe2': return 'Lowe270';
+  //     case 'lowe3': return 'Lowe366';
+  //     case 'OBS': return 'P516';
+  //     default: return type;
+  //   }
+  // }
 
   // Write screen data
   writeScreen(customer, id, style, screenH, screenHQ, screenV, screenVQ, color) {
