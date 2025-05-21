@@ -20,6 +20,7 @@ import WindowCalculator from './utils/WindowCalculator';
 import DataMapper from './utils/DataMapper';
 import DataMappingTest from './components/DataMappingTest';
 import ProcessingLog from './components/ProcessingLog';
+import PrintMaterialCuttingTable from './components/PrintMaterialCuttingTable';
 
 const { Header, Content, Footer } = Layout;
 const { TabPane } = Tabs;
@@ -56,6 +57,7 @@ function App() {
     order: [],
     label: [],
     sashWelding: [],
+    materialCutting: []
   });
 
   // Process the Excel file
@@ -96,7 +98,7 @@ function App() {
       
       // Reset all calculated data, as it's derived from selection
       setCalculatedData({ 
-        info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: []
+        info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
       });
       
       setIsDataLoaded(true);
@@ -395,7 +397,7 @@ function App() {
 
     if (!selectedRowKeys || selectedRowKeys.length === 0) {
       message.info('Please select rows from the table to process detailed data.');
-      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [] });
+      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: [] });
       return;
     }
     
@@ -407,7 +409,7 @@ function App() {
     if (selectedData.length === 0) {
       message.error('No rows selected for processing.');
       setIsProcessing(false);
-      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [] });
+      setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: [] });
       return;
     }
     
@@ -451,6 +453,7 @@ function App() {
       order: allCalculatedData.order || [],
       label: allCalculatedData.label || [],
       sashWelding: sashWeldingDataFromCalc, // Use directly from calculator
+      materialCutting: allCalculatedData.materialCutting || [],
     });
     message.success(`Processed ${selectedData.length} selected rows. Detailed tables generated!`);
     console.log('===== Selective calculation complete =====');
@@ -484,7 +487,7 @@ function App() {
 
     // Reset all calculated data
     setCalculatedData({ 
-      info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: []
+      info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
     });
 
     setIsDataLoaded(true); // excelData has content
@@ -534,6 +537,9 @@ function App() {
       case 'label':
         console.log("正在渲染label表格，数据:", calculatedData.label);
         return <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />;
+      case 'materialCutting':
+        console.log("正在渲染material cutting表格，数据:", calculatedData.materialCutting);
+        return <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} />;
       default:
         return <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
     }
@@ -553,7 +559,8 @@ function App() {
       grid: [],
       order: [],
       label: [],
-      sashWelding: [] // Ensure sashWelding is cleared
+      sashWelding: [],
+      materialCutting: []
     });
     setIsDataLoaded(false);
     setBatchNo('');
@@ -567,13 +574,14 @@ function App() {
     { key: 'general', title: 'General Info' },
     { key: 'frame', title: 'Frame' },
     { key: 'sash', title: 'Sash' },
-    { key: 'sashWelding', title: 'Sash Welding' }, // Added Sash Welding Tab
+    { key: 'sashWelding', title: 'Sash Welding' },
     { key: 'glass', title: 'Glass' },
     { key: 'screen', title: 'Screen' },
     { key: 'parts', title: 'Parts' },
     { key: 'grid', title: 'Grid' },
     { key: 'order', title: 'Glass Order' },
     { key: 'label', title: 'Label' },
+    { key: 'materialCutting', title: 'Material Cutting' }
   ];
 
   return (
@@ -654,6 +662,7 @@ function App() {
                 <TabPane tab="Grid" key="grid" />
                 <TabPane tab="Glass Order" key="order" />
                 <TabPane tab="Label" key="label" />
+                <TabPane tab="Material Cutting" key="materialCutting" />
               </Tabs>
             </Card>
             <div className="print-container">

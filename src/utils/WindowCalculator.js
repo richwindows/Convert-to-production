@@ -23,7 +23,8 @@ class WindowCalculator {
       grid: [], // Grid data
       order: [], // Glass order data
       label: [], // Label data
-      sashWelding: [] // Added for sash welding data
+      sashWelding: [], // Added for sash welding data
+      materialCutting: [] // Added for material cutting data
     };
     
     // 调试选项
@@ -33,7 +34,8 @@ class WindowCalculator {
   resetData() { // New method to explicitly reset
     this.data = {
       info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [],
-      sashWelding: [] // Added for sash welding data
+      sashWelding: [], // Added for sash welding data
+      materialCutting: [] // Added for material cutting data
     };
     this.log("Calculator data reset.");
   }
@@ -257,6 +259,9 @@ class WindowCalculator {
     
     this.data.frame.push(frameRow);
     
+    // Process material cutting data based on frame data
+    this.processMaterialCutting(frameRow);
+    
     // 增强日志信息
     let frameType = "";
     if (retroH || retroV) frameType = "Retrofit";
@@ -268,6 +273,54 @@ class WindowCalculator {
     if (retroH || retroV) this.log(`  Retrofit数据 - 水平: ${retroH || '无'} (${retroHQ || '0'}件), 垂直: ${retroV || '无'} (${retroVQ || '0'}件)`);
     if (nailonH || nailonV) this.log(`  Nailon数据 - 水平: ${nailonH || '无'} (${nailonHQ || '0'}件), 垂直: ${nailonV || '无'} (${nailonVQ || '0'}件)`);
     if (blockH || blockV) this.log(`  Block数据 - 水平: ${blockH || '无'} (${blockHQ || '0'}件), 垂直: ${blockV || '无'} (${blockVQ || '0'}件)`);
+  }
+
+  // Process material cutting data from frame data
+  processMaterialCutting(frameData) {
+    const id = frameData.ID;
+    const style = frameData.Style;
+    const color = frameData.Color;
+    
+    // Frame material mapping with proper material codes
+    const frameMaterialMap = {
+      '82-01-H': { name: 'HMST82-01', position: 'TOP+BOT', angles: '90°' },
+      '82-01-V': { name: 'HMST82-01', position: 'LEFT+RIGHT', angles: '90°' },
+      '82-02B-H': { name: 'HMST82-02B', position: 'TOP+BOT', angles: '90°' },
+      '82-02B-V': { name: 'HMST82-02B', position: 'LEFT+RIGHT', angles: '90°' },
+      '82-10-H': { name: 'HMST82-10', position: 'TOP+BOT', angles: '90°' },
+      '82-10-V': { name: 'HMST82-10', position: 'LEFT+RIGHT', angles: '90°' }
+    };
+    
+    // Process horizontal materials
+    Object.entries(frameMaterialMap).forEach(([key, materialInfo]) => {
+      if (frameData[key] && frameData[key] !== '' && frameData[`${key}-Pcs`] && frameData[`${key}-Pcs`] !== '') {
+        // Get the frame type for mapping back to descriptive names
+        let frameType = '';
+        if (key.includes('82-01')) frameType = 'Block-stop';
+        else if (key.includes('82-02B')) frameType = 'Retrofit';
+        else if (key.includes('82-10')) frameType = 'Nailon';
+        
+        const materialCuttingRow = {
+          ID: id,
+          OrderNo: id,
+          OrderItem: 1,
+          MaterialName: materialInfo.name,
+          CuttingID: this.data.materialCutting.length + 1,
+          PiecesID: this.data.materialCutting.length + 1,
+          Length: frameData[key],
+          Angles: materialInfo.angles,
+          Qty: frameData[`${key}-Pcs`],
+          BinNo: id,
+          Position: materialInfo.position,
+          Style: style,
+          Frame: frameType,
+          Color: color
+        };
+        
+        this.data.materialCutting.push(materialCuttingRow);
+        this.log(`写入材料切割数据 - ID: ${id}, 材料: ${materialInfo.name}, 长度: ${frameData[key]}, 位置: ${materialInfo.position}, 数量: ${frameData[`${key}-Pcs`]}`);
+      }
+    });
   }
 
   // Write sash data
