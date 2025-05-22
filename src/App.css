@@ -68,21 +68,30 @@ body {
 
 /* 顶部导航栏 */
 .header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: var(--dark-bg);
-  padding: 0 var(--spacing-lg);
+  background: var(--white);
   height: 64px;
   position: sticky;
   top: 0;
   z-index: 1000;
   box-shadow: var(--shadow-sm);
+  border-bottom: 1px solid var(--border-color);
   transition: all var(--transition-normal);
 }
 
+/* New wrapper for header content to control max-width and centering */
+.header-content-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 1440px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
 .logo {
-  color: var(--text-inverse);
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: bold;
   margin-right: var(--spacing-lg);
@@ -98,22 +107,39 @@ body {
   overflow-x: auto;
 }
 
-.header .ant-input {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--text-inverse);
+/* Styles for the Ant Design Input component in the header, specifically when it has a prefix */
+.header .ant-input-affix-wrapper {
+  background: var(--light-bg);
+  border: 1px solid var(--border-color);
   border-radius: var(--border-radius-md);
   transition: all var(--transition-quick);
+  padding-left: var(--spacing-sm);
 }
 
-.header .ant-input:hover,
-.header .ant-input:focus {
-  background: rgba(255, 255, 255, 0.2);
+/* Style the actual input element inside the wrapper */
+.header .ant-input-affix-wrapper .ant-input {
+  background: transparent !important; 
+  border: none !important;            
+  color: var(--text-primary) !important;
+  padding-left: var(--spacing-xs) !important; 
+  box-shadow: none !important;        
+}
+
+/* Style the prefix element */
+.header .ant-input-prefix {
+  margin-right: var(--spacing-xs);
+}
+
+/* Placeholder text style */
+.header .ant-input-affix-wrapper .ant-input::placeholder {
+  color: var(--text-hint);
+}
+
+/* Hover and Focus states for the wrapper */
+.header .ant-input-affix-wrapper:hover,
+.header .ant-input-affix-wrapper-focused {
+  background: var(--white);
   border-color: var(--primary-color);
-}
-
-.header .ant-input::placeholder {
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .header .ant-btn {
@@ -128,8 +154,8 @@ body {
 }
 
 .header .ant-btn:not(.ant-btn-primary) {
-  color: var(--text-inverse);
-  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--text-primary);
+  border-color: var(--border-color);
   background: transparent;
 }
 
@@ -295,18 +321,24 @@ body {
 }
 
 /* 打印视图样式 */
-.print-selector {
+.print-selector.ant-card {
   margin-bottom: var(--spacing-lg);
-  border-radius: var(--border-radius-lg);
+  border-radius: var(--border-radius-lg); /* Keep overall rounding if desired at this level */
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: none !important; /* Remove shadow */
+  background: transparent !important; /* Remove background */
+  border: none !important; /* Remove border */
+}
+
+.print-selector .ant-card-body {
+  padding: 0 !important; /* Remove padding from card body */
 }
 
 .print-container {
-  background: var(--white);
+  background: var(--white); /* Keep background for the actual content area */
   border-radius: var(--border-radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--spacing-lg);
+  box-shadow: none !important; /* Remove shadow from this container as well */
+  padding: 0 var(--spacing-lg) var(--spacing-lg) var(--spacing-lg); /* Adjust padding, removed top padding */
   transition: all var(--transition-normal);
 }
 
@@ -364,35 +396,125 @@ body {
 
 /* 打印样式保持不变 */
 @media print {
-  body * {
-    visibility: hidden;
+  html, body {
+    background: white !important;
+    color: black !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    visibility: visible !important; /* Ensure html and body are visible */
   }
-  
-  .print-container,
-  .print-container * {
-    visibility: visible;
+
+  body * {
+    visibility: hidden !important;
   }
   
   .print-container {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    padding: 20px;
-    margin: 0;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    padding: 20px !important;
+    margin: 0 !important;
+    background-color: white !important;
+    color: black !important;
+    display: block !important;
+    visibility: visible !important;
+    z-index: 9999 !important; /* Ensure it's on top */
+  }
+
+  .print-container * {
+    visibility: visible !important;
+    color: inherit !important; /* Inherit color (black from .print-container) */
+    background: transparent !important; /* Avoid overriding intended backgrounds like table stripes if any */
+    box-shadow: none !important; /* Remove shadows from printed elements */
   }
   
-  .upload-section,
   .header, 
+  .header-content-wrapper,
   .footer,
-  button,
   .ant-tabs-nav,
   .print-selector,
+  .upload-section,
   .table-actions,
   .debug-toggle,
-  .debug-info {
+  .debug-info,
+  .ant-layout-sider, 
+  .ant-modal-mask, 
+  .ant-modal-wrap,
+  button:not(.print-specific-button) { /* Hides general buttons, add class to print buttons if any */
     display: none !important; 
-    visibility: hidden !important;
+    visibility: hidden !important; /* Redundant but safe */
+  }
+
+  /* Ensure layout containers holding print-container are effectively transparent to it */
+  .layout, .content, .ant-tabs-content, .ant-tabs-tabpane {
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: transparent !important; /* Changed from none to transparent */
+    overflow: visible !important;
+    visibility: visible !important; 
+    display: block !important;
+  }
+
+  /* Specifics for Ant Design components within print-container */
+  .print-container .ant-card {
+    border: 1px solid #eee !important; /* Light border for cards in print */
+    box-shadow: none !important;
+    visibility: visible !important;
+    display: block !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-container .ant-card-head {
+    display: none !important; /* Usually hide card headers in print unless needed */
+  }
+
+  .print-container .ant-card-body {
+    padding: 0 !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  /* Restore table display properties */
+  .print-container table,
+  .print-container .ant-table table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    display: table !important;
+    visibility: visible !important;
+  }
+  .print-container thead, 
+  .print-container .ant-table thead {
+    display: table-header-group !important;
+    visibility: visible !important;
+  }
+  .print-container tbody,
+  .print-container .ant-table tbody {
+    display: table-row-group !important;
+    visibility: visible !important;
+  }
+  .print-container tr,
+  .print-container .ant-table tr {
+    display: table-row !important;
+    visibility: visible !important;
+    page-break-inside: avoid !important;
+  }
+  .print-container th,
+  .print-container .ant-table th,
+  .print-container td,
+  .print-container .ant-table td {
+    border: 1px solid #ccc !important;
+    padding: 5px !important;
+    text-align: left !important;
+    display: table-cell !important;
+    visibility: visible !important;
+    color: black !important; /* Ensure text color is black */
   }
 
   .print-container .bordered-print-table,
@@ -401,22 +523,15 @@ body {
     visibility: visible !important;
   }
 
-  .layout, .content, .ant-tabs-content, .ant-tabs-tabpane {
-    padding: 0 !important;
-    margin: 0 !important;
-    border: none !important;
-    box-shadow: none !important;
-    background: none !important;
-  }
-  
-  .print-container .ant-card-head {
-    display: none !important;
-  }
-  .print-container .ant-card-body {
-    padding: 0 !important;
-  }
-  .print-container .ant-card {
-    border: none !important;
-    box-shadow: none !important;
+  .print-timestamp {
+    position: fixed; 
+    top: 10px;  /* Adjusted for visual alignment with content below */
+    left: var(--spacing-lg); /* Align with .print-container padding */
+    font-size: 10px; 
+    color: #555;    
+    visibility: visible !important; 
+    display: block !important;      
+    z-index: 10000; 
+    background: none !important; 
   }
 }

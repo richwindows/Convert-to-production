@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Upload, Button, Input, Table, message, Space, Card, Tabs } from 'antd';
-import { UploadOutlined, PrinterOutlined, SettingOutlined, FileExcelOutlined } from '@ant-design/icons';
+import { Layout, Upload, Button, Input, Table, message, Space, Card, Tabs, Modal } from 'antd';
+import { UploadOutlined, PrinterOutlined, FileExcelOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import 'antd/dist/antd.css';
 import './App.css';
-import TabsComponent from './components/TabsComponent';
 import PrintTable from './components/PrintTable';
 import PrintFrameTable from './components/PrintFrameTable';
 import PrintSashTable from './components/PrintSashTable';
@@ -17,7 +16,6 @@ import PrintLabelTable from './components/PrintLabelTable';
 import PrintSashWeldingTable from './components/PrintSashWeldingTable';
 import WindowForm from './components/WindowForm';
 import WindowCalculator from './utils/WindowCalculator';
-import DataMapper from './utils/DataMapper';
 import DataMappingTest from './components/DataMappingTest';
 import ProcessingLog from './components/ProcessingLog';
 import PrintMaterialCuttingTable from './components/PrintMaterialCuttingTable';
@@ -40,7 +38,9 @@ function App() {
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [activeTab, setActiveTab] = useState('data');
   const [printTab, setPrintTab] = useState('general');
-  const [showForm, setShowForm] = useState(false);
+  const [printTimestamp, setPrintTimestamp] = useState('');
+  const [isPreparingPrint, setIsPreparingPrint] = useState(false);
+  const [windowFormModal, setWindowFormModal] = useState(false);
   const [showMappingTool, setShowMappingTool] = useState(false);
   const [showLogs, setShowLogs] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -147,8 +147,30 @@ function App() {
 
   // Handle printing
   const handlePrint = () => {
-    window.print();
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const formattedTimestamp = `${year}-${month}-${day} ${hours}:${minutes}`;
+    
+    setPrintTimestamp(formattedTimestamp);
+    setActiveTab('print');
+    setIsPreparingPrint(true); // Signal that we are preparing to print
   };
+
+  // Effect to handle actual printing after state updates
+  useEffect(() => {
+    if (isPreparingPrint && activeTab === 'print' && printTimestamp) {
+      // Timeout to allow DOM to update after tab switch and timestamp set
+      const timer = setTimeout(() => {
+        window.print();
+        setIsPreparingPrint(false); // Reset after printing
+      }, 50); // A small delay, can be adjusted. 0 might also work.
+      return () => clearTimeout(timer); // Cleanup timer
+    }
+  }, [isPreparingPrint, activeTab, printTimestamp]);
 
   // Function to export data to Excel
   const exportToExcel = () => {
@@ -298,7 +320,20 @@ function App() {
       XLSX.utils.book_append_sheet(wb, ws, def.name);
     });
     
-    const excelFileName = `ProductionData_${currentBatchNo === 'N/A' ? Date.now() : currentBatchNo.replace(/[^a-zA-Z0-9_\\-]/g, '_')}.xlsx`;
+    let excelFileName;
+    if (currentBatchNo === 'N/A' || currentBatchNo.trim() === '') {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      excelFileName = `production_${year}${month}${day}${hours}${minutes}${seconds}.xlsx`;
+    } else {
+      excelFileName = `${currentBatchNo}.xlsx`; // Use batchNo directly without processing
+    }
+    
     XLSX.writeFile(wb, excelFileName);
     message.success({ content: 'Excel file generated successfully!', key: 'exporting', duration: 2 });
     setIsExporting(false);
@@ -390,7 +425,6 @@ function App() {
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     const year = today.getFullYear();
-    const dateStr = `${month}${day}${year}`;
 
     // Format headers and data for CSV
     const headers = [
@@ -578,13 +612,8 @@ function App() {
     });
 
     setIsDataLoaded(true); // excelData has content
-    setShowForm(false); // Close the form
+    setWindowFormModal(false); // Close the modal instead of setShowForm
     message.info('New window added to the preview table. Please select rows and process to update detailed data.');
-  };
-
-  // Add a function to clear the form
-  const handleClearForm = () => {
-    // Just reset the form
   };
 
   // 渲染打印选择的表格
@@ -593,19 +622,23 @@ function App() {
     console.log("当前打印标签:", printTab);
     console.log("calculatedData:", calculatedData);
     
+    let tableToRender;
     switch (printTab) {
       case 'general':
         console.log("正在渲染general表格，数据:", calculatedData.info);
-        return <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
+        tableToRender = <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
+        break;
       case 'frame':
         console.log("正在渲染frame表格，数据:", calculatedData.frame);
-        return <PrintFrameTable batchNo={batchNo} calculatedData={calculatedData.frame} />;
+        tableToRender = <PrintFrameTable batchNo={batchNo} calculatedData={calculatedData.frame} />;
+        break;
       case 'sash':
         console.log("正在渲染sash表格，数据:", calculatedData.sash);
-        return <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} />;
+        tableToRender = <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} />;
+        break;
       case 'sashWelding':
         console.log("正在渲染sashWelding表格，数据:", calculatedData.sashWelding);
-        return (
+        tableToRender = (
           <div>
             <div className="table-actions">
               <Button 
@@ -621,27 +654,34 @@ function App() {
             <PrintSashWeldingTable batchNo={batchNo} calculatedData={calculatedData.sashWelding} />
           </div>
         );
+        break;
       case 'glass':
         console.log("正在渲染glass表格，数据:", calculatedData.glass);
-        return <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} />;
+        tableToRender = <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} />;
+        break;
       case 'screen':
         console.log("正在渲染screen表格，数据:", calculatedData.screen);
-        return <PrintScreenTable batchNo={batchNo} calculatedData={calculatedData.screen} />;
+        tableToRender = <PrintScreenTable batchNo={batchNo} calculatedData={calculatedData.screen} />;
+        break;
       case 'parts':
         console.log("正在渲染parts表格，数据:", calculatedData.parts);
-        return <PrintPartsTable batchNo={batchNo} calculatedData={calculatedData.parts} />;
+        tableToRender = <PrintPartsTable batchNo={batchNo} calculatedData={calculatedData.parts} />;
+        break;
       case 'grid':
         console.log("正在渲染grid表格，数据:", calculatedData.grid);
-        return <PrintGridTable batchNo={batchNo} calculatedData={calculatedData.grid} />;
+        tableToRender = <PrintGridTable batchNo={batchNo} calculatedData={calculatedData.grid} />;
+        break;
       case 'order':
         console.log("正在渲染order表格，数据:", calculatedData.order);
-        return <PrintGlassOrderTable batchNo={batchNo} calculatedData={calculatedData.order} />;
+        tableToRender = <PrintGlassOrderTable batchNo={batchNo} calculatedData={calculatedData.order} />;
+        break;
       case 'label':
         console.log("正在渲染label表格，数据:", calculatedData.label);
-        return <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />;
+        tableToRender = <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />;
+        break;
       case 'materialCutting':
         console.log("正在渲染DECA Cutting表格，数据:", calculatedData.materialCutting);
-        return (
+        tableToRender = (
           <div>
             <div className="table-actions">
               <Button 
@@ -657,61 +697,31 @@ function App() {
             <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} />
           </div>
         );
+        break;
       default:
-        return <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
+        tableToRender = <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
     }
-  };
 
-  // Add a new function to handle clearing form and data (if not fully covered by processExcelFile reset)
-  const handleClearAllData = () => {
-    setExcelData([]);
-    setSelectedRowKeys([]);
-    setCalculatedData({
-      info: [],
-      frame: [],
-      sash: [],
-      glass: [],
-      screen: [],
-      parts: [],
-      grid: [],
-      order: [],
-      label: [],
-      sashWelding: [],
-      materialCutting: []
-    });
-    setIsDataLoaded(false);
-    setBatchNo('');
-    // Optionally clear logs or other states if needed
-    // setLogs([]);
-    message.info('All data cleared.');
+    return (
+      <>
+        {printTimestamp && activeTab === 'print' && <div className="print-timestamp">{printTimestamp}</div>}
+        {tableToRender}
+      </>
+    );
   };
-
-  // Adjust TabsComponent to include Sash Welding if tabs are used for print sections
-  const printTabs = [
-    { key: 'general', title: 'General Info' },
-    { key: 'frame', title: 'Frame' },
-    { key: 'sash', title: 'Sash' },
-    { key: 'sashWelding', title: 'Sash Welding' },
-    { key: 'glass', title: 'Glass' },
-    { key: 'screen', title: 'Screen' },
-    { key: 'parts', title: 'Parts' },
-    { key: 'grid', title: 'Grid' },
-    { key: 'order', title: 'Glass Order' },
-    { key: 'label', title: 'Label' },
-    { key: 'materialCutting', title: 'DECA Cutting' }
-  ];
 
   return (
     <Layout className="layout">
       <Header className="header">
-        <div className="logo">Production Converter</div>
-        <Space size="middle">
+        <div className="header-content-wrapper">
+          <div className="logo">Production Converter</div>
+          <Space size="middle">
             <Input 
               placeholder="Enter Batch NO." 
               value={batchNo} 
               onChange={handleBatchNoChange}
               style={{ width: 200 }}
-              prefix={<span style={{ opacity: 0.5 }}>批次号:</span>}
+              prefix={<span style={{ color: 'var(--text-secondary)' }}>批次号:</span>}
             />
             <Button 
               icon={<PrinterOutlined />} 
@@ -732,7 +742,7 @@ function App() {
               导出Excel
             </Button>
           <Button 
-            onClick={() => setShowForm(true)}
+            onClick={() => setWindowFormModal(true)}
             type="default"
           >
             添加窗户
@@ -751,6 +761,7 @@ function App() {
             {showLogs ? '隐藏日志' : '显示日志'}
               </Button>
           </Space>
+        </div>
       </Header>
       <Content className="content">
         <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
@@ -813,10 +824,9 @@ function App() {
                 onChange={setPrintTab} 
                 type="line"
                 animated={{ inkBar: true, tabPane: false }}
-                tabBarStyle={{ 
+                tabBarStyle={{
                   marginBottom: '16px', 
-                  backgroundColor: '#fafafa',
-                  borderRadius: '4px',
+                  backgroundColor: 'transparent',
                   padding: '8px 16px 0'
                 }}
               >
@@ -838,16 +848,17 @@ function App() {
               </div>
             </TabPane>
           </Tabs>
-        {showForm && (
-          <Card 
-            title={<span style={{ fontSize: '16px', fontWeight: '600' }}>手动添加窗户数据</span>} 
-            className="manual-form"
-            style={{ marginTop: '20px' }}
-            bordered={false}
-          >
-            <WindowForm onAdd={handleAddWindow} onClear={handleClearForm} />
-          </Card>
-        )}
+        <Modal 
+          title={<span style={{ fontSize: '16px', fontWeight: '600' }}>手动添加窗户数据</span>}
+          visible={windowFormModal}
+          onCancel={() => setWindowFormModal(false)}
+          footer={null}
+          width={800}
+          destroyOnClose
+          centered
+        >
+          <WindowForm onAdd={handleAddWindow} onClear={() => setWindowFormModal(false)} />
+        </Modal>
         {showMappingTool && (
           <div style={{ marginTop: '20px' }}>
             <DataMappingTest />

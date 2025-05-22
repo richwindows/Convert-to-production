@@ -56,7 +56,7 @@ const processSH = (windowData, calculator) => {
   console.log(`尺寸: ${width}x${height} | 框架类型: ${frameType} | 玻璃: ${glassType}`);
   console.log(`数量: ${q} | 颜色: ${color}`);
   
-  let framew, frameh, sashw, sashh, screenw, screenh, mullion, mullionA, handleA, track, slop;
+  let framew, frameh, sashw, sashh, screenw, screenh, mullion, mullionA, handleA, slop;
   let sashglassw, sashglassh, fixedglassw, fixedglassh;
   let sashgridw, sashgridh, fixedgridw, fixedgridh;
   let SashWq, SashHq, FixWq, FixHq, holeW1, holeH1, holeW2, holeH2;
@@ -74,6 +74,16 @@ const processSH = (windowData, calculator) => {
     sashh = round((h / 2 - 17.1 - 15 + 1) / 25.4);
     calculator.writeSash(id, style, "", "", "", "", String(sashw), "1", String(sashw), "1", String(sashh), "2", color);
     console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
+    
+    // Add sash welding entry
+    calculator.writeSashWeldingEntry({
+      ID: id,
+      Customer: customer,
+      Style: style,
+      sashw: String(sashw),
+      sashh: String(sashh)
+    });
+    console.log(`窗扇焊接数据 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
     
     // Screen calculations for SH
     screenw = roundInt(w - 87 - 15 * 2 - 4 + 2);
@@ -100,8 +110,38 @@ const processSH = (windowData, calculator) => {
     fixedgridw = roundInt(fixedglassw - 18 - 2);
     fixedgridh = roundInt(fixedglassh - 18 - 2);
     
-    // Handle different grid types
-    processGrid(id, style, grid, gridW, gridH, q, sashgridw, sashgridh, fixedgridw, fixedgridh, gridNote, color, calculator);
+    // Handle different grid types inline
+    if ( gridW > 0 && gridH > 0) {
+      SashWq = gridH / 2 - 1;
+      holeW1 = sashgridw / gridW;
+      SashHq = gridW - 1;
+      holeH1 = sashgridh / (gridH / 2);
+      FixWq = gridH / 2 - 1;
+      holeW2 = 32.5;
+      FixHq = gridW - 1;
+      holeH2 = fixedgridh / (gridH / 2);
+      
+      calculator.writeGrid(
+        id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
+        String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
+        String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
+        String(holeH2), gridW + "W x " + gridH + " H", color
+      );
+    } else if (grid === 'Marginal') {
+      calculator.writeGrid(
+        id, style, grid, String(sashgridw), String(q * 2), "69.5",
+        String(sashgridh), String(q * 2), "102", String(fixedgridw),
+        String(q * 2), "102", String(fixedgridh), String(q * 2),
+        "102", gridNote, color
+      );
+    } else if (grid === 'Perimeter') {
+      calculator.writeGrid(
+        id, style, grid, String(sashgridw), String(q * 1), "69.5",
+        String(sashgridh), String(q * 2), "102", String(fixedgridw),
+        String(q * 1), "102", String(fixedgridh), String(q * 2),
+        "102", gridNote, color
+      );
+    }
     
     // Process glass based on glass type
     processGlass(customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon, calculator);
@@ -129,6 +169,16 @@ const processSH = (windowData, calculator) => {
     sashh = round((h / 2 - 17.1) / 25.4);
     calculator.writeSash(id, style, "", "", "", "", String(sashw), "1", String(sashw), "1", String(sashh), "2", color);
     console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
+    
+    // Add sash welding entry
+    calculator.writeSashWeldingEntry({
+      ID: id,
+      Customer: customer,
+      Style: style,
+      sashw: String(sashw),
+      sashh: String(sashh)
+    });
+    console.log(`窗扇焊接数据 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
     
     // Screen calculations for other frame types
     screenw = roundInt(w - 87 - 4 + 2);
@@ -161,53 +211,45 @@ const processSH = (windowData, calculator) => {
     fixedgridw = roundInt(fixedglassw - 18 - 2);
     fixedgridh = roundInt(fixedglassh - 18 - 2);
     
-    // Process grid data
-    processGrid(id, style, grid, gridW, gridH, q, sashgridw, sashgridh, fixedgridw, fixedgridh, gridNote, color, calculator);
+    // Handle different grid types inline
+    if ( gridW > 0 && gridH > 0) {
+      
+      SashWq = gridH / 2 - 1;
+      holeW1 = sashgridw / gridW;
+      SashHq = gridW - 1;
+      holeH1 = sashgridh / (gridH / 2);
+      FixWq = gridH / 2 - 1;
+      holeW2 = 32.5;
+      FixHq = gridW - 1;
+      holeH2 = fixedgridh / (gridH / 2);
+      
+      calculator.writeGrid(
+        id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
+        String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
+        String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
+        String(holeH2), gridW + "W x " + gridH + " H", color
+      );
+    } else if (grid === 'Marginal') {
+      calculator.writeGrid(
+        id, style, grid, String(sashgridw), String(q * 2), "69.5",
+        String(sashgridh), String(q * 2), "102", String(fixedgridw),
+        String(q * 2), "102", String(fixedgridh), String(q * 2),
+        "102", gridNote, color
+      );
+    } else if (grid === 'Perimeter') {
+      calculator.writeGrid(
+        id, style, grid, String(sashgridw), String(q * 1), "69.5",
+        String(sashgridh), String(q * 2), "102", String(fixedgridw),
+        String(q * 1), "102", String(fixedgridh), String(q * 2),
+        "102", gridNote, color
+      );
+    }
     
     // Process glass based on glass type
     processGlass(customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon, calculator);
   }
   
   console.log('===== SH窗口处理完成 =====\n');
-};
-
-/**
- * Process grid data based on grid type
- */
-const processGrid = (id, style, grid, gridW, gridH, q, sashgridw, sashgridh, fixedgridw, fixedgridh, gridNote, color, calculator) => {
-  let SashWq, SashHq, FixWq, FixHq, holeW1, holeH1, holeW2, holeH2;
-  
-  if ( gridW > 0 && gridH > 0) {
-    SashWq = gridH / 2 - 1;
-    holeW1 = sashgridw / gridW;
-    SashHq = gridW - 1;
-    holeH1 = sashgridh / (gridH / 2);
-    FixWq = gridH / 2 - 1;
-    holeW2 = 32.5;
-    FixHq = gridW - 1;
-    holeH2 = fixedgridh / (gridH / 2);
-    
-    calculator.writeGrid(
-      id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
-      String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
-      String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
-      String(holeH2), gridW + "W x " + gridH + " H", color
-    );
-  } else if (grid === 'Marginal') {
-    calculator.writeGrid(
-      id, style, grid, String(sashgridw), String(q * 2), "69.5",
-      String(sashgridh), String(q * 2), "102", String(fixedgridw),
-      String(q * 2), "102", String(fixedgridh), String(q * 2),
-      "102", gridNote, color
-    );
-  } else if (grid === 'Perimeter') {
-    calculator.writeGrid(
-      id, style, grid, String(sashgridw), String(q * 1), "69.5",
-      String(sashgridh), String(q * 2), "102", String(fixedgridw),
-      String(q * 1), "102", String(fixedgridh), String(q * 2),
-      "102", gridNote, color
-    );
-  }
 };
 
 /**
