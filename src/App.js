@@ -46,6 +46,7 @@ function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingSashWelding, setIsExportingSashWelding] = useState(false);
+  const [isExportingDecaCutting, setIsExportingDecaCutting] = useState(false);
   const [calculatedData, setCalculatedData] = useState({
     info: [],
     frame: [],
@@ -92,7 +93,7 @@ function App() {
           // BatchNO will be applied during processing if needed
         };
       });
-      
+
       setExcelData(processedData);
       setSelectedRowKeys([]); // Clear selections from previous data
       
@@ -372,9 +373,92 @@ function App() {
     setIsExportingSashWelding(false);
   };
 
+  // New function to export only DECA Cutting data to Excel
+  const exportDecaCuttingToExcel = () => {
+    if (!calculatedData.materialCutting || calculatedData.materialCutting.length === 0) {
+      message.error('No DECA Cutting data available to export.');
+      return;
+    }
+    
+    setIsExportingDecaCutting(true);
+    message.loading({ content: 'Generating DECA Cutting CSV file...', key: 'exportingDecaCutting' });
+
+    const currentBatchNo = batchNo || 'N/A';
+    
+    // Get today's date in MMDDYYYY format
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const year = today.getFullYear();
+    const dateStr = `${month}${day}${year}`;
+
+    // Format headers and data for CSV
+    const headers = [
+      'Batch No', 'Order No', 'Order Item', 'Material Name',
+      'Cutting ID', 'Pieces ID', 'Length', 'Angles', 'Qty',
+      'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
+    ];
+    
+    const dataForCSV = calculatedData.materialCutting.map(item => [
+      currentBatchNo,
+      item.OrderNo || item.ID || '',
+      item.OrderItem || '1',
+      item.MaterialName || '',
+      item.CuttingID || item['Cutting ID'] || '',
+      item.PiecesID || item['Pieces ID'] || '',
+      item.Length || '',
+      item.Angles || 'V',
+      item.Qty || '',
+      item.BinNo || item.ID || '',
+      item.Position || '',
+      item.Style || '',
+      item.Frame || '',
+      item.Color || '',
+      item.Painting || ''
+    ]);
+
+    // Create the CSV content
+    const csvContent = [
+      headers.join(','),
+      ...dataForCSV.map(row => row.map(cell => 
+        // Properly escape cells with commas, quotes, etc.
+        typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n')) 
+          ? `"${cell.replace(/"/g, '""')}"` 
+          : cell
+      ).join(','))
+    ].join('\n');
+
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Create the filename
+    const filename = `${currentBatchNo}_CutFrame.csv`;
+    
+    // Create a download link and trigger the download
+    if (navigator.msSaveBlob) { // IE 10+
+      navigator.msSaveBlob(blob, filename);
+    } else {
+      const link = document.createElement('a');
+      if (link.download !== undefined) {
+        // Browsers that support HTML5 download attribute
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
+    
+    message.success({ content: 'DECA Cutting CSV file generated successfully!', key: 'exportingDecaCutting', duration: 2 });
+    setIsExportingDecaCutting(false);
+  };
+
   // Switch to print view
   const handlePrintView = () => {
     setActiveTab('print');
+    setPrintTab('general'); // 确保切换到打印视图时默认显示General Information标签页
   };
 
   // Row selection configuration for the main table
@@ -389,7 +473,7 @@ function App() {
   };
 
   // Renamed from recalculateFromGeneralInfo
-  const generateDetailedDataAndNotify = () => {
+  const generateDetailedDataAndNotify = async () => {
     if (!isDataLoaded || excelData.length === 0) {
       message.error('No base data available. Please upload an Excel file or add data first.');
       return;
@@ -435,6 +519,9 @@ function App() {
       
       calculator.processWindow(windowDataForCalc);
     });
+
+    // Finalize material cutting before getting all data
+    await calculator.finalizeMaterialCutting();
 
     const allCalculatedData = calculator.getAllData();
     const finalInfoData = allCalculatedData.info || [];
@@ -518,7 +605,22 @@ function App() {
         return <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} />;
       case 'sashWelding':
         console.log("正在渲染sashWelding表格，数据:", calculatedData.sashWelding);
-        return <PrintSashWeldingTable batchNo={batchNo} calculatedData={calculatedData.sashWelding} />;
+        return (
+          <div>
+            <div className="table-actions">
+              <Button 
+                type="primary"
+                icon={<FileExcelOutlined />} 
+                onClick={exportSashWeldingToExcel}
+                loading={isExportingSashWelding}
+                disabled={!calculatedData.sashWelding || calculatedData.sashWelding.length === 0}
+              >
+                导出Sash Welding Excel
+              </Button>
+            </div>
+            <PrintSashWeldingTable batchNo={batchNo} calculatedData={calculatedData.sashWelding} />
+          </div>
+        );
       case 'glass':
         console.log("正在渲染glass表格，数据:", calculatedData.glass);
         return <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} />;
@@ -538,8 +640,23 @@ function App() {
         console.log("正在渲染label表格，数据:", calculatedData.label);
         return <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />;
       case 'materialCutting':
-        console.log("正在渲染material cutting表格，数据:", calculatedData.materialCutting);
-        return <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} />;
+        console.log("正在渲染DECA Cutting表格，数据:", calculatedData.materialCutting);
+        return (
+          <div>
+            <div className="table-actions">
+              <Button 
+                type="primary"
+                icon={<FileExcelOutlined />} 
+                onClick={exportDecaCuttingToExcel}
+                loading={isExportingDecaCutting}
+                disabled={!calculatedData.materialCutting || calculatedData.materialCutting.length === 0}
+              >
+                导出DECA Cutting CSV
+              </Button>
+            </div>
+            <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} />
+          </div>
+        );
       default:
         return <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
     }
@@ -581,108 +698,174 @@ function App() {
     { key: 'grid', title: 'Grid' },
     { key: 'order', title: 'Glass Order' },
     { key: 'label', title: 'Label' },
-    { key: 'materialCutting', title: 'Material Cutting' }
+    { key: 'materialCutting', title: 'DECA Cutting' }
   ];
 
   return (
     <Layout className="layout">
       <Header className="header">
         <div className="logo">Production Converter</div>
-        <Space>
-          <Input 
-            placeholder="Enter Batch NO." 
-            value={batchNo} 
-            onChange={handleBatchNoChange} 
-            style={{ width: 200 }}
-          />
+        <Space size="middle">
+            <Input 
+              placeholder="Enter Batch NO." 
+              value={batchNo} 
+              onChange={handleBatchNoChange}
+              style={{ width: 200 }}
+              prefix={<span style={{ opacity: 0.5 }}>批次号:</span>}
+            />
+            <Button 
+              icon={<PrinterOutlined />} 
+              onClick={handlePrint}
+              disabled={!isDataLoaded || calculatedData.info.length === 0}
+              type="primary"
+              ghost
+            >
+              打印
+            </Button>
+            <Button
+              icon={<FileExcelOutlined />} 
+              onClick={exportToExcel}
+              disabled={!isDataLoaded || calculatedData.info.length === 0 || isExporting}
+              loading={isExporting}
+              type="primary"
+            >
+              导出Excel
+            </Button>
           <Button 
-            icon={<PrinterOutlined />} 
-            onClick={handlePrint}
-            disabled={!isDataLoaded || calculatedData.info.length === 0}
+            onClick={() => setShowForm(true)}
+            type="default"
           >
-            打印
+            添加窗户
           </Button>
-          <Button 
-            icon={<FileExcelOutlined />} 
-            onClick={exportToExcel}
-            disabled={!isDataLoaded || calculatedData.info.length === 0 || isExporting}
-            loading={isExporting}
+            <Button
+            onClick={() => setShowMappingTool(true)}
+            type="default"
+            >
+            数据映射工具
+            </Button>
+              <Button
+            onClick={() => setShowLogs(!showLogs)}
+            type={showLogs ? "primary" : "default"}
+            ghost={showLogs}
           >
-            导出Excel
-          </Button>
-          <Button icon={<FileExcelOutlined />} onClick={exportSashWeldingToExcel} loading={isExportingSashWelding} disabled={!isDataLoaded || !calculatedData.sashWelding || calculatedData.sashWelding.length === 0} style={{ marginLeft: 8 }}>
-            导出Sash Welding Excel
-          </Button>
-          <Button onClick={() => setShowForm(true)}>添加窗户</Button>
-          <Button onClick={() => setShowMappingTool(true)}>数据映射工具</Button>
-          <Button onClick={() => setShowLogs(!showLogs)}>{showLogs ? '隐藏日志' : '显示日志'}</Button>
-        </Space>
+            {showLogs ? '隐藏日志' : '显示日志'}
+              </Button>
+          </Space>
       </Header>
-      <Content style={{ padding: '0 50px', marginTop: '20px' }}>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="数据总览" key="data">
-            <Card title="导入数据预览 (Excel Data Preview)">
+      <Content className="content">
+        <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
+          <TabPane tab={<span><span role="img" aria-label="database">📊</span> 数据总览</span>} key="data">
+            <Card 
+              title={<span style={{ fontSize: '16px', fontWeight: '600' }}>导入数据预览 (Excel Data Preview)</span>}
+              bordered={false}
+              className="data-preview-card"
+            >
               <Space direction="vertical" style={{ width: '100%' }}>
                 <div className="upload-section">
                   <Upload beforeUpload={processExcelFile} showUploadList={false}>
-                    <Button icon={<UploadOutlined />}>上传 Excel 文件</Button>
+                    <Button icon={<UploadOutlined />} size="large">上传 Excel 文件</Button>
                   </Upload>
-                  <Button 
+              <Button 
                     onClick={generateDetailedDataAndNotify} 
                     disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
                     loading={isProcessing}
-                    style={{ marginLeft: 8 }}
-                  >
-                    {isProcessing ? 'Processing...' : '处理选中行'}
-                  </Button>
-                </div>
-                {isDataLoaded && (
-                  <Table
-                    dataSource={excelData} 
-                    columns={columns} 
+                type="primary" 
+                    size="large"
+              >
+                    {isProcessing ? '处理中...' : '处理选中行'}
+              </Button>
+                  {isDataLoaded && calculatedData.info.length > 0 && (
+              <Button 
+                      onClick={handlePrintView}
+                type="primary" 
+                      ghost
+                      size="large"
+                      icon={<PrinterOutlined />}
+              >
+                      打印视图
+              </Button>
+          )}
+        </div>
+        {isDataLoaded && (
+                <Table 
+                  dataSource={excelData} 
+                  columns={columns} 
                     rowKey="ID" 
                     rowSelection={rowSelectionConfig}
                     loading={!isDataLoaded && excelData.length === 0}
-                    bordered
+                  bordered
+                    className="data-table"
+                    pagination={{ 
+                      defaultPageSize: 10, 
+                      showSizeChanger: true, 
+                      pageSizeOptions: ['10', '20', '50', '100'],
+                      showTotal: (total) => `共 ${total} 条记录`
+                    }}
                   />
                 )}
               </Space>
-            </Card>
-          </TabPane>
-          <TabPane tab="Print View" key="print">
-            <Card className="print-selector">
-              <Tabs activeKey={printTab} onChange={setPrintTab}>
-                <TabPane tab="General Information" key="general" />
-                <TabPane tab="Frame" key="frame" />
-                <TabPane tab="Sash" key="sash" />
+              </Card>
+            </TabPane>
+          <TabPane tab={<span><span role="img" aria-label="printer">🖨️</span> 打印视图</span>} key="print">
+            <Card className="print-selector" bordered={false}>
+              <Tabs 
+                activeKey={printTab} 
+                onChange={setPrintTab} 
+                type="line"
+                animated={{ inkBar: true, tabPane: false }}
+                tabBarStyle={{ 
+                  marginBottom: '16px', 
+                  backgroundColor: '#fafafa',
+                  borderRadius: '4px',
+                  padding: '8px 16px 0'
+                }}
+              >
+                  <TabPane tab="General Information" key="general" />
+                  <TabPane tab="Frame" key="frame" />
+                  <TabPane tab="Sash" key="sash" />
                 <TabPane tab="Sash Welding" key="sashWelding" />
-                <TabPane tab="Glass" key="glass" />
-                <TabPane tab="Screen" key="screen" />
-                <TabPane tab="Parts" key="parts" />
-                <TabPane tab="Grid" key="grid" />
-                <TabPane tab="Glass Order" key="order" />
-                <TabPane tab="Label" key="label" />
-                <TabPane tab="Material Cutting" key="materialCutting" />
-              </Tabs>
-            </Card>
+                  <TabPane tab="Glass" key="glass" />
+                  <TabPane tab="Screen" key="screen" />
+                  <TabPane tab="Parts" key="parts" />
+                  <TabPane tab="Grid" key="grid" />
+                  <TabPane tab="Glass Order" key="order" />
+                  <TabPane tab="Label" key="label" />
+                <TabPane tab="DECA Cutting" key="materialCutting" />
+                </Tabs>
+              </Card>
             <div className="print-container">
-              {renderPrintTable()}
-            </div>
-          </TabPane>
-        </Tabs>
+                {renderPrintTable()}
+              </div>
+            </TabPane>
+          </Tabs>
         {showForm && (
-          <Card title="手动添加窗户数据" className="manual-form">
+          <Card 
+            title={<span style={{ fontSize: '16px', fontWeight: '600' }}>手动添加窗户数据</span>} 
+            className="manual-form"
+            style={{ marginTop: '20px' }}
+            bordered={false}
+          >
             <WindowForm onAdd={handleAddWindow} onClear={handleClearForm} />
           </Card>
         )}
         {showMappingTool && (
-          <DataMappingTest />
+          <div style={{ marginTop: '20px' }}>
+            <DataMappingTest />
+          </div>
         )}
         {showLogs && (
-          <ProcessingLog />
+          <Card 
+            title={<span style={{ fontSize: '16px', fontWeight: '600' }}>处理日志</span>}
+            style={{ marginTop: '20px' }}
+            bordered={false}
+          >
+            <ProcessingLog />
+          </Card>
         )}
       </Content>
-      <Footer className="footer">Production Converter ©{new Date().getFullYear()}</Footer>
+      <Footer className="footer">
+        Production Converter &copy;{new Date().getFullYear()} | Rich Windows & Doors
+      </Footer>
     </Layout>
   );
 }

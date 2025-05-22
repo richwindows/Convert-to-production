@@ -4,6 +4,7 @@
  */
 
 import * as windowStyles from './windowStyles';
+import { getMaterialLength, optimizeCuttingGroups } from './MaterialOptimizer';
 
 // Round a number to 3 decimal places
 const round = (num) => Math.round(num * 1000) / 1000;
@@ -29,6 +30,9 @@ class WindowCalculator {
     
     // 调试选项
     this.debug = true; // 设置为true启用日志，设置为false禁用
+    
+    // Store optimized materials by material type - No longer used directly for storing final state
+    // this.optimizedMaterials = {}; 
   }
 
   resetData() { // New method to explicitly reset
@@ -37,6 +41,7 @@ class WindowCalculator {
       sashWelding: [], // Added for sash welding data
       materialCutting: [] // Added for material cutting data
     };
+    // this.optimizedMaterials = {}; // No longer needed
     this.log("Calculator data reset.");
   }
 
@@ -260,7 +265,7 @@ class WindowCalculator {
     this.data.frame.push(frameRow);
     
     // Process material cutting data based on frame data
-    this.processMaterialCutting(frameRow);
+    this.processRawMaterialPieces(frameRow);
     
     // 增强日志信息
     let frameType = "";
@@ -275,52 +280,129 @@ class WindowCalculator {
     if (blockH || blockV) this.log(`  Block数据 - 水平: ${blockH || '无'} (${blockHQ || '0'}件), 垂直: ${blockV || '无'} (${blockVQ || '0'}件)`);
   }
 
-  // Process material cutting data from frame data
-  processMaterialCutting(frameData) {
+  // New method to ONLY collect raw pieces from frameData
+  processRawMaterialPieces(frameData) {
     const id = frameData.ID;
     const style = frameData.Style;
-    const color = frameData.Color;
-    
-    // Frame material mapping with proper material codes
+    const color = frameData.Color || '';
     const frameMaterialMap = {
-      '82-01-H': { name: 'HMST82-01', position: 'TOP+BOT', angles: '90°' },
-      '82-01-V': { name: 'HMST82-01', position: 'LEFT+RIGHT', angles: '90°' },
-      '82-02B-H': { name: 'HMST82-02B', position: 'TOP+BOT', angles: '90°' },
-      '82-02B-V': { name: 'HMST82-02B', position: 'LEFT+RIGHT', angles: '90°' },
-      '82-10-H': { name: 'HMST82-10', position: 'TOP+BOT', angles: '90°' },
-      '82-10-V': { name: 'HMST82-10', position: 'LEFT+RIGHT', angles: '90°' }
+      '82-01-H': { name: 'HMST82-01', position: 'TOP+BOT', angles: 'V' }, '82-01-V': { name: 'HMST82-01', position: 'LEFT+RIGHT', angles: 'V' },
+      '82-02B-H': { name: 'HMST82-02B', position: 'TOP+BOT', angles: 'V' }, '82-02B-V': { name: 'HMST82-02B', position: 'LEFT+RIGHT', angles: 'V' },
+      '82-10-H': { name: 'HMST82-10', position: 'TOP+BOT', angles: 'V' }, '82-10-V': { name: 'HMST82-10', position: 'LEFT+RIGHT', angles: 'V' }
     };
     
-    // Process horizontal materials
     Object.entries(frameMaterialMap).forEach(([key, materialInfo]) => {
       if (frameData[key] && frameData[key] !== '' && frameData[`${key}-Pcs`] && frameData[`${key}-Pcs`] !== '') {
-        // Get the frame type for mapping back to descriptive names
         let frameType = '';
         if (key.includes('82-01')) frameType = 'Block-stop';
         else if (key.includes('82-02B')) frameType = 'Retrofit';
         else if (key.includes('82-10')) frameType = 'Nailon';
-        
-        const materialCuttingRow = {
-          ID: id,
-          OrderNo: id,
-          OrderItem: 1,
-          MaterialName: materialInfo.name,
-          CuttingID: this.data.materialCutting.length + 1,
-          PiecesID: this.data.materialCutting.length + 1,
-          Length: frameData[key],
-          Angles: materialInfo.angles,
-          Qty: frameData[`${key}-Pcs`],
-          BinNo: id,
-          Position: materialInfo.position,
-          Style: style,
-          Frame: frameType,
-          Color: color
+        let colorSuffix = "";
+        const colorLower = color.toLowerCase();
+        if (!color || colorLower === "" || colorLower.includes("white") || colorLower.includes("wh")) colorSuffix = "-WH";
+        else if (colorLower.includes("almond") || colorLower.includes("al")) colorSuffix = "-AL";
+        else if (colorLower.includes("painting")) colorSuffix = "-WH";
+        const materialNameWithColor = materialInfo.name + colorSuffix;
+        const materialPiece = {
+          ID: id, OrderNo: id, OrderItem: 1, MaterialName: materialNameWithColor,
+          Length: frameData[key], Angles: materialInfo.angles, Qty: frameData[`${key}-Pcs`],
+          BinNo: id, Position: materialInfo.position, Style: style, Frame: frameType,
+          Color: color, Painting: colorLower.includes("painting") ? "Yes" : ""
         };
-        
-        this.data.materialCutting.push(materialCuttingRow);
-        this.log(`写入材料切割数据 - ID: ${id}, 材料: ${materialInfo.name}, 长度: ${frameData[key]}, 位置: ${materialInfo.position}, 数量: ${frameData[`${key}-Pcs`]}`);
+        this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
+        this.log(`收集材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}`);
       }
     });
+  }
+  
+  // Asynchronously optimize material pieces and update data - THIS FUNCTION IS NOW REMOVED / OBSOLETE
+  // async optimizeMaterialPieces(materialName, pieces) { ... }
+
+  // New method to finalize material cutting after all windows are processed
+  async finalizeMaterialCutting() {
+    this.log('开始最终化材料切割数据...');
+    if (!this.data.materialCutting || this.data.materialCutting.length === 0) {
+      this.log('没有材料切割数据需要处理。');
+      return;
+    }
+
+    const allRawPieces = [...this.data.materialCutting]; // Copy of current raw pieces
+    this.data.materialCutting = []; // Clear current materialCutting, will be repopulated with optimized pieces
+
+    // Group pieces by MaterialName
+    const piecesByMaterial = allRawPieces.reduce((acc, piece) => {
+      const key = piece.MaterialName;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(piece);
+      return acc;
+    }, {});
+
+    this.log(`材料按名称分组: ${Object.keys(piecesByMaterial).length} 种材料`);
+
+    const optimizedMaterialCuttingData = [];
+
+    for (const materialName in piecesByMaterial) {
+      if (Object.hasOwnProperty.call(piecesByMaterial, materialName)) {
+        const piecesForMaterial = piecesByMaterial[materialName];
+        this.log(`正在处理材料: ${materialName}, 共有 ${piecesForMaterial.length} 个原始片段`);
+
+        try {
+          // Fetch the standard length for this material
+          const materialStandardLength = await getMaterialLength(materialName);
+          this.log(`获取到材料 ${materialName} 的标准长度: ${materialStandardLength}`);
+
+          if (typeof materialStandardLength !== 'number' || materialStandardLength <= 0) {
+            this.log(`警告: 材料 ${materialName} 的标准长度无效 (${materialStandardLength}). 跳过此材料的优化.`);
+            // Optionally, push raw pieces back if optimization is skipped, or handle as error
+            // For now, we'll assume optimizer can handle it or pieces are just not added if length is invalid.
+            // Or, we can push them unoptimized:
+            // optimizedMaterialCuttingData.push(...piecesForMaterial.map(p => ({...p, CuttingID: '', PiecesID: '', RemainingLength: ''})));
+            console.warn(`Standard length for ${materialName} is invalid: ${materialStandardLength}. Skipping optimization for this material.`);
+            // Add pieces back without optimization attempt if length is invalid
+            optimizedMaterialCuttingData.push(...piecesForMaterial.map(p => ({
+              ...p,
+              CuttingID: '', // Explicitly blank
+              PiecesID: '',  // Explicitly blank
+              StockLength: 0,
+              TotalCutLength: 0,
+              RemainingLength: 0,
+              Wastage: 0,
+              CutCount: 0
+            })));
+            continue; 
+          }
+
+          // Optimize the pieces for the current material
+          const optimizedPieces = optimizeCuttingGroups(piecesForMaterial, materialStandardLength);
+          this.log(`材料 ${materialName} 的优化结果: ${optimizedPieces.length} 个切割片段`);
+          optimizedMaterialCuttingData.push(...optimizedPieces);
+        } catch (error) {
+          this.log(`处理材料 ${materialName} 时发生错误: ${error}`);
+          console.error(`Error optimizing material ${materialName}:`, error);
+          // If an error occurs, add the original pieces for this material back without optimization
+          // to ensure data isn't lost, but mark them as unoptimized.
+          optimizedMaterialCuttingData.push(...piecesForMaterial.map(p => ({
+            ...p,
+            CuttingID: 'ERROR', // Mark as error
+            PiecesID: 'ERROR',
+            Notes: `Optimization failed: ${error.message}`,
+            StockLength: 0,
+            TotalCutLength: 0,
+            RemainingLength: 0,
+            Wastage: 0,
+            CutCount: 0
+          })));
+        }
+      }
+    }
+
+    this.data.materialCutting = optimizedMaterialCuttingData;
+    this.log('材料切割数据最终化完成。');
+    this.log(`最终材料切割数据条目数: ${this.data.materialCutting.length}`);
+    // Log the final optimized data to the console for inspection
+    console.log('Finalized materialCutting data in WindowCalculator:', JSON.stringify(this.data.materialCutting, null, 2));
   }
 
   // Write sash data

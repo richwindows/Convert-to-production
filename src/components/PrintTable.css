@@ -114,7 +114,114 @@
   font-weight: bold;
 }
 
-/* Ensure borders are visible when printing */
+/* DECA Cutting表格样式优化 */
+.deca-cutting-container {
+  margin-bottom: 24px;
+}
+
+.material-cutting-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e8e8e8;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.material-cutting-table th {
+  background-color: #fafafa;
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 600;
+  text-align: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.material-cutting-table td {
+  padding: 12px 8px;
+  text-align: center;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background 0.3s;
+}
+
+.material-cutting-table tr:hover td {
+  background-color: #f5f5f5;
+}
+
+.material-cutting-header {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #1890ff;
+}
+
+/* 材料名称样式 */
+.material-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.material-type {
+  font-weight: 500;
+}
+
+.material-color {
+  font-size: 12px;
+  border-radius: 4px;
+  padding: 0 4px;
+  line-height: 18px;
+}
+
+/* 优化指标样式 */
+.optimization-metrics {
+  margin: 0 0 20px 0;
+  padding: 0;
+  background-color: #f0f7ff;
+  border-radius: 8px;
+  border-left: 4px solid #1890ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.metrics-title {
+  padding: 12px 16px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1890ff;
+  background-color: rgba(24, 144, 255, 0.05);
+  border-bottom: 1px solid rgba(24, 144, 255, 0.1);
+  display: flex;
+  align-items: center;
+}
+
+.metrics-content {
+  padding: 12px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.metric-label {
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+.metric-value {
+  color: #1890ff;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* 确保边框在打印时可见 */
 @media print {
   .bordered-print-table, 
   .bordered-print-table th, 
@@ -134,5 +241,23 @@
   .debug-toggle,
   .debug-info {
     display: none !important;
+  }
+  
+  .optimization-metrics {
+    display: none;
+  }
+  
+  /* 优化DECA Cutting表格的打印样式 */
+  .material-cutting-table,
+  .material-cutting-table th,
+  .material-cutting-table td {
+    border-color: #000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .material-cutting-table th {
+    background-color: #f0f0f0 !important;
+    color: #000 !important;
   }
 } 

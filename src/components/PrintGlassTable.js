@@ -144,17 +144,17 @@ const PrintGlassTable = ({ batchNo, calculatedData }) => {
           </Button>
         </Tooltip>
       </div>
-      <CommonPrintTable
-        title="Glass"
-        headerClass="glass-header"
-        tableClass="glass-table"
-        columns={columns}
-        data={calculatedData || []}
-        batchNo={batchNo}
-        emptyRowCount={10}
-        renderRow={renderGlassRow}
-        debugTitle="玻璃表格数据"
-      />
+    <CommonPrintTable
+      title="Glass"
+      headerClass="glass-header"
+      tableClass="glass-table"
+      columns={columns}
+      data={calculatedData || []}
+      batchNo={batchNo}
+      emptyRowCount={10}
+      renderRow={renderGlassRow}
+      debugTitle="玻璃表格数据"
+    />
     </div>
   );
 };

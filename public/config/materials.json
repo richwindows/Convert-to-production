@@ -1,0 +1,40 @@
+{
+  "materials": [
+    {
+      "id": "HMST82-01",
+      "length": 233
+    },
+    {
+      "id": "HMST82-02B",
+      "length": 233
+    },
+    {
+      "id": "HMST82-03",
+      "length": 233
+    },
+    {
+      "id": "HMST82-04",
+      "length": 233
+    },
+    {
+      "id": "HMST82-05",
+      "length": 233
+    },
+    {
+      "id": "HMST82-10",
+      "length": 233
+    },
+    {
+      "id": "HMST130-01",
+      "length": 181
+    },
+    {
+      "id": "HMST130-01B",
+      "length": 181
+    },
+    {
+      "id": "HMST130-02",
+      "length": 181
+    }
+  ]
+} 

@@ -1,183 +1,406 @@
 /* App.css */
 :root {
-  --primary-dark-blue: #2c3e50;
-  --primary-accent-blue: #3498db;
-  --header-text-color: #ecf0f1;
-  --content-background: #ffffff;
-  --content-text-color: #333333;
-  --light-background: #f7f9fa; /* Lighter than previous #f5f5f5 */
-  --border-color: #dde3e8;
+  --primary-color: #1890ff;        /* 品牌主色调 */
+  --primary-hover: #40a9ff;        /* 主色调悬停状态 */
+  --secondary-color: #13c2c2;      /* 辅助色调 */
+  --accent-color: #722ed1;         /* 强调色 */
+  --success-color: #52c41a;        /* 成功色 */
+  --warning-color: #faad14;        /* 警告色 */
+  --error-color: #f5222d;          /* 错误色 */
+  
+  --dark-bg: #001529;              /* 深色背景 */
+  --light-bg: #f0f2f5;             /* 浅色背景 */
+  --white: #ffffff;                /* 白色 */
+  --black: #000000;                /* 黑色 */
+  
+  --text-primary: rgba(0, 0, 0, 0.85);  /* 主要文本 */
+  --text-secondary: rgba(0, 0, 0, 0.65); /* 次要文本 */
+  --text-hint: rgba(0, 0, 0, 0.45);     /* 提示文本 */
+  --text-disabled: rgba(0, 0, 0, 0.25);  /* 禁用文本 */
+  --text-inverse: #ffffff;              /* 反色文本 */
+  
+  --border-color: #d9d9d9;         /* 边框颜色 */
+  --border-radius-sm: 2px;         /* 小圆角 */
+  --border-radius-md: 4px;         /* 中圆角 */
+  --border-radius-lg: 8px;         /* 大圆角 */
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.15);    /* 小阴影 */
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);   /* 中阴影 */
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);   /* 大阴影 */
+  
+  --spacing-xs: 4px;              /* 极小间距 */
+  --spacing-sm: 8px;              /* 小间距 */
+  --spacing-md: 16px;             /* 中间距 */
+  --spacing-lg: 24px;             /* 大间距 */
+  --spacing-xl: 32px;             /* 特大间距 */
+  
+  --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 
+                 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+                 'Noto Color Emoji';
+  
+  --transition-quick: 0.2s;       /* 快速过渡 */
+  --transition-normal: 0.3s;      /* 普通过渡 */
+  --transition-slow: 0.5s;        /* 慢速过渡 */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-  color: var(--content-text-color);
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background-color: var(--light-bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* 整体布局 */
 .layout {
   min-height: 100vh;
-  background-color: var(--light-background); /* Apply light background to the whole layout */
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-normal);
 }
 
+/* 顶部导航栏 */
 .header {
   display: flex;
   align-items: center;
-  background-color: var(--primary-dark-blue);
-  padding: 0 24px; /* Reduced padding slightly from default antd 0 50px */
-  color: var(--header-text-color); /* For .logo text */
+  justify-content: space-between;
+  background: var(--dark-bg);
+  padding: 0 var(--spacing-lg);
+  height: 64px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
 }
 
-/* Style for Ant Design components in the header */
-.header .ant-input,
-.header .ant-btn {
-  color: var(--header-text-color) !important; /* Default text color */
-  border-color: var(--header-text-color) !important; /* Border for input and default/ghost buttons */
-}
-
-.header .ant-input::placeholder {
-  color: #bdc3c7 !important; /* Lighter placeholder text */
-}
-
-.header .ant-btn:not(.ant-btn-primary):not(.ant-btn-link) {
-  background-color: transparent !important; /* Make default buttons ghost-like */
-}
-.header .ant-btn:not(.ant-btn-primary):not(.ant-btn-link):hover,
-.header .ant-btn:not(.ant-btn-primary):not(.ant-btn-link):focus {
-  color: var(--primary-accent-blue) !important;
-  border-color: var(--primary-accent-blue) !important;
-  background-color: rgba(52, 152, 219, 0.1) !important; /* Subtle hover background */
-}
-
-.header .ant-btn-primary { /* If we ever add a primary button in header */
-  background-color: var(--primary-accent-blue) !important;
-  border-color: var(--primary-accent-blue) !important;
-  color: white !important;
-}
-.header .ant-btn-primary:hover,
-.header .ant-btn-primary:focus {
-  background-color: #2980b9 !important; /* Darker shade for hover/focus */
-  border-color: #2980b9 !important;
-}
-
-.content {
-  padding: 24px; /* Consistent padding */
-  background: var(--content-background);
-  margin: 16px; /* Add margin around content area */
-  border-radius: 8px; /* Rounded corners for content area */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.09); /* Subtle shadow */
-}
-
-.upload-section {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 16px; /* Adjusted gap */
-  margin-bottom: 24px; /* Consistent margin */
-  padding: 16px; /* Adjusted padding */
-  background: var(--light-background);
-  border: 1px solid var(--border-color);
-  border-radius: 6px; /* Slightly rounded corners */
-}
-
-/* General primary button styling */
-.ant-btn-primary {
-  background-color: var(--primary-accent-blue);
-  border-color: var(--primary-accent-blue);
-}
-.ant-btn-primary:hover,
-.ant-btn-primary:focus {
-  background-color: #2980b9; /* Darker shade */
-  border-color: #2980b9;
-}
-
-.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: var(--primary-accent-blue);
-}
-.ant-tabs-ink-bar {
-  background: var(--primary-accent-blue);
-}
-
-.batch-input {
+.logo {
+  color: var(--text-inverse);
+  font-size: 18px;
+  font-weight: bold;
+  margin-right: var(--spacing-lg);
+  white-space: nowrap;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
 }
 
-.data-table {
-  margin-bottom: 20px;
+/* 顶部导航栏内的组件样式 */
+.header .ant-space {
+  flex-wrap: wrap;
   overflow-x: auto;
 }
 
-.tabs-section {
-  margin-top: 20px;
+.header .ant-input {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text-inverse);
+  border-radius: var(--border-radius-md);
+  transition: all var(--transition-quick);
 }
 
-.tab-content {
-  padding: 16px;
-  min-height: 200px;
+.header .ant-input:hover,
+.header .ant-input:focus {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: var(--primary-color);
+}
+
+.header .ant-input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.header .ant-btn {
+  border-radius: var(--border-radius-md);
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  transition: all var(--transition-quick);
+  font-weight: 500;
+}
+
+.header .ant-btn:not(.ant-btn-primary) {
+  color: var(--text-inverse);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: transparent;
+}
+
+.header .ant-btn:not(.ant-btn-primary):hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(24, 144, 255, 0.1);
+}
+
+.header .ant-btn-primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--text-inverse);
+}
+
+.header .ant-btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+/* 内容区域 */
+.content {
+  padding: var(--spacing-lg);
+  flex: 1;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  transition: all var(--transition-normal);
+}
+
+/* 卡片样式 */
+.ant-card {
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: none;
+  transition: all var(--transition-normal);
+  overflow: hidden;
+}
+
+.ant-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.ant-card-head {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.ant-card-head-title {
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.ant-card-body {
+  padding: var(--spacing-lg);
+}
+
+/* 上传区域 */
+.upload-section {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  padding: var(--spacing-md);
+  background: var(--white);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-normal);
+}
+
+/* 按钮样式 */
+.ant-btn {
+  border-radius: var(--border-radius-md);
+  font-weight: 500;
+  height: 32px;
+  padding: 0 var(--spacing-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  transition: all var(--transition-quick);
+}
+
+.ant-btn-primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.ant-btn-success {
+  background: var(--success-color);
+  border-color: var(--success-color);
+  color: var(--text-inverse);
+}
+
+.ant-btn-success:hover,
+.ant-btn-success:focus {
+  background: #70db3a;
+  border-color: #70db3a;
+}
+
+/* 标签页样式 */
+.ant-tabs {
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+}
+
+.ant-tabs-nav {
+  margin-bottom: 0 !important;
+  background: var(--white);
+  padding: 0 var(--spacing-md);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+  transition: all var(--transition-normal);
+}
+
+.ant-tabs-tab {
+  padding: var(--spacing-md) var(--spacing-md);
+  transition: all var(--transition-quick);
+  margin: 0 !important;
+  color: var(--text-secondary);
+}
+
+.ant-tabs-tab:hover {
+  color: var(--primary-color);
+}
+
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.ant-tabs-content {
+  background: var(--white);
+  padding: var(--spacing-lg);
+  border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
+}
+
+.ant-tabs-ink-bar {
+  background: var(--primary-color);
+  height: 3px !important;
+}
+
+/* 表格样式 */
+.ant-table {
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+}
+
+.ant-table-thead > tr > th {
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.ant-table-tbody > tr:hover > td {
+  background: rgba(24, 144, 255, 0.05);
 }
 
 /* 打印视图样式 */
-.print-view {
-  padding: 20px;
-  background: #fff;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* 打印选择器样式 */
 .print-selector {
-  margin-bottom: 20px;
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
-.print-selector .ant-tabs-nav {
-  margin-bottom: 0;
+.print-container {
+  background: var(--white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+  transition: all var(--transition-normal);
 }
 
+/* 表格上方的操作区域 */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+/* 优化度量显示 */
+.optimization-metrics {
+  background: rgba(24, 144, 255, 0.1);
+  color: var(--primary-color);
+  padding: var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  margin-bottom: var(--spacing-md);
+  font-weight: 500;
+  border-left: 4px solid var(--primary-color);
+}
+
+/* 页脚样式 */
 .footer {
   text-align: center;
+  padding: var(--spacing-md) 0;
+  color: var(--text-secondary);
+  background: var(--white);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
 }
 
-/* Print specific styles */
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .header {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .content {
+    padding: var(--spacing-md);
+  }
+  
+  .upload-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .upload-section .ant-btn {
+    width: 100%;
+  }
+  
+  .ant-card-body {
+    padding: var(--spacing-md);
+  }
+}
+
+/* 打印样式保持不变 */
 @media print {
   body * {
-    visibility: hidden; /* Hide everything by default */
+    visibility: hidden;
   }
-
+  
   .print-container,
   .print-container * {
-    visibility: visible; /* Make only the print container and its children visible */
+    visibility: visible;
   }
-
+  
   .print-container {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    padding: 20px; /* Add some padding for the print content */
+    padding: 20px;
     margin: 0;
   }
-
-  /* Explicitly hide elements that should absolutely not print, even if they were somehow in print-container */
+  
   .upload-section,
   .header, 
   .footer,
   button,
   .ant-tabs-nav,
   .print-selector,
-  .debug-toggle, /* From PrintTable.css, but good to reinforce */
-  .debug-info    /* From PrintTable.css */
-  {
+  .table-actions,
+  .debug-toggle,
+  .debug-info {
     display: none !important; 
-    visibility: hidden !important; /* Belt and suspenders */
+    visibility: hidden !important;
   }
 
-  /* Styles for elements within the .print-container that might have been hidden by body * */
   .print-container .bordered-print-table,
   .print-container .bordered-print-table *,
   .print-container .table-print-title {
-    visibility: visible !important; /* Ensure table and title are visible */
+    visibility: visible !important;
   }
 
-  /* Remove padding/margins from main layout elements if they are part of the structure leading to print-container */
   .layout, .content, .ant-tabs-content, .ant-tabs-tabpane {
     padding: 0 !important;
     margin: 0 !important;
@@ -186,7 +409,6 @@ body {
     background: none !important;
   }
   
-  /* Ensure cards inside print view don't add extra borders/padding if .print-container is a card */
   .print-container .ant-card-head {
     display: none !important;
   }
