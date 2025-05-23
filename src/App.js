@@ -47,6 +47,7 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingSashWelding, setIsExportingSashWelding] = useState(false);
   const [isExportingDecaCutting, setIsExportingDecaCutting] = useState(false);
+  const [customStartId, setCustomStartId] = useState(1); // New state for custom start ID
   const [calculatedData, setCalculatedData] = useState({
     info: [],
     frame: [],
@@ -535,7 +536,7 @@ function App() {
     calculator.resetData(); // Reset before processing a new batch of selected rows
 
     selectedData.forEach((windowData, index) => {
-      const sequentialId = index + 1;
+      const sequentialId = index + customStartId; // 使用自定义起始ID
       const originalId = windowData.ID;
 
       let mappedFrameType = windowData.Frame || '';
@@ -716,6 +717,17 @@ function App() {
         <div className="header-content-wrapper">
           <div className="logo">Production Converter</div>
           <Space size="middle">
+            <Input
+              placeholder="ID起始值"
+              type="number"
+              value={customStartId}
+              onChange={(e) => {
+                const value = e.target.value === '' ? 0 : parseInt(e.target.value);
+                setCustomStartId(value);
+              }}
+              style={{ width: 150 }}
+              prefix={<span style={{ color: 'var(--text-secondary)' }}>起始ID:</span>}
+            />
             <Input 
               placeholder="Enter Batch NO." 
               value={batchNo} 
@@ -776,15 +788,15 @@ function App() {
                   <Upload beforeUpload={processExcelFile} showUploadList={false}>
                     <Button icon={<UploadOutlined />} size="large">上传 Excel 文件</Button>
                   </Upload>
-              <Button 
+                  <Button 
                     onClick={generateDetailedDataAndNotify} 
                     disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
                     loading={isProcessing}
-                type="primary" 
+                    type="primary" 
                     size="large"
-              >
+                  >
                     {isProcessing ? '处理中...' : '处理选中行'}
-              </Button>
+                  </Button>
                   {isDataLoaded && calculatedData.info.length > 0 && (
               <Button 
                       onClick={handlePrintView}
