@@ -138,43 +138,158 @@ const processPP_XOX = (windowData, calculator) => {
   fixedgrid2h = roundInt(fixedglass2h - 18 - 2);
 
   // 7. grid 写入
-  if ( gridW > 0 && gridH > 0) {
+  if (gridW > 0 && gridH > 0) { // Custom dimensions from GridNote or Grid (e.g. "3W4H")
     calculator.writeGrid(id, style, grid, String(sashgridw), '', '', String(sashgridh), '', '', String(fixedgridw), '', '', String(fixedgridh), '', '', gridNote, color);
-    calculator.writeGrid(id, style, grid, String(fixedgrid2w), '', '', String(fixedgrid2h), '', '', '', '', '', '', '', '', gridNote, color);
-  } else if (grid === 'Marginal') {
+    calculator.writeGrid(id, style, grid, String(fixedgrid2w), '', '', String(fixedgrid2h), '', '', '', '', '', '', '', '', gridNote, color); // For fixed part 2 (PP)
+  } else if (grid === 'Standard') { // VBA cmbGrid.ListIndex = 1
+    calculator.writeGrid(id, style, grid, String(sashgridw), '', '', String(sashgridh), '', '', String(fixedgridw), '', '', String(fixedgridh), '', '', gridNote, color);
+    calculator.writeGrid(id, style, grid, String(fixedgrid2w), '', '', String(fixedgrid2h), '', '', '', '', '', '', '', '', gridNote, color); // For fixed part 2 (PP)
+  } else if (grid === 'Marginal') { // VBA cmbGrid.ListIndex = 2
     calculator.writeGrid(id, style, grid, String(sashgridw), String(q * 2), '', String(sashgridh), String(q * 2), '', String(fixedgridw), String(q * 2), '', String(fixedgridh), String(q * 2), '', gridNote, color);
-    calculator.writeGrid(id, style, grid, String(fixedgrid2w), String(q * 2), '', String(fixedgrid2h), String(q * 2), '', '', '', '', '', '', '', gridNote, color);
-  } else if (grid === 'Perimeter') {
+    calculator.writeGrid(id, style, grid, String(fixedgrid2w), String(q * 2), '', String(fixedgrid2h), String(q * 2), '', '', '', '', '', '', '', gridNote, color); // For fixed part 2 (PP)
+  } else if (grid === 'Perimeter') { // VBA cmbGrid.ListIndex = 3
     calculator.writeGrid(id, style, grid, String(sashgridw), String(q * 2), '', String(sashgridh), String(q * 2), '', String(fixedgridw), String(q * 1), '', String(fixedgridh), String(q * 0), '', gridNote, color);
-    calculator.writeGrid(id, style, grid, String(fixedgrid2w), String(q * 2), '', String(fixedgrid2h), String(q * 2), '', '', '', '', '', '', '', gridNote, color);
+    calculator.writeGrid(id, style, grid, String(fixedgrid2w), String(q * 2), '', String(fixedgrid2h), String(q * 2), '', '', '', '', '', '', '', gridNote, color); // For fixed part 2 (PP)
   }
 
   // 8. 玻璃写入
   const widthStr = String(width);
   const heightStr = String(height);
-  const fixedHeightStr = String(fixedHeight);
+  const fixedHeightStr = String(fixedHeight); // Matching VBA context
   const standardGlassType = glassMap[glassType] || glassType;
+  console.log(`玻璃类型映射: ${glassType} → ${standardGlassType} for PP_XOX`);
 
-  // 玻璃写入逻辑（与VBA一致，分类型处理）
-  // 这里只实现Clear/Clear和Tempered的逻辑，其他类型可按需扩展
-  if (standardGlassType === 'cl/cl' && !isTopBottomTempered) {
-    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 4 * q, 'clear', '', sashglassw, sashglassh, grid, argon);
-    calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, 'clear', '', fixedglassw, fixedglassh, grid, argon);
-    calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', '', fixedglass2w, fixedglass2h, grid, argon);
-  } else if (standardGlassType === 'cl/cl' && isTopBottomTempered) {
+  // 8.1 Sash Welding Entry
+  calculator.writeSashWeldingEntry(id, style, String(sashw), String(sashh), String(4*q), color);
+
+  let sash1Temp = '';  // For --01 Sash Glass (X part)
+  let fixed1Temp = ''; // For --02 Fixed Glass 1 (O part)
+  let fixed2Temp = ''; // For --03 Fixed Glass 2 (PP part)
+
+  if (standardGlassType.toUpperCase().endsWith('TMP')) {
+    sash1Temp = 'T';
+    fixed1Temp = 'T';
+    fixed2Temp = 'T';
+  } else {
+    if (isTopBottomTempered) {
+      sash1Temp = 'T';
+      fixed1Temp = 'T';
+    }
+    fixed2Temp = ''; // Fixed glass 2 (--03) is NOT tempered by isTopBottomTempered for non-Tmp types in PP-XOX VBA
+  }
+
+  if (standardGlassType === 'cl/cl') { // VBA Case 0
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 4 * q, 'clear', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, 'clear', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon); // fixed2Temp will be '' unless base type is Tmp
+    if (sash1Temp === 'T') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 4 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    }
+    if (fixed1Temp === 'T') {
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 2 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    }
+    // No orderwrite for fixed2Temp if it's '' (non-Tmp base type)
+  } else if (standardGlassType === 'cl/le2') { // VBA Case 1
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 2 * q, 'lowe2', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe2', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon);
+    if (sash1Temp === 'T') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+      calculator.writeOrder('', '', '', '', '', id, id + '--01', 2 * q, 'Lowe270', 'Tempered', sashglassw, sashglassh);
+    }
+    if (fixed1Temp === 'T') {
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe270', 'Tempered', fixedglassw, fixedglassh);
+    }
+  } else if (standardGlassType === 'cl/le3') { // VBA Case 2
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 2 * q, 'lowe3', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe3', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon);
+    if (sash1Temp === 'T') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+      calculator.writeOrder('', '', '', '', '', id, id + '--01', 2 * q, 'Lowe366', 'Tempered', sashglassw, sashglassh);
+    }
+    if (fixed1Temp === 'T') {
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe366', 'Tempered', fixedglassw, fixedglassh);
+    }
+  } else if (standardGlassType === 'OBS/cl') { // VBA Case 3
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 2 * q, 'obs', sash1Temp, sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'obs', fixed1Temp, fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'obs', fixed2Temp, fixedglass2w, fixedglass2h, grid, argon);
+    if (sash1Temp === 'T') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+      calculator.writeOrder('', '', '', '', '', id, id + '--01', 2 * q, 'P516', 'Tempered', sashglassw, sashglassh);
+    }
+    if (fixed1Temp === 'T') {
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+      calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'P516', 'Tempered', fixedglassw, fixedglassh);
+    }
+  // VBA for PP_XOX does not include OBS/le2 or OBS/le3 non-Tmp. Cases 4 and 5 are skipped.
+
+  } else if (standardGlassType === 'cl/cl Tmp') { // VBA Case 6
     calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 4 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
     calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
-    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 4 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 4 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 2 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 4 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+  } else if (standardGlassType === 'cl/le2 Tmp') { // VBA Case 7
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 2 * q, 'lowe2', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe2', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 2 * q, 'Lowe270', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe270', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe270', 'Tempered', fixedglass2w, fixedglass2h);
+  } else if (standardGlassType === 'cl/le3 Tmp') { // VBA Case 8
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 2 * q, 'lowe3', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe3', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 2 * q, 'Lowe366', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe366', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe366', 'Tempered', fixedglass2w, fixedglass2h);
+  } else if (standardGlassType === 'OBS/cl Tmp') { // VBA Case 9
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 2 * q, 'obs', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'obs', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'obs', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 2 * q, 'P516', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'P516', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
+  // VBA for PP_XOX does not include OBS/le2 Tmp or OBS/le3 Tmp. Cases 10 and 11 are skipped.
+
   } else {
-    // 其他玻璃类型可按需扩展，参考XOX.js的processGlass实现
-    // 默认写入clear glass
-    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 4 * q, 'clear', '', sashglassw, sashglassh, grid, argon);
-    calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, 'clear', '', fixedglassw, fixedglassh, grid, argon);
-    calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', '', fixedglass2w, fixedglass2h, grid, argon);
+    // Fallback for unhandled glass types
+    console.warn(`Unhandled glass type: ${standardGlassType} in PP_XOX. Calculations may be incomplete.`);
   }
 
-  console.log('===== PP-XOX 三联窗（固定+滑动+下部固定）处理完成 =====\n');
+  console.log('===== PP-XOX 上下固定+中中空拉窗处理完成 =====\n');
 };
 
-export { processPP_XOX }; 
+export { processPP_XOX };

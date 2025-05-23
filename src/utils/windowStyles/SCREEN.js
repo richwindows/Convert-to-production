@@ -6,20 +6,33 @@
  * @param {Object} calculator - Reference to the calculator instance to use its write methods
  */
 const processSCREEN = (windowData, calculator) => {
-  const width = parseFloat(windowData.W) || 0;
-  const height = parseFloat(windowData.H) || 0;
+  // 提取基本数据
+  const customer = windowData.Customer || '';
+  const id = windowData.ID || '';
+  const style = windowData.Style || '';
+  const color = windowData.Color || '';
+  
+  const width = parseFloat(windowData.W) || '';
+  const height = parseFloat(windowData.H) || '';
   const w = width * 25.4;
   const h = height * 25.4;
-  const q = parseInt(windowData.Quantity) || 1;
+  const q = parseInt(windowData.Quantity) || '';
 
-  // 1. Screen 尺寸
+  console.log(`===== SCREEN 纱窗处理开始 =====`);
+  console.log(`客户: ${customer}, ID: ${id}, 样式: ${style}`);
+  console.log(`尺寸: ${width}" x ${height}" (${w}mm x ${h}mm)`);
+  console.log(`数量: ${q}, 颜色: ${color}`);
+
+  // 1. Screen 尺寸计算
   const screenw = Math.round(w - 45);
   const screenh = Math.round(h - 45);
+  
+  console.log(`纱窗计算 | 纱窗宽: ${screenw}mm | 纱窗高: ${screenh}mm`);
 
-  // 写入 screen
-  calculator.writeScreen('', '', '', String(screenw), '2', String(screenh), '2', '');
+  // 写入 screen 数据 - 传递完整的参数
+  calculator.writeScreen(customer, id, style, String(screenw), '2', String(screenh), '2', color);
 
   console.log('===== SCREEN 纱窗 处理完成 =====\n');
 };
 
-export { processSCREEN }; 
+export { processSCREEN };

@@ -5,6 +5,7 @@
 
 import * as windowStyles from './windowStyles';
 import { getMaterialLength, optimizeCuttingGroups } from './MaterialOptimizer';
+import { getMappedStyle } from './DataMapper'; // 导入样式映射函数
 
 // Round a number to 3 decimal places
 const round = (num) => Math.round(num * 1000) / 1000;
@@ -174,18 +175,20 @@ class WindowCalculator {
     
     // Write label info
     this.writeLabel(windowData);
+
+    console.log('windowData', windowData);
     
     // Process based on style
     const style = windowData.Style || '';
     
-    // 统一分发，样式名中的-替换为_，如XOX-PPP => processXOX_PPP
-    const funcName = `process${style.replace(/-/g, '_')}`;
+    // 使用DataMapper中的样式映射
+    const mappedStyle = getMappedStyle(style);
+    const funcName = `process${mappedStyle}`;
     const processFunc = windowStyles[funcName];
     if (processFunc) {
       processFunc(windowData, this);
     } else {
-      this.log(`未知样式: ${style}, 使用默认XO处理`);
-      windowStyles.processXO_OX(windowData, this);
+      this.log(`错误：未知样式: ${style}，映射后: ${mappedStyle}，无法处理。请检查输入数据或添加对应的处理函数。`);
     }
     
     // 验证每个表中的数据是否都包含正确的ID
@@ -608,4 +611,4 @@ class WindowCalculator {
   }
 }
 
-export default WindowCalculator; 
+export default WindowCalculator;

@@ -73,7 +73,7 @@ const processXO_PP_OX_PP = (windowData, calculator) => {
     sashw = round((w / 2 - 14.5 + 1) / 25.4);
     sashh = round((h - fh - 6 - 46 - 2 - 1) / 25.4);
   }
-  calculator.writeSash(String(sashw), '2', String(sashh), '1', String(sashh), '1', '', '', '', '', color);
+  calculator.writeSash(id, style, String(sashw), '2', String(sashh), '1', String(sashh), '1', '', '', '', '', color);
 
   // 3. Screen 尺寸
   if (frameType === 'Nailon') {
@@ -95,7 +95,7 @@ const processXO_PP_OX_PP = (windowData, calculator) => {
     coverh = round((fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
     bigmullion = round((w - 14 * 2 - 15 * 2 - 2 + 1.5) / 25.4);
     bigmullion2 = round((fh - 6 - 14 * 2 - 15 + 1.5) / 25.4);
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw) + 'x2', String(coverh) + 'x2', String(bigmullion), '1', String(bigmullion2), '1', '', color);
+    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw) + 'x2', String(coverh) + 'x2', String(bigmullion), '1', String(bigmullion2), '1', '', '', '', color);
   } else {
     mullion = round((h - fh - 6 - 36) / 25.4);
     mullionA = round((h - fh - 6 - 36) / 25.4 - 2, 1);
@@ -106,7 +106,12 @@ const processXO_PP_OX_PP = (windowData, calculator) => {
     bigmullion = round((w - 14 * 2 - 2 + 1.5) / 25.4);
     bigmullion2 = round((fh - 6 - 14 * 2 + 1.5) / 25.4);
     slop = round((w - 10) / 25.4, 1);
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw) + 'x2', String(coverh) + 'x2', String(bigmullion), '1', String(bigmullion2), '1', frameType === 'Block-slop 1/2' ? String(slop) : '', color);
+    
+    if (frameType === 'Block-slop 1/2') {
+      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw) + 'x2', String(coverh) + 'x2', String(bigmullion), '1', String(bigmullion2), '1', String(slop), '', '', color);
+    } else {
+      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw) + 'x2', String(coverh) + 'x2', String(bigmullion), '1', String(bigmullion2), '1', '', '', '', color);
+    }
   }
 
   // 5. 玻璃尺寸
@@ -151,18 +156,175 @@ const processXO_PP_OX_PP = (windowData, calculator) => {
   const heightStr = String(height);
   const fixedHeightStr = String(fixedHeight);
   const standardGlassType = glassMap[glassType] || glassType;
+  console.log(`玻璃类型映射: ${glassType} → ${standardGlassType}`);
 
-  // 滑动扇玻璃
-  calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, standardGlassType, '', sashglassw, sashglassh, grid, argon);
-  // 固定扇玻璃
-  calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, standardGlassType, '', fixedglassw, fixedglassh, grid, argon);
-  // 下部双固定玻璃
-  if (isBottomTempered) {
-    calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, standardGlassType, 'T', fixedglass2w, fixedglass2h, grid, argon);
-    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 4 * q, standardGlassType, 'Tempered', fixedglass2w, fixedglass2h);
-  } else {
-    calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, standardGlassType, '', fixedglass2w, fixedglass2h, grid, argon);
+  // 按照VBA代码的逻辑处理不同玻璃类型
+  if (standardGlassType === 'cl/cl') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, 'clear', '', fixedglassw, fixedglassh, grid, argon);
+    if (isBottomTempered) {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 4 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    } else {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', '', fixedglass2w, fixedglass2h, grid, argon);
+    }
+  } 
+  else if (standardGlassType === 'cl/le2') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'clear', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'lowe2', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', '', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe2', '', fixedglassw, fixedglassh, grid, argon);
+    if (isBottomTempered) {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+      calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe270', 'Tempered', fixedglass2w, fixedglass2h);
+    } else {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', '', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', '', fixedglass2w, fixedglass2h, grid, argon);
+    }
+  } 
+  else if (standardGlassType === 'cl/le3') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'clear', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'lowe3', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', '', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe3', '', fixedglassw, fixedglassh, grid, argon);
+    if (isBottomTempered) {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+      calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe366', 'Tempered', fixedglass2w, fixedglass2h);
+    } else {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', '', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', '', fixedglass2w, fixedglass2h, grid, argon);
+    }
+  } 
+  else if (standardGlassType === 'OBS/cl') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'clear', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', '', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'OBS', '', fixedglassw, fixedglassh, grid, argon);
+    if (isBottomTempered) {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 1 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 1 * q, 'OBS', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 1 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+      calculator.writeOrder('', '', '', '', '', id, id + '--03', 1 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
+    } else {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 1 * q, 'clear', '', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 1 * q, 'OBS', '', fixedglass2w, fixedglass2h, grid, argon);
+    }
+  } 
+  else if (standardGlassType === 'OBS/le2') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'lowe2', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe2', '', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'OBS', '', fixedglassw, fixedglassh, grid, argon);
+    if (isBottomTempered) {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 2 * q, 'Lowe270', 'Tempered', fixedglass2w, fixedglass2h);
+      calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
+    } else {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', '', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', '', fixedglass2w, fixedglass2h, grid, argon);
+    }
+  } 
+  else if (standardGlassType === 'OBS/le3') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'lowe3', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', '', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe3', '', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'OBS', '', fixedglassw, fixedglassh, grid, argon);
+    if (isBottomTempered) {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', 'T', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--03', 2 * q, 'Lowe366', 'Tempered', fixedglass2w, fixedglass2h);
+      calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
+    } else {
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', '', fixedglass2w, fixedglass2h, grid, argon);
+      calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', '', fixedglass2w, fixedglass2h, grid, argon);
+    }
+  } 
+  else if (standardGlassType === 'cl/cl Tmp') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 2 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 4 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 2 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 2 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 4 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+  } 
+  else if (standardGlassType === 'cl/le2 Tmp') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'lowe2', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe2', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe270', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe270', 'Tempered', fixedglass2w, fixedglass2h);
+  } 
+  else if (standardGlassType === 'cl/le3 Tmp') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'lowe3', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe3', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'Lowe366', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe366', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe366', 'Tempered', fixedglass2w, fixedglass2h);
+  } 
+  else if (standardGlassType === 'OBS/cl Tmp') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'clear', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'clear', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'OBS', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'clear', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'Clear', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'P516', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Clear', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'P516', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Clear', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
+  } 
+  else if (standardGlassType === 'OBS/le2 Tmp') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'lowe2', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe2', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'OBS', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe2', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'Lowe270', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'P516', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe270', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'P516', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe270', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
+  } 
+  else if (standardGlassType === 'OBS/le3 Tmp') {
+    calculator.writeGlass(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'lowe3', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', 'T', sashglassw, sashglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'lowe3', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--02', 1 * q, 'OBS', 'T', fixedglassw, fixedglassh, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'lowe3', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeGlass('', '', '', '', '', id, id + '--03', 2 * q, 'OBS', 'T', fixedglass2w, fixedglass2h, grid, argon);
+    calculator.writeOrder(customer, style, widthStr, heightStr, fixedHeightStr, id, id + '--01', 1 * q, 'Lowe366', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'P516', 'Tempered', sashglassw, sashglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'Lowe366', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--02', 1 * q, 'P516', 'Tempered', fixedglassw, fixedglassh);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'Lowe366', 'Tempered', fixedglass2w, fixedglass2h);
+    calculator.writeOrder('', '', '', '', '', id, id + '--03', 2 * q, 'P516', 'Tempered', fixedglass2w, fixedglass2h);
   }
+
+  // 添加Sash Welding计算，如果需要
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
 
   console.log('===== XO-PP/OX-PP 滑动+固定+下方双固定窗处理完成 =====\n');
 };

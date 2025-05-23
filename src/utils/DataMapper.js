@@ -3,45 +3,81 @@
  * Handles field name differences and provides defaults for missing values
  */
 
-// Style mappings
-const styleMap = {
-  // Direct mappings for exact matches
-  'XO': 'XO',
-  'OX': 'OX',
-  'XOX': 'XOX',
-  'XOX-1/3': 'XOX-1/3',
-  'SH': 'SH', 
-  'Picture': 'Picture',
-  'XO-P': 'XO-P',
-  'OX-P': 'OX-P',
-  'P-XO': 'P-XO',
-  'P-OX': 'P-OX',
-  'SH-P': 'SH-P',
-  'P-SH': 'P-SH',
-  'H-PP': 'H-PP',
-  'V-PP': 'V-PP',
-  'XO-PP': 'XO-PP',
-  'OX-PP': 'OX-PP',
-  'PP-XO': 'PP-XO',
-  'PP-OX': 'PP-OX',
-  'XOX-PPP': 'XOX-PPP',
-  'PPP-XOX': 'PPP-XOX',
-  'XOX-PP': 'XOX-PP',
-  'PP-XOX': 'PP-XOX',
-  'SH-SH': 'SH-SH',
-  'SH-O-SH': 'SH-O-SH',
-  '3/4 IGU': '3/4 IGU',
-  '1 IGU': '1 IGU',
-  '5/8 IGU': '5/8 IGU',
-  'Screen': 'Screen',
-  '1/2 IGU': '1/2 IGU',
-  '7/8 IGU': '7/8 IGU',
-  'P-PP': 'P-PP',
+/**
+ * 标准化样式字符串 - 去除空格、转换为小写、处理特殊字符
+ * @param {string} style - 原始样式字符串
+ * @returns {string} - 标准化后的样式字符串
+ */
+function normalizeStyle(style) {
+  if (!style || typeof style !== 'string') {
+    return '';
+  }
   
-  // Alternative mappings for possible variations
-  'XO': 'XO ',
-  'OX': 'OX ',
+  return style
+    .trim()                    // 去除首尾空格
+    .toLowerCase()             // 转换为小写
+    .replace(/\s+/g, '')       // 去除所有空格
+    .replace(/[_-]+/g, '-')    // 统一分隔符为连字符
+    .replace(/\//g, '/')       // 保持斜杠
+    .replace(/^-+|-+$/g, '');  // 去除首尾的连字符
+}
+
+// Style mappings - 修正后的映射
+const styleMap = {
+  // 基础样式映射 - 统一使用下划线格式
+  'xo': 'XO_OX',
+  'ox': 'XO_OX', 
+  
+  
+  'xox': 'XOX',
+  'xox-1/3': 'XOX_1/3',
+  'sh': 'SH',
+  'picture': 'Picture',
+  'pw': 'Picture',
+  'xo-p': 'XO_P_OX_P',
+  'ox-p': 'XO_P_OX_P', 
+  'p-xo': 'P_XO_P_OX',
+  'p-ox': 'P_XO_P_OX',
+  'sh-p': 'SH_P',
+  'p-sh': 'P_SH',
+  'h-pp': 'H_PP',
+  'v-pp': 'V_PP',
+  'xo-pp': 'XO_PP_OX_PP',
+  'ox-pp': 'XO_PP_OX_PP',
+  'pp-xo': 'PP_XO_PP_OX',
+  'pp-ox': 'PP_XO_PP_OX',
+  'xo-pp-ox-pp': 'XO_PP_OX_PP',
+  'pp-xo-pp-ox': 'PP_XO_PP_OX',
+  'xox-ppp': 'XOX_PPP',
+  'ppp-xox': 'PPP_XOX',
+  'xox-pp': 'XOX_PP',
+  'pp-xox': 'PP_XOX',
+  '3/4igu': 'IGU',
+  '1igu': 'IGU',
+  '5/8igu': 'IGU',
+  '1/2igu': 'IGU',
+  '7/8igu': 'IGU',
+  'igu': 'IGU',
+  'screen': 'SCREEN',
+  'screenwindow': 'SCREEN',
+  'screen-window': 'SCREEN',
+  'screen window': 'SCREEN',
+  'p-pp': 'P_PP',
 };
+
+/**
+ * 获取映射后的样式
+ * @param {string} originalStyle - 原始样式
+ * @returns {string} - 映射后的样式
+ */
+function getMappedStyle(originalStyle) {
+  const normalizedStyle = normalizeStyle(originalStyle);
+  const mappedStyle = styleMap[normalizedStyle];
+  
+  console.log(`[DataMapper] Style mapping: '${originalStyle}' -> '${normalizedStyle}' -> '${mappedStyle || normalizedStyle}'`);
+  
+  return mappedStyle || normalizedStyle;
+}
 
 // Frame mappings
 const frameMap = {
@@ -389,9 +425,10 @@ class DataMapper {
     }
     
     // Apply mappings for specific fields
+    console.log('[DataMapper] CHECKING standardized.Style right before IF: ', standardized.Style);
     if (standardized.Style) {
-      const styleKey = String(standardized.Style).trim();
-      standardized.Style = styleMap[styleKey] || styleKey;
+      standardized.Style = getMappedStyle(standardized.Style);
+      console.log('[DataMapper] After styleMap: standardized.Style is', standardized.Style);
     }
     
     if (standardized.Frame) {
@@ -427,6 +464,7 @@ class DataMapper {
     standardized.GridH = parseInt(standardized.GridH) || 0;
     standardized.Quantity = parseInt(standardized.Quantity) || 1;
     
+    console.log(`[DataMapper] FINAL Style for ID ${standardized.ID || excelRow.ID || 'UNKNOWN_ID'}: '${standardized.Style}' (Original from excelRow: '${excelRow.Style}')`);
     return standardized;
   }
   
@@ -441,6 +479,6 @@ class DataMapper {
   }
 }
 
-export default new DataMapper(); 
-// 导出glassMap以便其他模块可以直接导入
-export { glassMap, frameMap, styleMap, colorMap, argonMap, gridMap }; 
+export default new DataMapper();
+// 导出映射函数和映射表
+export { glassMap, frameMap, styleMap, colorMap, argonMap, gridMap, getMappedStyle, normalizeStyle };
