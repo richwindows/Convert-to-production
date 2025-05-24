@@ -6,6 +6,7 @@
 import * as windowStyles from './windowStyles';
 import { getMaterialLength, optimizeCuttingGroups } from './MaterialOptimizer';
 import { getMappedStyle } from './DataMapper'; // 导入样式映射函数
+import { formatSize } from './formattingUtils'; // Import the new utility
 
 // Round a number to 3 decimal places
 const round = (num) => Math.round(num * 1000) / 1000;
@@ -596,7 +597,7 @@ class WindowCalculator {
       ID: data.ID, // This IS the sequential display ID from App.js
       originalId: data.originalId, // Preserve original for reference if needed
       Style: data.Style || '',
-      Size: data.W && data.H ? `${data.W}x${data.H}` : '',
+      Size: formatSize(data.W, data.H), // Use formatSize here
       Frame: data.Frame || '',
       Glass: data.Glass && data.Argon && data.Argon !== 'None' 
         ? `${data.Glass}+${data.Argon}` 

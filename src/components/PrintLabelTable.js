@@ -1,6 +1,7 @@
 import React from 'react';
 import './PrintTable.css';
 import CommonPrintTable from './CommonPrintTable';
+import { formatSize } from '../utils/formattingUtils';
 
 const PrintLabelTable = ({ batchNo, calculatedData }) => {
   // Generate barcode based on batch number and ID
@@ -12,7 +13,7 @@ const PrintLabelTable = ({ batchNo, calculatedData }) => {
     if (parts.length !== 3) return '';
     
     const monthDay = parts[0]; // 05212025
-    const orderNum = parts[1]; // 01
+    // const orderNum = parts[1]; // 01
     const dayPart = parts[2]; // 16
     
     // Extract simplified date: 052125 (from 05212025, year 2025 -> 25)
@@ -26,47 +27,6 @@ const PrintLabelTable = ({ batchNo, calculatedData }) => {
     
     // Generate barcode: Rich-052125-16-02
     return `Rich-${simplifiedDate}-${dayPart}-${formattedId}`;
-  };
-
-  // 格式化尺寸显示，支持分数格式
-  const formatSize = (width, height) => {
-    if (!width || !height) return '';
-    
-    // 将小数转换为分数格式
-    const convertToFraction = (value) => {
-      // 如果已经是字符串且包含分数格式，直接返回
-      if (typeof value === 'string' && value.includes('/')) {
-        return value;
-      }
-      
-      const numValue = parseFloat(value);
-      // 检查是否为整数
-      if (Number.isInteger(numValue)) {
-        return String(numValue);
-      } else {
-        // 提取整数部分和小数部分
-        const intPart = Math.floor(numValue);
-        const fracPart = numValue - intPart;
-        
-        // 将小数转换为分数表示
-        if (Math.abs(fracPart - 0.5) < 0.01) {
-          return intPart > 0 ? `${intPart} 1/2` : "1/2";
-        } else if (Math.abs(fracPart - 0.25) < 0.01) {
-          return intPart > 0 ? `${intPart} 1/4` : "1/4";
-        } else if (Math.abs(fracPart - 0.75) < 0.01) {
-          return intPart > 0 ? `${intPart} 3/4` : "3/4";
-        } else {
-          // 如果不是常见分数，保留原始格式
-          return String(numValue);
-        }
-      }
-    };
-    
-    const formattedWidth = convertToFraction(width);
-    const formattedHeight = convertToFraction(height);
-    
-    // 注意这里没有空格
-    return `${formattedWidth}x${formattedHeight}`;
   };
 
   // Define column structure for the label table (removed Batch NO., added Barcode)
@@ -90,12 +50,11 @@ const PrintLabelTable = ({ batchNo, calculatedData }) => {
   const renderLabelRow = (row, index, batchNo) => {
     const barcode = generateBarcode(batchNo, row.ID);
     
-    // 优先使用 W 和 H 通过 formatSize 生成尺寸，如果 W 或 H 不存在，则回退到 row.Size
-    let sizeDisplay = '';
-    if (row.W && row.H) {
-      sizeDisplay = formatSize(row.W, row.H);
-    } else if (row.Size) { // 作为 W 和 H 都不存在时的备选
-      sizeDisplay = row.Size;
+    // The row.Size should now be pre-formatted from WindowCalculator
+    // Fallback to W and H if row.Size is somehow missing, but ideally row.Size is primary.
+    let sizeDisplay = row.Size || ''; 
+    if (!sizeDisplay && row.W && row.H) { // Fallback if row.Size is not present
+      sizeDisplay = formatSize(row.W, row.H); 
     }
     
     // 调试输出

@@ -47,7 +47,9 @@ function App() {
   const [isExporting, setIsExporting] = useState(false);
   const [isExportingSashWelding, setIsExportingSashWelding] = useState(false);
   const [isExportingDecaCutting, setIsExportingDecaCutting] = useState(false);
-  const [customStartId, setCustomStartId] = useState(1); // New state for custom start ID
+  const [isExportingGlassOrder, setIsExportingGlassOrder] = useState(false);
+  const [isExportingLabel, setIsExportingLabel] = useState(false);
+  const [customStartId, setCustomStartId] = useState(1);
   const [calculatedData, setCalculatedData] = useState({
     info: [],
     frame: [],
@@ -164,14 +166,65 @@ function App() {
   // Effect to handle actual printing after state updates
   useEffect(() => {
     if (isPreparingPrint && activeTab === 'print' && printTimestamp) {
-      // Timeout to allow DOM to update after tab switch and timestamp set
       const timer = setTimeout(() => {
         window.print();
-        setIsPreparingPrint(false); // Reset after printing
-      }, 50); // A small delay, can be adjusted. 0 might also work.
-      return () => clearTimeout(timer); // Cleanup timer
+        setIsPreparingPrint(false);
+      }, 50);
+      return () => clearTimeout(timer);
     }
   }, [isPreparingPrint, activeTab, printTimestamp]);
+
+  // Ensure exportGlassOrderToExcel is defined within App scope
+  const exportGlassOrderToExcel = () => {
+    if (!calculatedData.order || calculatedData.order.length === 0) {
+      message.error('没有Glass Order数据可导出。');
+      return;
+    }
+    setIsExportingGlassOrder(true);
+    message.loading({ content: '正在生成Glass Order Excel文件...', key: 'exportingGlassOrder' });
+    const wb = XLSX.utils.book_new();
+    const currentBatchNo = batchNo || 'N/A';
+    const defaultCellStyle = { font: { name: 'Calibri', sz: 12 }, border: { top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } }, left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } } }, alignment: { horizontal: "center", vertical: "center" } };
+    const headerCellStyle = { ...defaultCellStyle, font: { ...defaultCellStyle.font, bold: true }, fill: { fgColor: { rgb: "FFFF00" } } };
+    const headers = ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'];
+    const dataForSheet = calculatedData.order.map(row => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.Line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row['Glass Width'], row['Glass Height'], row.Notes]);
+    const ws_data = [headers, ...dataForSheet];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) { for (let C = range.s.c; C <= range.e.c; ++C) { const cell_address = { c: C, r: R }; const cell_ref = XLSX.utils.encode_cell(cell_address); if (!ws[cell_ref]) continue; ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle; } }
+    ws['!cols'] = headers.map(() => ({ wch: 15 }));
+    XLSX.utils.book_append_sheet(wb, ws, 'Glass Order');
+    const glassOrderFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_\-]/g, '_')}_GlassOrder.xlsx`;
+    XLSX.writeFile(wb, glassOrderFileName);
+    message.success({ content: 'Glass Order Excel文件生成成功！', key: 'exportingGlassOrder', duration: 2 });
+    setIsExportingGlassOrder(false);
+  };
+
+  // Ensure exportLabelToExcel is defined within App scope
+  const exportLabelToExcel = () => {
+    if (!calculatedData.label || calculatedData.label.length === 0) {
+      message.error('没有Label数据可导出。');
+      return;
+    }
+    setIsExportingLabel(true);
+    message.loading({ content: '正在生成Label Excel文件...', key: 'exportingLabel' });
+    const wb = XLSX.utils.book_new();
+    const currentBatchNo = batchNo || 'N/A';
+    const defaultCellStyle = { font: { name: 'Calibri', sz: 12 }, border: { top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } }, left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } } }, alignment: { horizontal: "center", vertical: "center" } };
+    const headerCellStyle = { ...defaultCellStyle, font: { ...defaultCellStyle.font, bold: true }, fill: { fgColor: { rgb: "FFFF00" } } };
+    const headers = ['Batch NO.', 'Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.'];
+    const dataForSheet = calculatedData.label.map(row => [currentBatchNo, row.Customer, row.ID, row.Style, row.Size, row.Frame, row.Glass, row.Grid, row.PO || row.Note || '', currentBatchNo]);
+    const ws_data = [headers, ...dataForSheet];
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) { for (let C = range.s.c; C <= range.e.c; ++C) { const cell_address = { c: C, r: R }; const cell_ref = XLSX.utils.encode_cell(cell_address); if (!ws[cell_ref]) continue; ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle; } }
+    ws['!cols'] = headers.map(() => ({ wch: 15 }));
+    XLSX.utils.book_append_sheet(wb, ws, 'Labels');
+    const labelFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_\-]/g, '_')}_Labels.xlsx`;
+    XLSX.writeFile(wb, labelFileName);
+    message.success({ content: 'Label Excel文件生成成功！', key: 'exportingLabel', duration: 2 });
+    setIsExportingLabel(false);
+  };
 
   // Function to export data to Excel
   const exportToExcel = () => {
@@ -674,11 +727,41 @@ function App() {
         break;
       case 'order':
         console.log("正在渲染order表格，数据:", calculatedData.order);
-        tableToRender = <PrintGlassOrderTable batchNo={batchNo} calculatedData={calculatedData.order} />;
+        tableToRender = (
+          <div>
+            <div className="table-actions">
+              <Button 
+                type="primary"
+                icon={<FileExcelOutlined />} 
+                onClick={exportGlassOrderToExcel}
+                loading={isExportingGlassOrder}
+                disabled={!calculatedData.order || calculatedData.order.length === 0}
+              >
+                导出Glass Order Excel
+              </Button>
+            </div>
+            <PrintGlassOrderTable batchNo={batchNo} calculatedData={calculatedData.order} />
+          </div>
+        );
         break;
       case 'label':
         console.log("正在渲染label表格，数据:", calculatedData.label);
-        tableToRender = <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />;
+        tableToRender = (
+          <div>
+            <div className="table-actions">
+              <Button 
+                type="primary"
+                icon={<FileExcelOutlined />} 
+                onClick={exportLabelToExcel}
+                loading={isExportingLabel}
+                disabled={!calculatedData.label || calculatedData.label.length === 0}
+              >
+                导出Label Excel
+              </Button>
+            </div>
+            <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />
+          </div>
+        );
         break;
       case 'materialCutting':
         console.log("正在渲染DECA Cutting表格，数据:", calculatedData.materialCutting);
