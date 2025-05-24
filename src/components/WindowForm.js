@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Form, Input, Select, Button, Row, Col, InputNumber } from 'antd';
 import './PrintTable.css';
 
@@ -45,6 +45,18 @@ const WindowForm = ({ onAdd, onClear }) => {
   ];
 
   const handleSubmit = (values) => {
+    // If Grid is 'Standard' and GridW & GridH are provided, format Grid value
+    if (values.Grid === 'Standard') {
+      const gridW = parseInt(values.GridW, 10);
+      const gridH = parseInt(values.GridH, 10);
+      if (gridW > 0 && gridH > 0) {
+        values.Grid = `${gridW}W${gridH}H`;
+      }
+      // If GridW or GridH are not valid, values.Grid remains 'Standard' by default
+      // or you might want to set it to 'None' or handle it differently.
+      // For now, it will only change if both W and H are valid positive numbers.
+    }
+
     if (onAdd) {
       onAdd(values);
     }
@@ -69,11 +81,6 @@ const WindowForm = ({ onAdd, onClear }) => {
           </Col>
           <Col span={8}>
             <Form.Item label="P.O." name="PO">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={8}>
-            <Form.Item label="Batch NO." name="BatchNO">
               <Input />
             </Form.Item>
           </Col>
