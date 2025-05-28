@@ -267,9 +267,7 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 2 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
     
-    // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 2 * q, "clear", "Annealed", fixedglassw, fixedglassh);
+    
     
     console.log(`写入玻璃数据: cl/cl | ID: ${id}`);
     console.log(`  移动扇: clear ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${2*q}件)`);
@@ -282,11 +280,7 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe2", "", fixedglassw, fixedglassh, grid, argon);
     
-    // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "clear", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "lowe2", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "clear", "Annealed", fixedglassw, fixedglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "lowe2", "Annealed", fixedglassw, fixedglassh);
+   
     
     console.log(`写入玻璃数据: cl/le2 | ID: ${id}`);
     console.log(`  移动扇: clear+lowe2 ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
@@ -299,11 +293,6 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe3", "", fixedglassw, fixedglassh, grid, argon);
     
-    // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "clear", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "lowe3", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "clear", "Annealed", fixedglassw, fixedglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "lowe3", "Annealed", fixedglassw, fixedglassh);
     
     console.log(`写入玻璃数据: cl/le3 | ID: ${id}`);
     console.log(`  移动扇: clear+lowe3 ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
@@ -316,11 +305,7 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "", fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
     
-    // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "OBS", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "clear", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "Annealed", fixedglassw, fixedglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "clear", "Annealed", fixedglassw, fixedglassh);
+    
     
     console.log(`写入玻璃数据: OBS/cl | ID: ${id}`);
     console.log(`  移动扇: OBS+clear ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
@@ -333,11 +318,6 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "", fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe2", "", fixedglassw, fixedglassh, grid, argon);
     
-    // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "OBS", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "lowe2", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "Annealed", fixedglassw, fixedglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "lowe2", "Annealed", fixedglassw, fixedglassh);
     
     console.log(`写入玻璃数据: OBS/le2 | ID: ${id}`);
     console.log(`  移动扇: OBS+lowe2 ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);
@@ -350,11 +330,7 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "", fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe3", "", fixedglassw, fixedglassh, grid, argon);
     
-    // 直接添加Order数据
-    calculator.writeOrder(customer, style, widthStr, heightStr, "", id, id + "--01", 1 * q, "OBS", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--01", 1 * q, "lowe3", "Annealed", sashglassw, sashglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "OBS", "Annealed", fixedglassw, fixedglassh);
-    calculator.writeOrder("", "", "", "", "", id, id + "--02", 1 * q, "lowe3", "Annealed", fixedglassw, fixedglassh);
+   
     
     console.log(`写入玻璃数据: OBS/le3 | ID: ${id}`);
     console.log(`  移动扇: OBS+lowe3 ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${q}件)`);

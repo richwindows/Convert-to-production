@@ -30,7 +30,7 @@ const styleMap = {
   
   
   'xox': 'XOX',
-  'xox-1/3': 'XOX_1/3',
+  'xox-1/3': 'XOX_1_3',
   'sh': 'SH',
   'picture': 'Picture',
   'pw': 'Picture',
@@ -63,6 +63,10 @@ const styleMap = {
   'screen-window': 'SCREEN',
   'screen window': 'SCREEN',
   'p-pp': 'P_PP',
+  '3mm': 'Single_Pane',
+  '4.7mm': 'Single_Pane',
+  '5.7mm': 'Single_Pane',
+  '3.9mm': 'Single_Pane',
 };
 
 /**

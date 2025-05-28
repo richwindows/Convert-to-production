@@ -4,6 +4,7 @@
 
 import { processXO_OX } from './XO_OX';
 import { processXOX } from './XOX';
+import { processXOX_1_3 } from './XOX_1_3';
 import { processSH } from './SH';
 import { processPicture } from './Picture';
 import { processSH_P } from './SH_P';
@@ -19,10 +20,12 @@ import { processPP_XOX } from './PP_XOX';
 import { processP_PP } from './P_PP';
 import { processIGU } from './IGU';
 import { processSCREEN } from './SCREEN';
+import { processSingle_Pane } from './Single_Pane';
 
 export {
   processXO_OX,
   processXOX,
+  processXOX_1_3,
   processSH,
   processPicture,
   processSH_P,
@@ -38,4 +41,5 @@ export {
   processP_PP,
   processIGU,
   processSCREEN,
+  processSingle_Pane,
 }; 

@@ -115,30 +115,30 @@ const processIGU = (windowData, calculator) => {
   } else if (standardGlassType === 'OBS/le3') { // VBA Case 5 (OBS/Lowe3)
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe3', '', glassw, glassh, grid, argon); // VBA writes lowe3 first
     calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', '', glassw, glassh, grid, argon);
-  } else if (standardGlassType === 'cl/cl Tmp') { // VBA Case 6 (cl/cl-tmp)
+  } else if (standardGlassType === 'cl/cl Tmp' || standardGlassType === 'cl/cl TP') { // VBA Case 6 (cl/cl-tmp)
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 2 * q, 'clear', 'T', glassw, glassh, grid, argon);
     calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 2 * q, 'Clear', 'Tempered', glassw, glassh);
-  } else if (standardGlassType === 'cl/le2 Tmp') { // VBA Case 7 (cl/lowe2-tmp)
+  } else if (standardGlassType === 'cl/le2 Tmp' || standardGlassType === 'cl/le2 TP') { // VBA Case 7 (cl/lowe2-tmp)
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'clear', 'T', glassw, glassh, grid, argon);
     calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'lowe2', 'T', glassw, glassh, grid, argon);
     calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh);
     calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', glassw, glassh);
-  } else if (standardGlassType === 'cl/le3 Tmp') { // VBA Case 8 (cl/lowe3-tmp)
+  } else if (standardGlassType === 'cl/le3 Tmp' || standardGlassType === 'cl/le3 TP') { // VBA Case 8 (cl/lowe3-tmp)
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'clear', 'T', glassw, glassh, grid, argon);
     calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'lowe3', 'T', glassw, glassh, grid, argon);
     calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh);
     calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'Lowe366', 'Tempered', glassw, glassh);
-  } else if (standardGlassType === 'OBS/cl Tmp') { // VBA Case 9 (OBS/Clear Tmp)
+  } else if (standardGlassType === 'OBS/cl Tmp' || standardGlassType === 'OBS/cl TP') { // VBA Case 9 (OBS/Clear Tmp)
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'clear', 'T', glassw, glassh, grid, argon); // VBA clear first
     calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', 'T', glassw, glassh, grid, argon);
     calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh);
     calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'P516', 'Tempered', glassw, glassh);
-  } else if (standardGlassType === 'OBS/le2 Tmp') { // VBA Case 10 (OBS/Lowe2 Tmp)
+  } else if (standardGlassType === 'OBS/le2 Tmp' || standardGlassType === 'OBS/le2 TP') { // VBA Case 10 (OBS/Lowe2 Tmp)
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe2', 'T', glassw, glassh, grid, argon); // VBA lowe2 first
     calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', 'T', glassw, glassh, grid, argon);
     calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', glassw, glassh);
     calculator.writeOrder('', '', '', '', '', id, id + '--01', 1 * q, 'P516', 'Tempered', glassw, glassh);
-  } else if (standardGlassType === 'OBS/le3 Tmp') { // VBA Case 11 (OBS/Lowe3 Tmp)
+  } else if (standardGlassType === 'OBS/le3 Tmp' || standardGlassType === 'OBS/le3 TP') { // VBA Case 11 (OBS/Lowe3 Tmp)
     // VBA uses Lowe366 for the material name of the first glass component in orderwrite.
     calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe3', 'T', glassw, glassh, grid, argon); // VBA lowe3 first, map to Lowe366
     calculator.writeGlass('', '', '', '', '', id, id + '--01', 1 * q, 'OBS', 'T', glassw, glassh, grid, argon);

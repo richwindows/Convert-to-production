@@ -14,7 +14,8 @@ const WindowForm = ({ onAdd, onClear }) => {
     "H-PP", "V-PP", "XO-PP", "OX-PP", "PP-XO", "PP-OX", 
     "XOX-PPP", "PPP-XOX", "XOX-PP", "PP-XOX", "SH-SH", 
     "SH-O-SH", "3/4 IGU", "1 IGU", "5/8 IGU", "Screen", 
-    "1/2 IGU", "7/8 IGU", "P-PP"
+    "1/2 IGU", "7/8 IGU", "P-PP", "3mm","3.9mm","4.7mm",
+    "5.7mm",
   ];
 
   const frameOptions = [
@@ -29,7 +30,9 @@ const WindowForm = ({ onAdd, onClear }) => {
     "cl/cl", "cl/le2", "cl/le3", 
     "OBS/cl", "OBS/le2", "OBS/le3", 
     "cl/cl TP", "cl/le2 TP", "cl/le3 TP", 
-    "OBS/cl TP", "OBS/le2 TP", "OBS/le3 TP"
+    "OBS/cl TP", "OBS/le2 TP", "OBS/le3 TP",
+    "cl","le2","le3","OBS","cl TP","le2 TP","le3 TP",
+    "OBS TP",
   ];
 
   const argonOptions = [
@@ -60,7 +63,6 @@ const WindowForm = ({ onAdd, onClear }) => {
     if (onAdd) {
       onAdd(values);
     }
-    form.resetFields();
   };
 
   const handleClear = () => {

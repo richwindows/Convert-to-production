@@ -187,7 +187,7 @@ function App() {
     const defaultCellStyle = { font: { name: 'Calibri', sz: 12 }, border: { top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } }, left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } } }, alignment: { horizontal: "center", vertical: "center" } };
     const headerCellStyle = { ...defaultCellStyle, font: { ...defaultCellStyle.font, bold: true }, fill: { fgColor: { rgb: "FFFF00" } } };
     const headers = ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'];
-    const dataForSheet = calculatedData.order.map(row => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.Line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row['Glass Width'], row['Glass Height'], row.Notes]);
+    const dataForSheet = calculatedData.order.map(row => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row.Width, row.Height, row.Notes]);
     const ws_data = [headers, ...dataForSheet];
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const range = XLSX.utils.decode_range(ws['!ref']);
@@ -312,7 +312,7 @@ function App() {
         name: 'Glass Order',
         dataKey: 'order',
         headers: ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.Line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row['Glass Width'], row['Glass Height'], row.Notes]
+        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row.Width, row.Height, row.Notes]
       },
       { // Label data comes from calculatedData.info
         name: 'Label',
@@ -635,6 +635,17 @@ function App() {
     setIsProcessing(false);
   };
 
+  // Add a new function to handle cell changes in print tables
+  const handlePrintTableCellChange = (dataKey, rowIndex, columnKey, value) => {
+    setCalculatedData(prevData => {
+      const updatedTableData = [...prevData[dataKey]];
+      if (updatedTableData[rowIndex]) {
+        updatedTableData[rowIndex] = { ...updatedTableData[rowIndex], [columnKey]: value };
+      }
+      return { ...prevData, [dataKey]: updatedTableData };
+    });
+  };
+
   // Add a new function to handle adding a window manually
   const handleAddWindow = (windowDataFromForm) => {
     const newId = excelData.length > 0 
@@ -666,7 +677,6 @@ function App() {
     });
 
     setIsDataLoaded(true); // excelData has content
-    setWindowFormModal(false); // Close the modal instead of setShowForm
     message.info('New window added to the preview table. Please select rows and process to update detailed data.');
   };
 
@@ -740,7 +750,11 @@ function App() {
                 导出Glass Order Excel
               </Button>
             </div>
-            <PrintGlassOrderTable batchNo={batchNo} calculatedData={calculatedData.order} />
+            <PrintGlassOrderTable 
+              batchNo={batchNo} 
+              calculatedData={calculatedData.order} 
+              onCellChange={handlePrintTableCellChange} // Pass the handler
+            />
           </div>
         );
         break;
@@ -859,93 +873,109 @@ function App() {
         </div>
       </Header>
       <Content className="content">
-        <Tabs activeKey={activeTab} onChange={setActiveTab} type="card">
-          <TabPane tab={<span><span role="img" aria-label="database">📊</span> 数据总览</span>} key="data">
-            <Card 
-              title={<span style={{ fontSize: '16px', fontWeight: '600' }}>导入数据预览 (Excel Data Preview)</span>}
-              bordered={false}
-              className="data-preview-card"
-            >
-              <Space direction="vertical" style={{ width: '100%' }}>
-                <div className="upload-section">
-                  <Upload beforeUpload={processExcelFile} showUploadList={false}>
-                    <Button icon={<UploadOutlined />} size="large">上传 Excel 文件</Button>
-                  </Upload>
-                  <Button 
-                    onClick={generateDetailedDataAndNotify} 
-                    disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
-                    loading={isProcessing}
-                    type="primary" 
-                    size="large"
-                  >
-                    {isProcessing ? '处理中...' : '处理选中行'}
-                  </Button>
-                  {isDataLoaded && calculatedData.info.length > 0 && (
-              <Button 
-                      onClick={handlePrintView}
-                type="primary" 
-                      ghost
-                      size="large"
-                      icon={<PrinterOutlined />}
-              >
-                      打印视图
-              </Button>
-          )}
-        </div>
-        {isDataLoaded && (
-                <Table 
-                  dataSource={excelData} 
-                  columns={columns} 
-                    rowKey="ID" 
-                    rowSelection={rowSelectionConfig}
-                    loading={!isDataLoaded && excelData.length === 0}
-                  bordered
-                    className="data-table"
-                    pagination={{ 
-                      defaultPageSize: 10, 
-                      showSizeChanger: true, 
-                      pageSizeOptions: ['10', '20', '50', '100'],
-                      showTotal: (total) => `共 ${total} 条记录`
-                    }}
-                  />
-                )}
-              </Space>
-              </Card>
-            </TabPane>
-          <TabPane tab={<span><span role="img" aria-label="printer">🖨️</span> 打印视图</span>} key="print">
-            <Card className="print-selector" bordered={false}>
-              <Tabs 
-                activeKey={printTab} 
-                onChange={setPrintTab} 
-                type="line"
-                animated={{ inkBar: true, tabPane: false }}
-                tabBarStyle={{
-                  marginBottom: '16px', 
-                  backgroundColor: 'transparent',
-                  padding: '8px 16px 0'
-                }}
-              >
-                  <TabPane tab="General Information" key="general" />
-                  <TabPane tab="Frame" key="frame" />
-                  <TabPane tab="Sash" key="sash" />
-                <TabPane tab="Sash Welding" key="sashWelding" />
-                  <TabPane tab="Glass" key="glass" />
-                  <TabPane tab="Screen" key="screen" />
-                  <TabPane tab="Parts" key="parts" />
-                  <TabPane tab="Grid" key="grid" />
-                  <TabPane tab="Glass Order" key="order" />
-                  <TabPane tab="Label" key="label" />
-                <TabPane tab="DECA Cutting" key="materialCutting" />
-                </Tabs>
-              </Card>
-            <div className="print-container">
-                {renderPrintTable()}
-              </div>
-            </TabPane>
-          </Tabs>
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          type="card"
+          items={[
+            {
+              label: <span><span role="img" aria-label="database">📊</span> 数据总览</span>,
+              key: 'data',
+              children: (
+                <Card 
+                  title={<span style={{ fontSize: '16px', fontWeight: '600' }}>导入数据预览 (Excel Data Preview)</span>}
+                  bordered={false}
+                  className="data-preview-card"
+                >
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <div className="upload-section">
+                      <Upload beforeUpload={processExcelFile} showUploadList={false}>
+                        <Button icon={<UploadOutlined />} size="large">上传 Excel 文件</Button>
+                      </Upload>
+                      <Button 
+                        onClick={generateDetailedDataAndNotify} 
+                        disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
+                        loading={isProcessing}
+                        type="primary" 
+                        size="large"
+                      >
+                        {isProcessing ? '处理中...' : '处理选中行'}
+                      </Button>
+                      {isDataLoaded && calculatedData.info.length > 0 && (
+                        <Button 
+                          onClick={handlePrintView}
+                          type="primary" 
+                          ghost
+                          size="large"
+                          icon={<PrinterOutlined />}
+                        >
+                          打印视图
+                        </Button>
+                      )}
+                    </div>
+                    {isDataLoaded && (
+                      <Table 
+                        dataSource={excelData} 
+                        columns={columns} 
+                        rowKey="ID" 
+                        rowSelection={rowSelectionConfig}
+                        loading={!isDataLoaded && excelData.length === 0}
+                        bordered
+                        className="data-table"
+                        pagination={{ 
+                          defaultPageSize: 10, 
+                          showSizeChanger: true, 
+                          pageSizeOptions: ['10', '20', '50', '100'],
+                          showTotal: (total) => `共 ${total} 条记录`
+                        }}
+                      />
+                    )}
+                  </Space>
+                </Card>
+              ),
+            },
+            {
+              label: <span><span role="img" aria-label="printer">🖨️</span> 打印视图</span>,
+              key: 'print',
+              children: (
+                <>
+                  <Card className="print-selector" bordered={false}>
+                    <Tabs 
+                      activeKey={printTab} 
+                      onChange={setPrintTab} 
+                      type="line"
+                      animated={{ inkBar: true, tabPane: false }}
+                      tabBarStyle={{
+                        marginBottom: '16px', 
+                        backgroundColor: 'transparent',
+                        padding: '8px 16px 0'
+                      }}
+                      items={[
+                        { label: "General Information", key: "general" },
+                        { label: "Frame", key: "frame" },
+                        { label: "Sash", key: "sash" },
+                        { label: "Sash Welding", key: "sashWelding" },
+                        { label: "Glass", key: "glass" },
+                        { label: "Screen", key: "screen" },
+                        { label: "Parts", key: "parts" },
+                        { label: "Grid", key: "grid" },
+                        { label: "Glass Order", key: "order" },
+                        { label: "Label", key: "label" },
+                        { label: "DECA Cutting", key: "materialCutting" },
+                      ]}
+                    />
+                  </Card>
+                  <div className="print-container">
+                    {renderPrintTable()}
+                  </div>
+                </>
+              ),
+            },
+          ]}
+        />
         <Modal 
           title={<span style={{ fontSize: '16px', fontWeight: '600' }}>手动添加窗户数据</span>}
-          visible={windowFormModal}
+          open={windowFormModal}
           onCancel={() => setWindowFormModal(false)}
           footer={null}
           width={800}

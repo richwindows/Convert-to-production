@@ -6,9 +6,12 @@ import * as XLSX from 'xlsx';
  * @param {string} batchNo - 批次号
  */
 export function exportSimpleExcel(glassData, batchNo = '') {
+ 
   // 1. 过滤出3mm非钢化玻璃
   const filtered = glassData.filter(item => 
-    item.thickness === '3' && item.Tmprd !== 'T'
+    (
+      console.log(item.thickness,item.Tmprd,item.defined_thickness_str),
+      item.thickness === '3' && item.Tmprd !== 'T') || (item.thickness !== '3' || item.defined_thickness_str !== '3')
   );
   
   if (filtered.length === 0) {

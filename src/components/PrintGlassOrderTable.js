@@ -1,7 +1,8 @@
 import React from 'react';
+import { Input } from 'antd';
 import './PrintTable.css';
 
-const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
+const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
   // 添加条件样式逻辑，根据各种条件为尺寸格子添加颜色
   const getCellStyle = (row, field) => {
     if (field === 'Width' || field === 'Height') {
@@ -30,6 +31,12 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
     }
     
     return {};
+  };
+
+  const handleInputChange = (e, rowIndex, columnKey) => {
+    if (onCellChange) {
+      onCellChange('order', rowIndex, columnKey, e.target.value);
+    }
   };
 
   return (
@@ -64,20 +71,113 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
             calculatedData.map((row, index) => (
               <tr key={index} style={getTextStyle(row)}>
                 <td>{batchNo}</td>
-                <td>{row.Customer || ''}</td>
-                <td>{row.Style || ''}</td>
-                <td>{row.W || ''}</td>
-                <td>{row.H || ''}</td>
-                <td>{row.FH || ''}</td>
-                <td>{row.ID || ''}</td>
-                <td>{row.line || ''}</td>
-                <td>{row.Quantity || ''}</td>
-                <td>{row['Glass Type'] || ''}</td>
-                <td>{row['Annealed/Tempered'] || ''}</td>
-                <td>{row.Thickness || ''}</td>
-                <td style={getCellStyle(row, 'Width')}>{row.Width || ''}</td>
-                <td style={getCellStyle(row, 'Height')}>{row.Height || ''}</td>
-                <td>{row.Notes || ''}</td>
+                <td>
+                  <Input 
+                    value={row.Customer || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Customer')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.Style || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Style')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.W || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'W')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.H || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'H')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.FH || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'FH')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>{row.ID || ''}</td>{/* ID typically not editable */}
+                <td>
+                  <Input 
+                    value={row.line || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'line')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.Quantity || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Quantity')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row['Glass Type'] || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Glass Type')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row['Annealed/Tempered'] || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Annealed/Tempered')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.Thickness || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Thickness')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
+                <td style={getCellStyle(row, 'Width')}>
+                  <Input 
+                    value={row.Width || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Width')} 
+                    bordered={false}
+                    size="small"
+                    style={{backgroundColor: 'transparent'}}
+                  />
+                </td>
+                <td style={getCellStyle(row, 'Height')}>
+                  <Input 
+                    value={row.Height || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Height')} 
+                    bordered={false}
+                    size="small"
+                    style={{backgroundColor: 'transparent'}}
+                  />
+                </td>
+                <td>
+                  <Input 
+                    value={row.Notes || ''} 
+                    onChange={(e) => handleInputChange(e, index, 'Notes')} 
+                    bordered={false}
+                    size="small"
+                  />
+                </td>
               </tr>
             ))
           ) : (
@@ -101,44 +201,16 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData }) => {
           )}
           {/* Add more empty rows if data is less than minimum rows */}
           {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
-            [...Array(10 - calculatedData.length)].map((_, index) => (
-              <tr key={`empty-${index}`}>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+            [...Array(10 - calculatedData.length)].map((_, i) => (
+              <tr key={`empty-${i}`}>
+                {[...Array(15)].map((_, j) => <td key={`empty-${i}-${j}`}></td>)}
               </tr>
             ))
           }
           {(!calculatedData || calculatedData.length === 0) && 
-            [...Array(9)].map((_, index) => (
-              <tr key={index}>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+            [...Array(9)].map((_, i) => (
+              <tr key={i}>
+                 {[...Array(15)].map((_, j) => <td key={`empty-${i}-${j}`}></td>)}
               </tr>
             ))
           }

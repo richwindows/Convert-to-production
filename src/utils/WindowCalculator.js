@@ -432,15 +432,20 @@ class WindowCalculator {
   }
 
   // Write glass data
-  writeGlass(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, grid, argon) {
+  writeGlass(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, grid, argon, overrideThickness) {
     const { type: finalGlassString } = this.standardizeGlassType(rawGlassType);
     
-    const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144; // Assuming width and height are numeric here
-    let thickness = '';
-    
-    if (glassArea <= 21) thickness = '3';
-    else if (glassArea > 21 && glassArea <= 26) thickness = '3.9';
-    else if (glassArea > 26 && glassArea <= 46) thickness = '4.7';
+    const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144;
+    let calculatedThickness = '';
+
+    if (overrideThickness === undefined || overrideThickness === null || overrideThickness === '') {
+      // Calculate thickness based on area only if not overridden
+      if (glassArea <= 21) calculatedThickness = '3';
+      else if (glassArea > 21 && glassArea <= 26) calculatedThickness = '3.9';
+      else if (glassArea > 26 && glassArea <= 46) calculatedThickness = '4.7';
+    } else {
+      calculatedThickness = String(overrideThickness);
+    }
     
     const glassRow = {
       Customer: customer,
@@ -451,11 +456,11 @@ class WindowCalculator {
       ID: id, 
       line: line,
       quantity: quantity,
-      glassType: finalGlassString, // Use standardized string e.g. "cl/le2 TP"
-      thickness: thickness,
+      glassType: finalGlassString,
+      thickness: calculatedThickness, // Use determined thickness
       width: roundInt(width),
       height: roundInt(height),
-      grid: grid, // Grid determination logic is separate
+      grid: grid,
       argon: argon
     };
     
@@ -467,26 +472,29 @@ class WindowCalculator {
     }
     
     this.data.glass.push(glassRow);
-    this.log(`写入玻璃数据 - ID: ${id}, 行: ${line}, 类型: ${finalGlassString}, 尺寸: ${roundInt(width)}x${roundInt(height)}, 厚度: ${thickness}${incomingAorT === "T" ? ", 钢化标记: T" : ""}`);
+    this.log(`写入玻璃数据 - ID: ${id}, 行: ${line}, 类型: ${finalGlassString}, 尺寸: ${roundInt(width)}x${roundInt(height)}, 厚度: ${calculatedThickness}${incomingAorT === "T" ? ", 钢化标记: T" : ""}`);
     
     // 检查面积来决定是否需要添加到订单
     const needsOrder = (glassArea > 21 && glassArea <= 26) || (glassArea > 26 && glassArea <= 46);
     if (needsOrder) {
       // 传递钢化状态到writeOrder方法
-      this.writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height); 
+      this.writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, calculatedThickness); 
     }
   }
 
   // Write glass order data
-  writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height) {
+  writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, overrideThickness) {
     const { type: finalGlassString } = this.standardizeGlassType(rawGlassType);
     
-    const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144;
-    let thickness = '';
-        
-    if (glassArea <= 21) thickness = '3';
-    else if (glassArea > 21 && glassArea <= 26) thickness = '3.9';
-    else if (glassArea > 26 && glassArea <= 46) thickness = '4.7';
+    let calculatedThickness = '';
+    if (overrideThickness === undefined || overrideThickness === null || overrideThickness === '') {
+      const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144;
+      if (glassArea <= 21) calculatedThickness = '3';
+      else if (glassArea > 21 && glassArea <= 26) calculatedThickness = '3.9';
+      else if (glassArea > 26 && glassArea <= 46) calculatedThickness = '4.7';
+    } else {
+      calculatedThickness = String(overrideThickness);
+    }
 
     const orderRow = {
       Customer: customer,
@@ -497,10 +505,10 @@ class WindowCalculator {
       ID: id, 
       line: line, // Corrected from 'Line' to 'line' if data uses 'line' consistently
       Quantity: quantity,
-      'Glass Type': finalGlassString, // Use standardized string e.g. "cl/le3 TP"
-      'Annealed/Tempered': incomingAorT === "Tempered" ? "Tempered" : "Annealed", // Use incomingAorT to determine status
-      Thickness: thickness, 
-      Width: round(width / 25.4), // Assuming these are final glass dimensions in mm, converting to inches for order
+      'Glass Type': finalGlassString,
+      'Annealed/Tempered': incomingAorT === "Tempered" || incomingAorT === "T" ? "Tempered" : "Annealed",
+      Thickness: calculatedThickness, // Use determined thickness
+      Width: round(width / 25.4),
       Height: round(height / 25.4),
       Notes: customer // Or other relevant notes
     };
