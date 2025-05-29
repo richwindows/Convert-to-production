@@ -22,6 +22,7 @@ import { processIGU } from './IGU';
 import { processSCREEN } from './SCREEN';
 import { processSingle_Pane } from './Single_Pane';
 import { processXO_P_OX_P } from './XO_P_OX_P';
+import { processP_XO_P_OX } from './P_XO_P_OX';
 
 export {
   processXO_OX,
@@ -44,4 +45,5 @@ export {
   processSCREEN,
   processSingle_Pane,
   processXO_P_OX_P,
+  processP_XO_P_OX,
 }; 

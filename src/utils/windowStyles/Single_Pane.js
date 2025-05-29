@@ -35,6 +35,9 @@ const processSingle_Pane = (windowData, calculator) => {
     // if thickness is critical and cannot have a default.
   }
 
+  // Extract numeric part from thickness string
+  const numericThicknessStr = defined_thickness_str.replace(/mm/i, '').trim();
+
   let glassw = w;
   let glassh = h;
 
@@ -44,40 +47,41 @@ const processSingle_Pane = (windowData, calculator) => {
   const heightStr = String(height);
   const standardGlassType = glassMap[glassType] || glassType;
   console.log(`玻璃类型映射: ${glassType} → ${standardGlassType} for IGU`);
+  
 
 
   if (standardGlassType === 'cl') { // VBA Case 0
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1* q, 'clear', '', glassw, glassh, grid, argon,defined_thickness_str);
-    if(defined_thickness_str !== '3') {
-      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1* q, 'clear', '', glassw, glassh, grid, argon,numericThicknessStr);
+    if(numericThicknessStr !== '3') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh,numericThicknessStr);
     }
   } else if (standardGlassType === 'le2') { // VBA Case 1 (cl/lowe2)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe2', '', glassw, glassh, grid, argon,defined_thickness_str);
-    if(defined_thickness_str !== '3') {
-      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe2', '', glassw, glassh, grid, argon,numericThicknessStr);
+    if(numericThicknessStr !== '3') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', glassw, glassh,numericThicknessStr);
     }
   } else if (standardGlassType === 'le3') { // VBA Case 2 (cl/lowe3)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe3', '', glassw, glassh, grid, argon,defined_thickness_str);
-    if(defined_thickness_str !== '3') {
-      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe366', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe3', '', glassw, glassh, grid, argon,numericThicknessStr);
+    if(numericThicknessStr !== '3') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe366', 'Tempered', glassw, glassh,numericThicknessStr);
     }
   } else if (standardGlassType === 'OBS') { // VBA Case 3 (OBS/Clear)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', '', glassw, glassh, grid, argon,defined_thickness_str); // VBA writes clear first
-    if(defined_thickness_str !== '3') {
-      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', '', glassw, glassh, grid, argon,numericThicknessStr); // VBA writes clear first
+    if(numericThicknessStr !== '3') {
+      calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', 'Tempered', glassw, glassh,numericThicknessStr);
     }
   } else if (standardGlassType === 'cl Tmp' || standardGlassType === 'cl TP') { // VBA Case 4 (OBS/Lowe2)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'clear', 'T', glassw, glassh, grid, argon,defined_thickness_str); // VBA writes lowe2 first
-    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'clear', 'T', glassw, glassh, grid, argon,numericThicknessStr); // VBA writes lowe2 first
+    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Clear', 'Tempered', glassw, glassh,numericThicknessStr);
   } else if (standardGlassType === 'le2 Tmp' || standardGlassType === 'le2 TP') { // VBA Case 5 (OBS/Lowe3)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe2', 'T', glassw, glassh, grid, argon,defined_thickness_str); // VBA writes lowe3 first
-    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe2', 'T', glassw, glassh, grid, argon,numericThicknessStr); // VBA writes lowe3 first
+    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe270', 'Tempered', glassw, glassh,numericThicknessStr);
   } else if (standardGlassType === 'le3 Tmp' || standardGlassType === 'le3 TP') { // VBA Case 6 (cl/cl-tmp)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe3', 'T', glassw, glassh, grid, argon,defined_thickness_str);
-    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe366','Tmpered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'lowe3', 'T', glassw, glassh, grid, argon,numericThicknessStr);
+    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'Lowe366','Tmpered', glassw, glassh,numericThicknessStr);
   } else if (standardGlassType === 'OBS Tmp' || standardGlassType === 'OBS TP') { // VBA Case 7 (cl/lowe2-tmp)
-    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', 'T', glassw, glassh, grid, argon,defined_thickness_str);
-    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', 'Tempered', glassw, glassh,defined_thickness_str);
+    calculator.writeGlass(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', 'T', glassw, glassh, grid, argon,numericThicknessStr);
+    calculator.writeOrder(customer, style, widthStr, heightStr, '', id, id + '--01', 1 * q, 'OBS', 'Tempered', glassw, glassh,numericThicknessStr);
   } else {
     console.warn(`Unhandled glass type: ${standardGlassType} in IGU. Glass calculations may be incomplete.`);
   }

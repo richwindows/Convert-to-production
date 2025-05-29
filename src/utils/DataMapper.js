@@ -290,6 +290,15 @@ const glassMap = {
   'OBS/CL, X-TP': 'OBS/cl TP',
   'OBS/CL X-TP': 'OBS/cl TP',
   'OBS/CL,X-TP': 'OBS/cl TP',
+
+
+ 'CL':'cl',
+ 'LE2':'le2',
+ 'LE3':'le3',
+ 'OBS':'OBS',
+ 'CL TP':'cl TP',
+ 'LE2 TP':'le2 TP',
+ 'LE3 TP':'le3 TP',
 };
 
 // Argon mappings

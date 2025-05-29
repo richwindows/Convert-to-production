@@ -74,41 +74,114 @@ function App() {
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(worksheet);
+      const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
       
-      const processedData = json.map((item, index) => {
-        if (!item.ID || item.ID === '') {
-          item.ID = (index + 1).toString();
+      const successfullyProcessedData = [];
+      const errorItems = [];
+      const extractableColors = ['white', 'almond']; // lowercase for matching
+
+      json.forEach((item, index) => {
+        const excelRowNumber = index + 2;
+        const idForErrorMessage = item.ID || `Excel Row ${excelRowNumber}`;
+
+        // 1. Process Frame and Color
+        let rawFrameFromExcel = item.Frame || '';
+        let rawColorFromExcel = item.Color || '';
+        let processedFrame = rawFrameFromExcel;
+        let processedColor = rawColorFromExcel;
+
+        if (typeof rawFrameFromExcel === 'string' && rawFrameFromExcel.includes('-')) {
+            const lastHyphenIndex = rawFrameFromExcel.lastIndexOf('-');
+            const partBeforeHyphen = rawFrameFromExcel.substring(0, lastHyphenIndex).trim();
+            const partAfterHyphen = rawFrameFromExcel.substring(lastHyphenIndex + 1).trim();
+
+            if (partBeforeHyphen && partAfterHyphen) { // Both parts must exist
+                const potentialColorKey = partAfterHyphen.toLowerCase();
+                if (extractableColors.includes(potentialColorKey)) {
+                    processedFrame = partBeforeHyphen;
+                    // Normalize capitalization for the extracted color
+                    if (potentialColorKey === 'white') processedColor = 'White';
+                    else if (potentialColorKey === 'almond') processedColor = 'Almond';
+                }
+            }
         }
-        // Ensure basic fields exist, even if empty, consistent with form fields
-        return {
-          Customer: item.Customer || '',
-          ID: item.ID.toString(),
-          Style: item.Style || '',
-          W: item.W || '',
-          H: item.H || '',
-          FH: item.FH || '',
-          Frame: item.Frame || '', // Original frame type
-          Glass: item.Glass || '',
-          Argon: item.Argon || '',
-          Grid: item.Grid || '',
-          Color: item.Color || '',
-          Note: item.Note || '',
-          Quantity: item.Quantity || 1, // Default quantity
-          // BatchNO will be applied during processing if needed
-        };
+
+        let mappedFrame = processedFrame;
+        if (frameMapping.hasOwnProperty(processedFrame)) {
+            mappedFrame = frameMapping[processedFrame];
+        }
+
+        // 2. Validate FH (using item.FH directly from Excel)
+        let fhValue = item.FH;
+        let isValidFH = true;
+        let specificFHValidationError = '';
+
+        if (fhValue == null || (typeof fhValue === 'string' && fhValue.trim() === '')) {
+          fhValue = '';
+        } else if (typeof fhValue === 'number') {
+          if (!isFinite(fhValue)) {
+             isValidFH = false;
+             specificFHValidationError = `Item [${idForErrorMessage}]: FH value is a non-finite number (${fhValue}).`;
+          }
+        } else if (typeof fhValue === 'string') {
+          const fhStrTrimmed = fhValue.trim();
+          if (/[a-zA-Z]/.test(fhStrTrimmed)) {
+            isValidFH = false;
+            specificFHValidationError = `Item [${idForErrorMessage}]: FH value "${fhStrTrimmed}" contains letters and is invalid. Only numbers are allowed.`;
+          } else {
+            const parsedNum = parseFloat(fhStrTrimmed);
+            if (isFinite(parsedNum)) {
+              fhValue = parsedNum;
+            } else {
+              isValidFH = false;
+              specificFHValidationError = `Item [${idForErrorMessage}]: FH value "${fhStrTrimmed}" is not a valid number.`;
+            }
+          }
+        } else {
+          isValidFH = false;
+          specificFHValidationError = `Item [${idForErrorMessage}]: FH value has an unexpected type (${typeof fhValue}).`;
+        }
+
+        // 3. Push data or error
+        if (!isValidFH) {
+          message.error(specificFHValidationError + " This item will not be processed.", 6);
+          errorItems.push({ id: idForErrorMessage, value: item.FH, error: specificFHValidationError });
+        } else {
+          successfullyProcessedData.push({
+            Customer: item.Customer || '',
+            ID: (item.ID || excelRowNumber).toString(),
+            Style: item.Style || '',
+            W: item.W || '',
+            H: item.H || '',
+            FH: fhValue, // Validated FH
+            Frame: mappedFrame, // Processed and mapped Frame
+            Glass: item.Glass || '',
+            Argon: item.Argon || '',
+            Grid: item.Grid || '',
+            Color: processedColor, // Potentially extracted and overridden Color
+            Note: item.Note || '',
+            Quantity: item.Quantity || 1,
+          });
+        }
       });
 
-      setExcelData(processedData);
-      setSelectedRowKeys([]); // Clear selections from previous data
-      
-      // Reset all calculated data, as it's derived from selection
+      setExcelData(successfullyProcessedData);
+      setSelectedRowKeys([]);
       setCalculatedData({ 
         info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
       });
-      
-      setIsDataLoaded(true);
-      message.success(`${file.name} imported successfully. Please select rows and click 'Process Selected Rows'.`);
+      setIsDataLoaded(successfullyProcessedData.length > 0);
+
+      if (errorItems.length > 0) {
+        message.warning(`Excel import complete. ${successfullyProcessedData.length} items loaded. ${errorItems.length} items were skipped due to invalid FH values. Check console for details.`, 7);
+        console.warn("The following items were skipped due to invalid FH values:", errorItems);
+      } else if (json.length === 0 && file.size > 0) {
+        message.info("The Excel file appears to be empty or has no data rows after the header.");
+      } else if (successfullyProcessedData.length === 0 && json.length > 0) {
+        message.error("No items could be processed from the Excel file. Check FH values or file content.", 7);
+      } else if (successfullyProcessedData.length > 0) {
+        message.success(`${file.name} imported successfully. ${successfullyProcessedData.length} items loaded.`);
+      }
     };
     reader.readAsArrayBuffer(file);
     return false; // Prevent auto upload
@@ -620,6 +693,46 @@ function App() {
 
   // Add a new function to handle cell changes in print tables
   const handlePrintTableCellChange = (dataKey, rowIndex, columnKey, value) => {
+    if (columnKey === 'FH') {
+      let validatedFH = value;
+      let rejectChange = false;
+      let errorMessage = '';
+
+      if (value == null || (typeof value === 'string' && value.trim() === '')) {
+        validatedFH = ''; // Normalize
+      } else if (typeof value === 'number') {
+        if (!isFinite(value)){
+            rejectChange = true;
+            errorMessage = `Invalid FH: Non-finite number (${value}).`;
+        }
+        // else validatedFH remains the finite number
+      } else if (typeof value === 'string') {
+        const valTrimmed = value.trim();
+        if (/[a-zA-Z]/.test(valTrimmed)) {
+          rejectChange = true;
+          errorMessage = `Invalid FH: "${valTrimmed}" contains letters. Only numbers allowed.`;
+        } else {
+          const parsedNum = parseFloat(valTrimmed);
+          if (isFinite(parsedNum)) {
+            validatedFH = parsedNum;
+          } else {
+            rejectChange = true;
+            errorMessage = `Invalid FH: "${valTrimmed}" is not a valid number.`;
+          }
+        }
+      } else {
+        rejectChange = true;
+        errorMessage = `Invalid FH: Unexpected data type (${typeof value}).`;
+      }
+
+      if (rejectChange) {
+        message.error(errorMessage + ' Change rejected.', 5);
+        return; // Reject the change by not proceeding to setCalculatedData
+      }
+      // If validation passed, value will be updated with validatedFH
+      value = validatedFH;
+    }
+
     setCalculatedData(prevData => {
       const updatedTableData = [...prevData[dataKey]];
       if (updatedTableData[rowIndex]) {
