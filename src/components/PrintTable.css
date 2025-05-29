@@ -63,6 +63,74 @@
     print-color-adjust: exact !important;
     color-adjust: exact !important;
   }
+
+  /* General body/html adjustments for printing */
+  body, html {
+    width: 100%;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    overflow: visible; /* Ensure all content is considered for printing */
+  }
+
+  /* Hide elements not meant for printing - adjust selectors as needed */
+  .header, .footer, .ant-layout-header, .ant-layout-footer, .ant-tabs-nav, .upload-section, .print-selector, .debug-toggle, .table-actions, .ant-modal-mask, .ant-modal-wrap {
+    display: none !important;
+  }
+
+  /* Ensure print container takes full width and reset some properties */
+  .print-container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Table header styling for print */
+  .bordered-print-table th {
+    font-size: 12pt !important; /* Increased font size */
+    text-align: center !important; /* Center align text */
+    padding: 8px !important; /* Adjust padding as needed */
+    background-color: #f0f0f0 !important; /* Ensure background prints */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .bordered-print-table td {
+    font-size: 10pt !important; /* Optional: adjust data cell font size if needed */
+    padding: 6px !important;
+  }
+
+  /* Attempt to avoid breaking table rows or elements inside tables across pages */
+  table, tr, td, th, tbody, thead, tfoot {
+    page-break-inside: avoid !important;
+  }
+
+  /* Attempt to control page breaks before/after main table containers if necessary */
+  .print-container > div > table {
+    page-break-before: auto;
+    page-break-after: auto;
+  }
+  
+  .optimization-metrics {
+    page-break-inside: avoid !important; /* Avoid breaking metrics block */
+    margin: 0 0 10px 0 !important; /* Adjust margins for print if needed */
+  }
+
+  .material-cutting-table,
+  .material-cutting-table th,
+  .material-cutting-table td {
+    border-color: #555 !important; /* Darker borders for print */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .material-cutting-table th {
+    background-color: #f0f0f0 !important; /* Consistent header background */
+    font-size: 12pt !important; /* Match other table headers */
+    text-align: center !important; /* Center align text */
+  }
 }
 
 .debug-info {
@@ -219,45 +287,4 @@
   color: #1890ff;
   font-weight: 600;
   font-size: 16px;
-}
-
-/* 确保边框在打印时可见 */
-@media print {
-  .bordered-print-table, 
-  .bordered-print-table th, 
-  .bordered-print-table td {
-    border-color: #000 !important; /* Black borders for printing */
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-
-  /* Ensure caption styles are also applied for printing */
-  .bordered-print-table > .table-print-title {
-    color: #000 !important; /* Black color for printing title */
-    /* Other styles like font-size, weight, text-align should carry over */
-  }
-
-  /* Hide debug panel elements during print */
-  .debug-toggle,
-  .debug-info {
-    display: none !important;
-  }
-  
-  .optimization-metrics {
-    display: none;
-  }
-  
-  /* 优化DECA Cutting表格的打印样式 */
-  .material-cutting-table,
-  .material-cutting-table th,
-  .material-cutting-table td {
-    border-color: #000 !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-  }
-  
-  .material-cutting-table th {
-    background-color: #f0f0f0 !important;
-    color: #000 !important;
-  }
 } 

@@ -1,67 +1,76 @@
 import React from 'react';
+import { Input } from 'antd';
 import './PrintTable.css';
-import CommonPrintTable from './CommonPrintTable';
 
-const PrintPartsTable = ({ batchNo, calculatedData }) => {
-  // Define column structure for the parts table
-  const columns = [
-    [
-      { title: 'Batch', rowSpan: 2 },
-      { title: 'ID', rowSpan: 1 },
-      { title: 'Style', rowSpan: 1 },
-      { title: '中框', rowSpan: 1 },
-      { title: '中铝', rowSpan: 1 },
-      { title: '手铝', rowSpan: 1 },
-      { title: 'Pcs', rowSpan: 1 },
-      { title: 'Track', rowSpan: 1 },
-      { title: 'Cover--', rowSpan: 1 },
-      { title: 'Cover|', rowSpan: 1 },
-      { title: '大中', rowSpan: 1 },
-      { title: 'pcs', rowSpan: 1 },
-      { title: '大中2', rowSpan: 1 },
-      { title: 'pcs', rowSpan: 1 },
-      { title: 'Slop', rowSpan: 1 },
-      { title: 'Color', rowSpan: 1 },
-      { title: 'ID', rowSpan: 1 }
-    ],
-    []
+const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
+  const handleInputChange = (e, rowIndex, columnKey) => {
+    if (onCellChange) {
+      onCellChange('parts', rowIndex, columnKey, e.target.value);
+    }
+  };
+
+  const headerTitles = [
+    'Batch', 'ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track',
+    'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color', 'Original ID'
   ];
 
-  // Custom row renderer for parts data
-  const renderPartsRow = (row, index, batchNo) => (
-    <tr key={index}>
-      <td>{batchNo}</td>
-      <td>{row.ID || index + 1}</td>
-      <td>{row.Style || ''}</td>
-      <td>{row.mullion || ''}</td>
-      <td>{row.mullionA || ''}</td>
-      <td>{row.handleA || ''}</td>
-      <td>{row.quantity || ''}</td>
-      <td>{row.track || ''}</td>
-      <td>{row.coverH || ''}</td>
-      <td>{row.coverV || ''}</td>
-      <td>{row.bigMu1 || ''}</td>
-      <td>{row.bigMu1Q || ''}</td>
-      <td>{row.bigMu2 || ''}</td>
-      <td>{row.bigMu2Q || ''}</td>
-      <td>{row.slop || ''}</td>
-      <td>{row.Color || ''}</td>
-      <td>{row.ID || index + 1}</td>
-    </tr>
-  );
-
   return (
-    <CommonPrintTable
-      title="Parts"
-      headerClass="parts-header"
-      tableClass="parts-table"
-      columns={columns}
-      data={calculatedData}
-      batchNo={batchNo}
-      emptyRowCount={9}
-      renderRow={renderPartsRow}
-      debugTitle="零件表格数据"
-    />
+    <div className="print-container">
+      <div className="print-header parts-header">
+        Parts
+      </div>
+      <table className="parts-table bordered-print-table">
+        <thead>
+          <tr>
+            {headerTitles.map(title => <th key={title}>{title}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {calculatedData && calculatedData.length > 0 ? (
+            calculatedData.map((row, index) => (
+              <tr key={index}>
+                <td>{batchNo}</td>
+                <td>{row.ID || ''}</td>
+                <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                <td><Input size="small" bordered={false} value={row.mullion || ''} onChange={(e) => handleInputChange(e, index, 'mullion')} /></td>
+                <td><Input size="small" bordered={false} value={row.mullionA || ''} onChange={(e) => handleInputChange(e, index, 'mullionA')} /></td>
+                <td><Input size="small" bordered={false} value={row.handleA || ''} onChange={(e) => handleInputChange(e, index, 'handleA')} /></td>
+                <td><Input size="small" bordered={false} value={row.quantity || ''} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
+                <td><Input size="small" bordered={false} value={row.track || ''} onChange={(e) => handleInputChange(e, index, 'track')} /></td>
+                <td><Input size="small" bordered={false} value={row.coverH || ''} onChange={(e) => handleInputChange(e, index, 'coverH')} /></td>
+                <td><Input size="small" bordered={false} value={row.coverV || ''} onChange={(e) => handleInputChange(e, index, 'coverV')} /></td>
+                <td><Input size="small" bordered={false} value={row.bigMu1 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1')} /></td>
+                <td><Input size="small" bordered={false} value={row.bigMu1Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1Q')} /></td>
+                <td><Input size="small" bordered={false} value={row.bigMu2 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2')} /></td>
+                <td><Input size="small" bordered={false} value={row.bigMu2Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2Q')} /></td>
+                <td><Input size="small" bordered={false} value={row.slop || ''} onChange={(e) => handleInputChange(e, index, 'slop')} /></td>
+                <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
+                <td>{row.originalId || ''}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td>{batchNo}</td>
+              {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+            </tr>
+          )}
+          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
+            [...Array(10 - calculatedData.length)].map((_, i) => (
+              <tr key={`empty-fill-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+          {(!calculatedData || calculatedData.length === 0) &&
+            [...Array(9)].map((_, i) => (
+              <tr key={`initial-empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
   );
 };
 

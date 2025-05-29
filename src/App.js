@@ -690,15 +690,15 @@ function App() {
     switch (printTab) {
       case 'general':
         console.log("正在渲染general表格，数据:", calculatedData.info);
-        tableToRender = <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} />;
+        tableToRender = <PrintTable batchNo={batchNo} calculatedData={calculatedData.info} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'frame':
         console.log("正在渲染frame表格，数据:", calculatedData.frame);
-        tableToRender = <PrintFrameTable batchNo={batchNo} calculatedData={calculatedData.frame} />;
+        tableToRender = <PrintFrameTable batchNo={batchNo} calculatedData={calculatedData.frame} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'sash':
         console.log("正在渲染sash表格，数据:", calculatedData.sash);
-        tableToRender = <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} />;
+        tableToRender = <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'sashWelding':
         console.log("正在渲染sashWelding表格，数据:", calculatedData.sashWelding);
@@ -715,25 +715,25 @@ function App() {
                 导出Sash Welding Excel
               </Button>
             </div>
-            <PrintSashWeldingTable batchNo={batchNo} calculatedData={calculatedData.sashWelding} />
+            <PrintSashWeldingTable batchNo={batchNo} calculatedData={calculatedData.sashWelding} onCellChange={handlePrintTableCellChange} />
           </div>
         );
         break;
       case 'glass':
         console.log("正在渲染glass表格，数据:", calculatedData.glass);
-        tableToRender = <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} />;
+        tableToRender = <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'screen':
         console.log("正在渲染screen表格，数据:", calculatedData.screen);
-        tableToRender = <PrintScreenTable batchNo={batchNo} calculatedData={calculatedData.screen} />;
+        tableToRender = <PrintScreenTable batchNo={batchNo} calculatedData={calculatedData.screen} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'parts':
         console.log("正在渲染parts表格，数据:", calculatedData.parts);
-        tableToRender = <PrintPartsTable batchNo={batchNo} calculatedData={calculatedData.parts} />;
+        tableToRender = <PrintPartsTable batchNo={batchNo} calculatedData={calculatedData.parts} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'grid':
         console.log("正在渲染grid表格，数据:", calculatedData.grid);
-        tableToRender = <PrintGridTable batchNo={batchNo} calculatedData={calculatedData.grid} />;
+        tableToRender = <PrintGridTable batchNo={batchNo} calculatedData={calculatedData.grid} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'order':
         console.log("正在渲染order表格，数据:", calculatedData.order);
@@ -773,7 +773,7 @@ function App() {
                 导出Label Excel
               </Button>
             </div>
-            <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} />
+            <PrintLabelTable batchNo={batchNo} calculatedData={calculatedData.label} onCellChange={handlePrintTableCellChange} />
           </div>
         );
         break;
@@ -792,7 +792,7 @@ function App() {
                 导出DECA Cutting CSV
               </Button>
             </div>
-            <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} />
+            <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} onCellChange={handlePrintTableCellChange} />
           </div>
         );
         break;

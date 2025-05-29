@@ -1,74 +1,80 @@
 import React from 'react';
+import { Input } from 'antd';
 import './PrintTable.css';
-import CommonPrintTable from './CommonPrintTable';
 
-const PrintGridTable = ({ batchNo, calculatedData }) => {
-  // Define column structure for the grid table
-  const columns = [
-    [
-      { title: 'Batch', rowSpan: 2 },
-      { title: 'ID', rowSpan: 2 },
-      { title: 'Style', rowSpan: 2 },
-      { title: 'Grid Style', rowSpan: 2 },
-      { title: 'Sash', colSpan: 6 },
-      { title: 'Fixed', colSpan: 6 },
-      { title: 'ID', rowSpan: 2 },
-      { title: 'Note', rowSpan: 2 },
-      { title: 'Color', rowSpan: 2 }
-    ],
-    [
-      { title: 'W1' },
-      { title: 'Pcs' },
-      { title: '一刀' },
-      { title: 'H1' },
-      { title: 'Pcs' },
-      { title: '一刀' },
-      { title: 'W2' },
-      { title: 'Pcs' },
-      { title: '一刀' },
-      { title: 'H2' },
-      { title: 'Pcs' },
-      { title: '一刀' }
-    ]
+const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
+  const handleInputChange = (e, rowIndex, columnKey) => {
+    if (onCellChange) {
+      onCellChange('grid', rowIndex, columnKey, e.target.value);
+    }
+  };
+
+  const headerTitles = [
+    'Batch', 'ID', 'Style', 'Grid Style',
+    'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀',
+    'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀',
+    'Note', 'Color', 'Original ID'
   ];
 
-  // Custom row renderer for grid data
-  const renderGridRow = (row, index, batchNo) => (
-    <tr key={index}>
-      <td>{batchNo}</td>
-      <td>{row.ID || index + 1}</td>
-      <td>{row.Style || ''}</td>
-      <td>{row.Grid || ''}</td>
-      <td>{row.sashW || ''}</td>
-      <td>{row.sashWq || ''}</td>
-      <td>{row.holeW1 || ''}</td>
-      <td>{row.sashH || ''}</td>
-      <td>{row.sashHq || ''}</td>
-      <td>{row.holeH1 || ''}</td>
-      <td>{row.fixW || ''}</td>
-      <td>{row.fixWq || ''}</td>
-      <td>{row.holeW2 || ''}</td>
-      <td>{row.fixH || ''}</td>
-      <td>{row.fixHq || ''}</td>
-      <td>{row.holeH2 || ''}</td>
-      <td>{row.ID || index + 1}</td>
-      <td>{row.Note || ''}</td>
-      <td>{row.Color || ''}</td>
-    </tr>
-  );
-
   return (
-    <CommonPrintTable
-      title="Grid"
-      headerClass="grid-header"
-      tableClass="grid-table"
-      columns={columns}
-      data={calculatedData}
-      batchNo={batchNo}
-      emptyRowCount={9}
-      renderRow={renderGridRow}
-      debugTitle="格栅表格数据"
-    />
+    <div className="print-container">
+      <div className="print-header grid-header">
+        Grid
+      </div>
+      <table className="grid-table bordered-print-table">
+        <thead>
+          <tr>
+            {headerTitles.map(title => <th key={title}>{title}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {calculatedData && calculatedData.length > 0 ? (
+            calculatedData.map((row, index) => (
+              <tr key={index}>
+                <td>{batchNo}</td>
+                <td>{row.ID || ''}</td> 
+                <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                <td><Input size="small" bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
+                <td><Input size="small" bordered={false} value={row.sashW || ''} onChange={(e) => handleInputChange(e, index, 'sashW')} /></td>
+                <td><Input size="small" bordered={false} value={row.sashWq || ''} onChange={(e) => handleInputChange(e, index, 'sashWq')} /></td>
+                <td><Input size="small" bordered={false} value={row.holeW1 || ''} onChange={(e) => handleInputChange(e, index, 'holeW1')} /></td>
+                <td><Input size="small" bordered={false} value={row.sashH || ''} onChange={(e) => handleInputChange(e, index, 'sashH')} /></td>
+                <td><Input size="small" bordered={false} value={row.sashHq || ''} onChange={(e) => handleInputChange(e, index, 'sashHq')} /></td>
+                <td><Input size="small" bordered={false} value={row.holeH1 || ''} onChange={(e) => handleInputChange(e, index, 'holeH1')} /></td>
+                <td><Input size="small" bordered={false} value={row.fixW || ''} onChange={(e) => handleInputChange(e, index, 'fixW')} /></td>
+                <td><Input size="small" bordered={false} value={row.fixWq || ''} onChange={(e) => handleInputChange(e, index, 'fixWq')} /></td>
+                <td><Input size="small" bordered={false} value={row.holeW2 || ''} onChange={(e) => handleInputChange(e, index, 'holeW2')} /></td>
+                <td><Input size="small" bordered={false} value={row.fixH || ''} onChange={(e) => handleInputChange(e, index, 'fixH')} /></td>
+                <td><Input size="small" bordered={false} value={row.fixHq || ''} onChange={(e) => handleInputChange(e, index, 'fixHq')} /></td>
+                <td><Input size="small" bordered={false} value={row.holeH2 || ''} onChange={(e) => handleInputChange(e, index, 'holeH2')} /></td>
+                <td><Input size="small" bordered={false} value={row.Note || ''} onChange={(e) => handleInputChange(e, index, 'Note')} /></td>
+                <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
+                <td>{row.originalId || ''}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td>{batchNo}</td>
+              {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+            </tr>
+          )}
+          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
+            [...Array(10 - calculatedData.length)].map((_, i) => (
+              <tr key={`empty-fill-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+          {(!calculatedData || calculatedData.length === 0) &&
+            [...Array(9)].map((_, i) => (
+              <tr key={`initial-empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
   );
 };
 

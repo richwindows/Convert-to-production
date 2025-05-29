@@ -1,94 +1,96 @@
 import React from 'react';
+import { Input } from 'antd';
 import './PrintTable.css';
-import CommonPrintTable from './CommonPrintTable';
 import { formatSize } from '../utils/formattingUtils';
 
-const PrintLabelTable = ({ batchNo, calculatedData }) => {
-  // Generate barcode based on batch number and ID
+const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
+  const handleInputChange = (e, rowIndex, columnKey) => {
+    if (onCellChange) {
+      // If editing the combined 'Glass' field, we might need special handling 
+      // if you intend to update row.Glass and row.Argon separately.
+      // For now, assumes direct update to the provided columnKey (e.g., row.Glass_Argon_Combined)
+      // Or, if the original data structure has `row.Glass` and `row.PO` as distinct editable fields:
+      onCellChange('label', rowIndex, columnKey, e.target.value);
+    }
+  };
+
   const generateBarcode = (batchNo, id) => {
     if (!batchNo || !id) return '';
-    
-    // Extract date parts from batch number (format: 05212025-01-16)
     const parts = batchNo.split('-');
-    if (parts.length !== 3) return '';
-    
-    const monthDay = parts[0]; // 05212025
-    // const orderNum = parts[1]; // 01
-    const dayPart = parts[2]; // 16
-    
-    // Extract simplified date: 052125 (from 05212025, year 2025 -> 25)
-    const month = monthDay.substring(0, 2); // 05
-    const day = monthDay.substring(2, 4); // 21
-    const year = monthDay.substring(6, 8); // 25 (from 2025)
-    const simplifiedDate = month + day + year; // 052125
-    
-    // Format ID with leading zero (2 -> 02)
+    if (parts.length < 1) return ''; // Basic check, adjust if batchNo format is strict
+    // Simplified barcode generation for example, adjust to your exact needs
+    const datePart = parts[0].replace(/\//g, ''); // Assuming first part is date-like
     const formattedId = String(id).padStart(2, '0');
-    
-    // Generate barcode: Rich-052125-16-02
-    return `Rich-${simplifiedDate}-${dayPart}-${formattedId}`;
+    return `Rich-${datePart}-${formattedId}`;
   };
 
-  // Define column structure for the label table (removed Batch NO., added Barcode)
-  const columns = [
-    [
-      { title: 'Customer', rowSpan: 1 },
-      { title: 'ID', rowSpan: 1 },
-      { title: 'Style', rowSpan: 1 },
-      { title: 'Size', rowSpan: 1 },
-      { title: 'Frame', rowSpan: 1 },
-      { title: 'Glass', rowSpan: 1 },
-      { title: 'Grid', rowSpan: 1 },
-      { title: 'P.O', rowSpan: 1 },
-      { title: 'Invoice Num. Order Date', rowSpan: 1 },
-      { title: 'Barcode', rowSpan: 1 },
-    ],
-    []
+  const headerTitles = [
+    'Customer', 'ID', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Invoice Num. Order Date', 'Barcode', 'Original ID'
   ];
 
-  // Custom row renderer for label data
-  const renderLabelRow = (row, index, batchNo) => {
-    const barcode = generateBarcode(batchNo, row.ID);
-    
-    // The row.Size should now be pre-formatted from WindowCalculator
-    // Fallback to W and H if row.Size is somehow missing, but ideally row.Size is primary.
-    let sizeDisplay = row.Size || ''; 
-    if (!sizeDisplay && row.W && row.H) { // Fallback if row.Size is not present
-      sizeDisplay = formatSize(row.W, row.H); 
-    }
-    
-    // 调试输出
-    console.log('Row data:', row);
-    console.log('Size display:', sizeDisplay);
-    
-    return (
-      <tr key={index}>
-        <td>{row.Customer || ''}</td>
-        <td>{row.ID}</td>
-        <td>{row.Style || ''}</td>
-        <td>{sizeDisplay}</td>
-        <td>{row.Frame || ''}</td>
-        <td>{row.Glass ? (row.Argon && row.Argon !== 'None' ? `${row.Glass}+${row.Argon}` : row.Glass) : ''}</td>
-        <td>{row.Grid || ''}</td>
-        <td>{row.PO || ''}</td>
-        <td>{batchNo}</td>
-        <td>{barcode}</td>
-      </tr>
-    );
-  };
-
   return (
-    <CommonPrintTable
-      title="Label"
-      headerClass="label-header"
-      tableClass="label-table"
-      columns={columns}
-      data={calculatedData}
-      batchNo={batchNo}
-      emptyRowCount={9}
-      renderRow={renderLabelRow}
-      debugTitle="标签表格数据"
-    />
+    <div className="print-container">
+      <div className="print-header label-header">
+        Label
+      </div>
+      <table className="label-table bordered-print-table">
+        <thead>
+          <tr>
+            {headerTitles.map(title => <th key={title}>{title}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {calculatedData && calculatedData.length > 0 ? (
+            calculatedData.map((row, index) => {
+              const barcode = generateBarcode(batchNo, row.ID);
+              let sizeDisplay = row.Size || '';
+              if (!sizeDisplay && row.W && row.H) {
+                sizeDisplay = formatSize(row.W, row.H);
+              }
+              const glassDisplay = row.Glass ? (row.Argon && row.Argon !== 'None' ? `${row.Glass}+${row.Argon}` : row.Glass) : '';
+
+              return (
+                <tr key={index}>
+                  <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
+                  <td>{row.ID}</td>
+                  <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                  <td>{sizeDisplay}</td>
+                  <td><Input size="small" bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
+                  {/* For simplicity, making the combined display string editable. 
+                      If row.Glass and row.Argon need to be updated separately, this needs more complex logic 
+                      or two separate input fields mapped to row.Glass and row.Argon respectively.*/}
+                  <td><Input size="small" bordered={false} value={glassDisplay} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
+                  <td><Input size="small" bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
+                  <td><Input size="small" bordered={false} value={row.PO || row.Note || ''} onChange={(e) => handleInputChange(e, index, 'PO')} /></td>
+                  <td>{batchNo}</td>
+                  <td>{barcode}</td>
+                  <td>{row.originalId || ''}</td>
+                </tr>
+              );
+            })
+          ) : (
+            <tr>
+              <td></td>{/* Placeholder for Customer if needed, or adjust Array length */}
+              {[...Array(headerTitles.length)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+            </tr>
+          )}
+          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
+            [...Array(10 - calculatedData.length)].map((_, i) => (
+              <tr key={`empty-fill-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+          {(!calculatedData || calculatedData.length === 0) &&
+            [...Array(10 -1)].map((_, i) => ( // Assuming 10 rows total including header, so 9 empty data rows initially
+              <tr key={`initial-empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
   );
 };
 

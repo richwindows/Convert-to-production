@@ -1,51 +1,68 @@
 import React from 'react';
+import { Input } from 'antd';
 import './PrintTable.css';
-import CommonPrintTable from './CommonPrintTable';
 
-const PrintScreenTable = ({ batchNo, calculatedData }) => {
-  // Define column structure for the screen table
-  const columns = [
-    [
-      { title: 'Batch NO.', rowSpan: 2 },
-      { title: 'Customer', rowSpan: 1 },
-      { title: 'ID', rowSpan: 1 },
-      { title: 'Style', rowSpan: 1 },
-      { title: 'Screen', rowSpan: 1 },
-      { title: 'pcs', rowSpan: 1 },
-      { title: 'Screen T', rowSpan: 1 },
-      { title: 'pcs', rowSpan: 1 },
-      { title: 'Color', rowSpan: 1 }
-    ],
-    []
+const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
+  const handleInputChange = (e, rowIndex, columnKey) => {
+    if (onCellChange) {
+      onCellChange('screen', rowIndex, columnKey, e.target.value);
+    }
+  };
+
+  const headerTitles = [
+    'Batch NO.', 'Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color', 'Original ID'
   ];
 
-  // Custom row renderer for screen data
-  const renderScreenRow = (row, index, batchNo) => (
-    <tr key={index}>
-      <td>{batchNo}</td>
-      <td>{row.Customer || ''}</td>
-      <td>{row.ID || ''}</td>
-      <td>{row.Style || ''}</td>
-      <td>{row.screenSize || ''}</td>
-      <td>{row.screenPcs || ''}</td>
-      <td>{row.screenT || ''}</td>
-      <td>{row.screenTPcs || ''}</td>
-      <td>{row.Color || ''}</td>
-    </tr>
-  );
-
   return (
-    <CommonPrintTable
-      title="Screen"
-      headerClass="screen-header"
-      tableClass="screen-table"
-      columns={columns}
-      data={calculatedData}
-      batchNo={batchNo}
-      emptyRowCount={9}
-      renderRow={renderScreenRow}
-      debugTitle="纱窗表格数据"
-    />
+    <div className="print-container">
+      <div className="print-header screen-header">
+        Screen
+      </div>
+      <table className="screen-table bordered-print-table">
+        <thead>
+          <tr>
+            {headerTitles.map(title => <th key={title}>{title}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {calculatedData && calculatedData.length > 0 ? (
+            calculatedData.map((row, index) => (
+              <tr key={index}>
+                <td>{batchNo}</td>
+                <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
+                <td>{row.ID || ''}</td>
+                <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                <td><Input size="small" bordered={false} value={row.screenSize || ''} onChange={(e) => handleInputChange(e, index, 'screenSize')} /></td>
+                <td><Input size="small" bordered={false} value={row.screenPcs || ''} onChange={(e) => handleInputChange(e, index, 'screenPcs')} /></td>
+                <td><Input size="small" bordered={false} value={row.screenT || ''} onChange={(e) => handleInputChange(e, index, 'screenT')} /></td>
+                <td><Input size="small" bordered={false} value={row.screenTPcs || ''} onChange={(e) => handleInputChange(e, index, 'screenTPcs')} /></td>
+                <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
+                <td>{row.originalId || ''}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td>{batchNo}</td>
+              {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+            </tr>
+          )}
+          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
+            [...Array(10 - calculatedData.length)].map((_, i) => (
+              <tr key={`empty-fill-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+          {(!calculatedData || calculatedData.length === 0) &&
+            [...Array(9)].map((_, i) => (
+              <tr key={`initial-empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
   );
 };
 
