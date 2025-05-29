@@ -10,28 +10,38 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
   };
 
   const headerTitles = [
-    'Batch', 'ID', 'Style', 'Grid Style',
+    'Batch NO.', 'ID', 'Style', 'Grid Style',
     'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀',
     'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀',
-    'Note', 'Color', 'Original ID'
+    'Note', 'Color'
   ];
 
   return (
     <div className="print-container">
-      <div className="print-header grid-header">
+      <div className="print-header grid-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Grid
       </div>
-      <table className="grid-table bordered-print-table">
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="grid-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            {headerTitles.map(title => <th key={title}>{title}</th>)}
+            {headerTitles.map(title => {
+              if (title === 'Batch NO.') {
+                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
+              } else if (title === 'Style' || title === 'Grid Style' || title.includes('Pcs') || title === 'Note' || title === 'Color' || title === '一刀') {
+                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
+              }
+              return <th key={title}>{title}</th>;
+            })}
           </tr>
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td>{row.ID || ''}</td> 
                 <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
                 <td><Input size="small" bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
@@ -49,12 +59,11 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
                 <td><Input size="small" bordered={false} value={row.holeH2 || ''} onChange={(e) => handleInputChange(e, index, 'holeH2')} /></td>
                 <td><Input size="small" bordered={false} value={row.Note || ''} onChange={(e) => handleInputChange(e, index, 'Note')} /></td>
                 <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
-                <td>{row.originalId || ''}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td>{batchNo}</td>
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
               {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
             </tr>
           )}

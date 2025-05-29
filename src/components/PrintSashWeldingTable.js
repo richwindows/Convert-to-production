@@ -12,21 +12,24 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   return (
     <div className="print-container">
-      <div className="print-header sash-welding-header">
+      <div className="print-header sash-welding-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Sash Welding List
       </div>
-      <table className="sash-welding-table bordered-print-table">
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="sash-welding-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            <th>Batch NO.</th>
-            <th>Customer</th>
+            <th style={{ width: 'max-content', whiteSpace: 'nowrap' }}>Batch NO.</th>
+            <th style={{ width: 'max-content' }}>Customer</th>
             <th>ID</th>
-            <th>Style</th>
+            <th style={{ width: 'max-content' }}>Style</th>
             <th>W</th>
             <th>H</th>
             <th>Sashw</th>
             <th>Sashh</th>
-            <th>Pcs</th>
+            <th style={{ width: 'max-content' }}>Pcs</th>
             <th>No.</th> 
           </tr>
         </thead>
@@ -34,7 +37,7 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
                 <td>{row.ID || ''}</td>
                 <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
@@ -48,7 +51,7 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td>{batchNo}</td>
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
               {[...Array(9)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
             </tr>
           )}

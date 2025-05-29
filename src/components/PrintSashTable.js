@@ -9,31 +9,40 @@ const PrintSashTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
-  // Simplified header for direct table rendering
   const headerTitles = [
     'Batch NO.', 'ID', 'Style',
     '82-03--', 'Pcs', '82-03 |', 'Pcs',
     '82-05', 'Pcs',
     '82-04--', 'Pcs', '82-04|', 'Pcs',
-    'Color', 'Original ID' // Added original ID for consistency
+    'Color'
   ];
 
   return (
     <div className="print-container">
-      <div className="print-header sash-header">
+      <div className="print-header sash-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Sash
       </div>
-      <table className="sash-table bordered-print-table">
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="sash-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            {headerTitles.map(title => <th key={title}>{title}</th>)}
+            {headerTitles.map(title => {
+              if (title === 'Batch NO.') {
+                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
+              } else if (title === 'Style' || title === 'Color' || title.includes('Pcs')) {
+                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
+              }
+              return <th key={title}>{title}</th>;
+            })}
           </tr>
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, rowIndex) => (
               <tr key={rowIndex}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td>{row.ID || ''}</td>
                 <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Style')} /></td>
                 <td><Input size="small" bordered={false} value={row['82-03-H'] || ''} onChange={(e) => handleInputChange(e, rowIndex, '82-03-H')} /></td>
@@ -47,12 +56,11 @@ const PrintSashTable = ({ batchNo, calculatedData, onCellChange }) => {
                 <td><Input size="small" bordered={false} value={row['82-04-V'] || ''} onChange={(e) => handleInputChange(e, rowIndex, '82-04-V')} /></td>
                 <td><Input size="small" bordered={false} value={row['82-04-V-Pcs'] || ''} onChange={(e) => handleInputChange(e, rowIndex, '82-04-V-Pcs')} /></td>
                 <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Color')} /></td>
-                <td>{row.originalId || ''}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td>{batchNo}</td>
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
               {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
             </tr>
           )}

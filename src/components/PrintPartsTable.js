@@ -10,26 +10,37 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
   };
 
   const headerTitles = [
-    'Batch', 'ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track',
-    'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color', 'Original ID'
+    'Batch NO.', 'ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track',
+    'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color'
   ];
 
   return (
     <div className="print-container">
-      <div className="print-header parts-header">
+      <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Parts
       </div>
-      <table className="parts-table bordered-print-table">
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="parts-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            {headerTitles.map(title => <th key={title}>{title}</th>)}
+            {headerTitles.map(title => {
+              if (title === 'Batch NO.') {
+                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
+              } else if (title === 'Style' || title.toLowerCase().includes('pcs') || title === 'Color' || 
+                  ['中框', '中铝', '手铝', 'Track', 'Cover--', 'Cover|', '大中', '大中2', 'Slop'].includes(title)) {
+                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
+              }
+              return <th key={title}>{title}</th>;
+            })}
           </tr>
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td>{row.ID || ''}</td>
                 <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
                 <td><Input size="small" bordered={false} value={row.mullion || ''} onChange={(e) => handleInputChange(e, index, 'mullion')} /></td>
@@ -45,12 +56,11 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
                 <td><Input size="small" bordered={false} value={row.bigMu2Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2Q')} /></td>
                 <td><Input size="small" bordered={false} value={row.slop || ''} onChange={(e) => handleInputChange(e, index, 'slop')} /></td>
                 <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
-                <td>{row.originalId || ''}</td>
               </tr>
             ))
           ) : (
             <tr>
-              <td>{batchNo}</td>
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
               {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
             </tr>
           )}

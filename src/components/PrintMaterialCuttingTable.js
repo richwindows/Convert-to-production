@@ -73,8 +73,7 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
 
   const headerTitles = [
     'Batch No', 'Order No', 'Order Item', 'Material Name', 'Cutting ID', 'Pieces ID',
-    'Length', 'Angles', 'Qty', 'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting',
-    'Original ID' // Added Original ID
+    'Length', 'Angles', 'Qty', 'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
   ];
 
   const renderOptimizationMetrics = () => {
@@ -95,11 +94,21 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
   return (
     <div className="deca-cutting-container print-container">
       {renderOptimizationMetrics()}
-      <div className="print-header material-cutting-header">DECA Cutting</div>
-      <table className="material-cutting-table bordered-print-table">
+      <div className="print-header material-cutting-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>DECA Cutting</div>
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="material-cutting-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            {headerTitles.map(title => <th key={title}>{title}</th>)}
+            {headerTitles.map(title => {
+              if (title === 'Batch No') {
+                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
+              } else if (['Material Name', 'Qty', 'Position', 'Style', 'Frame', 'Color', 'Painting', 'Angles'].includes(title)) {
+                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
+              }
+              return <th key={title}>{title}</th>;
+            })}
           </tr>
         </thead>
         <tbody>
@@ -115,7 +124,7 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
             }
             return (
               <tr key={`${row.MaterialName}_${cuttingID}_${piecesID}_${index}_${row.ID || index}`}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td>{row.OrderNo}</td>
                 <td>{row.OrderItem}</td>
                 <td>
@@ -137,13 +146,12 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
                 <td><Input size="small" bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
                 <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
                 <td><Input size="small" bordered={false} value={row.Painting || ''} onChange={(e) => handleInputChange(e, index, 'Painting')} /></td>
-                <td>{row.originalId || ''}</td>
               </tr>
             );
           })}
           {sortedData.length === 0 &&
             <tr>
-              <td>{batchNo}</td>
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
               {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
             </tr>
           }

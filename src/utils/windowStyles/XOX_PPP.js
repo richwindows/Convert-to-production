@@ -75,7 +75,7 @@ const processXOX_PPP = (windowData, calculator) => {
     sashw = round((w / 4 - 14.5 + 1) / 25.4);
     sashh = round((h - fh - 6 - 46 - 3) / 25.4);
   }
-  calculator.writeSash(String(sashw), '4', String(sashh), '2', String(sashh), '2', '', '', '', '', color);
+  calculator.writeSash(id, style, String(sashw), '4', String(sashh), '2', String(sashh), '2', '', '', '', '', color);
 
   // 3. Screen 尺寸
   if (frameType === 'Nailon') {

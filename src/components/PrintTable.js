@@ -9,40 +9,57 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  const headerTitles = [
+    'Batch NO.',
+    'Customer',
+    'ID',
+    'Style',
+    'W',
+    'H',
+    'FH',
+    'Frame',
+    'Glass',
+    'Argon',
+    'Grid',
+    'Color',
+    'Note',
+    'Quantity',
+  ];
+
   return (
     <div className="print-container">
-      <div className="print-header">
-        {/* Title can be dynamic if needed */}
+      <div className="print-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         General Information
       </div>
-      <table className="bordered-print-table">
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            <th>Batch NO.</th>
-            <th>Customer</th>
+            <th style={{ width: 'max-content', whiteSpace: 'nowrap' }}>Batch NO.</th>
+            <th style={{ width: 'max-content' }}>Customer</th>
             <th>ID</th>
-            <th>Original ID</th>
-            <th>Style</th>
+            <th style={{ width: 'max-content' }}>Style</th>
             <th>W</th>
             <th>H</th>
             <th>FH</th>
             <th>Frame</th>
-            <th>Glass</th>
+            <th style={{ width: 'max-content' }}>Glass</th>
             <th>Argon</th>
             <th>Grid</th>
             <th>Color</th>
             <th>Note</th>
-            <th>Quantity</th>
+            <th style={{ width: 'max-content' }}>Quantity</th>
           </tr>
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
-                <td>{row.ID || ''}</td> 
-                <td>{row.originalId || ''}</td> 
+                <td>{row.ID || ''}</td>
                 <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
                 <td><Input size="small" bordered={false} value={row.W || ''} onChange={(e) => handleInputChange(e, index, 'W')} /></td>
                 <td><Input size="small" bordered={false} value={row.H || ''} onChange={(e) => handleInputChange(e, index, 'H')} /></td>
@@ -58,21 +75,21 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td>{batchNo}</td>
-              {[...Array(14)].map((_, i) => <td key={i}></td>)}
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
+              {[...Array(13)].map((_, i) => <td key={i}></td>)}
             </tr>
           )}
           {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
             [...Array(10 - calculatedData.length)].map((_, i) => (
               <tr key={`empty-${i}`}>
-                {[...Array(15)].map((_, j) => <td key={`empty-${i}-${j}`}></td>)}
+                {[...Array(14)].map((_, j) => <td key={`empty-${i}-${j}`}></td>)}
               </tr>
             ))
           }
           {(!calculatedData || calculatedData.length === 0) &&
             [...Array(9)].map((_, i) => (
               <tr key={i}>
-                 {[...Array(15)].map((_, j) => <td key={`empty-${i}-${j}`}></td>)}
+                 {[...Array(14)].map((_, j) => <td key={`empty-${i}-${j}`}></td>)}
               </tr>
             ))
           }

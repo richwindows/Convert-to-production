@@ -68,7 +68,7 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   // Simplified header titles for a single row header
   const headerTitles = [
     'Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity',
-    'Glass Type', 'Tmprd', 'Thick', 'Width', 'Height', 'Grid', 'Argon', 'Original ID'
+    'Glass Type', 'Tmprd', 'Thick', 'Width', 'Height', 'Grid', 'Argon'
   ];
 
   return (
@@ -93,20 +93,30 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
         </Tooltip>
       </div>
       <div className="print-container">
-        <div className="print-header glass-header">
+        <div className="print-header glass-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
           Glass
         </div>
-        <table className="glass-table bordered-print-table">
+        <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+          Batch: {batchNo}
+        </div>
+        <table className="glass-table bordered-print-table" style={{ tableLayout: 'auto' }}>
           <thead>
             <tr>
-              {headerTitles.map(title => <th key={title}>{title}</th>)}
+              {headerTitles.map(title => {
+                if (title === 'Batch NO.') {
+                  return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
+                } else if (title === 'Customer' || title === 'Style' || title === 'Quantity' || title === 'Glass Type') {
+                  return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
+                }
+                return <th key={title}>{title}</th>;
+              })}
             </tr>
           </thead>
           <tbody>
             {calculatedData && calculatedData.length > 0 ? (
               calculatedData.map((row, index) => (
                 <tr key={index} style={getTextStyle(row)}>
-                  <td>{batchNo}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                   <td><Input size="small" bordered={false} style={getTextStyle(row)} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
                   <td><Input size="small" bordered={false} style={getTextStyle(row)} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
                   <td><Input size="small" bordered={false} style={getTextStyle(row)} value={row.W || ''} onChange={(e) => handleInputChange(e, index, 'W')} /></td>
@@ -122,12 +132,11 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
                   <td style={{...getCellStyle(row, 'height'), ...getTextStyle(row)}}>{row.height || ''}</td>
                   <td><Input size="small" bordered={false} style={getTextStyle(row)} value={row.grid || ''} onChange={(e) => handleInputChange(e, index, 'grid')} /></td>
                   <td><Input size="small" bordered={false} style={getTextStyle(row)} value={row.argon || ''} onChange={(e) => handleInputChange(e, index, 'argon')} /></td>
-                  <td>{row.originalId || row.ID || ''}</td> {/* Display originalId, fallback to ID if not present */}
                 </tr>
               ))
             ) : (
               <tr>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
               </tr>
             )}

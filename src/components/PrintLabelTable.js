@@ -25,18 +25,28 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
   };
 
   const headerTitles = [
-    'Customer', 'ID', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Invoice Num. Order Date', 'Barcode', 'Original ID'
+    'Customer', 'ID', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Invoice Num. Order Date', 'Barcode'
   ];
 
   return (
     <div className="print-container">
-      <div className="print-header label-header">
+      <div className="print-header label-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Label
       </div>
-      <table className="label-table bordered-print-table">
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
+      </div>
+      <table className="label-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            {headerTitles.map(title => <th key={title}>{title}</th>)}
+            {headerTitles.map(title => {
+              if (title === 'Invoice Num. Order Date') {
+                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
+              } else if (['Customer', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Barcode'].includes(title)) {
+                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
+              }
+              return <th key={title}>{title}</th>;
+            })}
           </tr>
         </thead>
         <tbody>
@@ -54,7 +64,7 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
                   <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
                   <td>{row.ID}</td>
                   <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                  <td>{sizeDisplay}</td>
+                  <td className="label-size-cell">{sizeDisplay}</td>
                   <td><Input size="small" bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
                   {/* For simplicity, making the combined display string editable. 
                       If row.Glass and row.Argon need to be updated separately, this needs more complex logic 
@@ -62,16 +72,20 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
                   <td><Input size="small" bordered={false} value={glassDisplay} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
                   <td><Input size="small" bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
                   <td><Input size="small" bordered={false} value={row.PO || row.Note || ''} onChange={(e) => handleInputChange(e, index, 'PO')} /></td>
-                  <td>{batchNo}</td>
-                  <td>{barcode}</td>
-                  <td>{row.originalId || ''}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
+                  <td className="label-barcode-cell">{barcode}</td>
                 </tr>
               );
             })
           ) : (
             <tr>
-              <td></td>{/* Placeholder for Customer if needed, or adjust Array length */}
-              {[...Array(headerTitles.length)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+              {/* Render empty cells for all header titles in the placeholder row */}
+              {headerTitles.map((title, i) => {
+                if (title === 'Invoice Num. Order Date') {
+                  return <td key={`empty-placeholder-${i}`} style={{ whiteSpace: 'nowrap' }}>{batchNo || ''}</td>;
+                }
+                return <td key={`empty-placeholder-${i}`}></td>;
+              })}
             </tr>
           )}
           {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&

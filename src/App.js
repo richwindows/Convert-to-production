@@ -19,9 +19,11 @@ import WindowCalculator from './utils/WindowCalculator';
 import DataMappingTest from './components/DataMappingTest';
 import ProcessingLog from './components/ProcessingLog';
 import PrintMaterialCuttingTable from './components/PrintMaterialCuttingTable';
+import PrintOptimizedFrameTable from './components/PrintOptimizedFrameTable';
+import PrintOptimizedSashTable from './components/PrintOptimizedSashTable';
+import PrintOptimizedPartsTable from './components/PrintOptimizedPartsTable';
 
 const { Header, Content, Footer } = Layout;
-const { TabPane } = Tabs;
 
 const frameMapping = {
   'RT': 'Retrofit',
@@ -194,7 +196,7 @@ function App() {
     for (let R = range.s.r; R <= range.e.r; ++R) { for (let C = range.s.c; C <= range.e.c; ++C) { const cell_address = { c: C, r: R }; const cell_ref = XLSX.utils.encode_cell(cell_address); if (!ws[cell_ref]) continue; ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle; } }
     ws['!cols'] = headers.map(() => ({ wch: 15 }));
     XLSX.utils.book_append_sheet(wb, ws, 'Glass Order');
-    const glassOrderFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_\-]/g, '_')}_GlassOrder.xlsx`;
+    const glassOrderFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_GlassOrder.xlsx`;
     XLSX.writeFile(wb, glassOrderFileName);
     message.success({ content: 'Glass Order Excel文件生成成功！', key: 'exportingGlassOrder', duration: 2 });
     setIsExportingGlassOrder(false);
@@ -220,7 +222,7 @@ function App() {
     for (let R = range.s.r; R <= range.e.r; ++R) { for (let C = range.s.c; C <= range.e.c; ++C) { const cell_address = { c: C, r: R }; const cell_ref = XLSX.utils.encode_cell(cell_address); if (!ws[cell_ref]) continue; ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle; } }
     ws['!cols'] = headers.map(() => ({ wch: 15 }));
     XLSX.utils.book_append_sheet(wb, ws, 'Labels');
-    const labelFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_\-]/g, '_')}_Labels.xlsx`;
+    const labelFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_Labels.xlsx`;
     XLSX.writeFile(wb, labelFileName);
     message.success({ content: 'Label Excel文件生成成功！', key: 'exportingLabel', duration: 2 });
     setIsExportingLabel(false);
@@ -374,21 +376,8 @@ function App() {
       XLSX.utils.book_append_sheet(wb, ws, def.name);
     });
     
-    let excelFileName;
-    if (currentBatchNo === 'N/A' || currentBatchNo.trim() === '') {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const day = String(now.getDate()).padStart(2, '0');
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
-      const seconds = String(now.getSeconds()).padStart(2, '0');
-      excelFileName = `production_${year}${month}${day}${hours}${minutes}${seconds}.xlsx`;
-    } else {
-      excelFileName = `${currentBatchNo}.xlsx`; // Use batchNo directly without processing
-    }
-    
-    XLSX.writeFile(wb, excelFileName);
+    const fileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_ProductionData.xlsx`;
+    XLSX.writeFile(wb, fileName);
     message.success({ content: 'Excel file generated successfully!', key: 'exporting', duration: 2 });
     setIsExporting(false);
   };
@@ -455,9 +444,9 @@ function App() {
     colWidths[1] = { wch: 25 }; // Customer-ID
     ws['!cols'] = colWidths;
 
-    XLSX.utils.book_append_sheet(wb, ws, 'Sash Welding List');
-    const welderExcelFileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_\-]/g, '_')}_welder.xlsx`;
-    XLSX.writeFile(wb, welderExcelFileName);
+    XLSX.utils.book_append_sheet(wb, ws, 'Sash Welding');
+    const fileNameSashWelding = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_SashWelding.xlsx`;
+    XLSX.writeFile(wb, fileNameSashWelding);
     message.success({ content: 'Sash Welding Excel file generated successfully!', key: 'exportingSashWelding', duration: 2 });
     setIsExportingSashWelding(false);
   };
@@ -470,24 +459,24 @@ function App() {
     }
     
     setIsExportingDecaCutting(true);
-    message.loading({ content: 'Generating DECA Cutting CSV file...', key: 'exportingDecaCutting' });
+    message.loading({ content: 'Generating DECA Cutting Excel file...', key: 'exportingDecaCutting' });
 
     const currentBatchNo = batchNo || 'N/A';
     
-    // Get today's date in MMDDYYYY format
-    const today = new Date();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
-    const year = today.getFullYear();
+    // Get today's date in MMDDYYYY format (variables month, day, year are not used further)
+    // const today = new Date(); 
+    // const month = String(today.getMonth() + 1).padStart(2, '0');
+    // const day = String(today.getDate()).padStart(2, '0');
+    // const year = today.getFullYear();
 
-    // Format headers and data for CSV
+    // Format headers and data for Excel
     const headers = [
       'Batch No', 'Order No', 'Order Item', 'Material Name',
       'Cutting ID', 'Pieces ID', 'Length', 'Angles', 'Qty',
       'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
     ];
     
-    const dataForCSV = calculatedData.materialCutting.map(item => [
+    const dataForSheet = calculatedData.materialCutting.map(item => [
       currentBatchNo,
       item.OrderNo || item.ID || '',
       item.OrderItem || '1',
@@ -505,41 +494,35 @@ function App() {
       item.Painting || ''
     ]);
 
-    // Create the CSV content
-    const csvContent = [
-      headers.join(','),
-      ...dataForCSV.map(row => row.map(cell => 
-        // Properly escape cells with commas, quotes, etc.
-        typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n')) 
-          ? `"${cell.replace(/"/g, '""')}"` 
-          : cell
-      ).join(','))
-    ].join('\n');
+    // Create the Excel workbook
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataForSheet]);
 
-    // Create a Blob with the CSV content
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    
-    // Create the filename
-    const filename = `${currentBatchNo}_CutFrame.csv`;
-    
-    // Create a download link and trigger the download
-    if (navigator.msSaveBlob) { // IE 10+
-      navigator.msSaveBlob(blob, filename);
-    } else {
-      const link = document.createElement('a');
-      if (link.download !== undefined) {
-        // Browsers that support HTML5 download attribute
-        const url = URL.createObjectURL(blob);
-        link.setAttribute('href', url);
-        link.setAttribute('download', filename);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    // Apply styles
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { c: C, r: R };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        if (!ws[cell_ref]) continue;
+        ws[cell_ref].s = {
+          font: { name: 'Calibri', sz: 12 },
+          border: { top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } }, left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } } },
+          alignment: { horizontal: "center", vertical: "center" }
+        };
       }
     }
     
-    message.success({ content: 'DECA Cutting CSV file generated successfully!', key: 'exportingDecaCutting', duration: 2 });
+    // Set column widths (optional, but good for readability)
+    const colWidths = headers.map(() => ({ wch: 15 }));
+    ws['!cols'] = colWidths;
+
+    // Create the filename
+    const fileNameDecaCutting = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_DECA_Cutting.xlsx`;
+    
+    // Save the workbook to a file
+    XLSX.writeFile(wb, fileNameDecaCutting);
+    message.success({ content: 'DECA Cutting Excel file generated successfully!', key: 'exportingDecaCutting', duration: 2 });
     setIsExportingDecaCutting(false);
   };
 
@@ -696,9 +679,21 @@ function App() {
         console.log("正在渲染frame表格，数据:", calculatedData.frame);
         tableToRender = <PrintFrameTable batchNo={batchNo} calculatedData={calculatedData.frame} onCellChange={handlePrintTableCellChange} />;
         break;
+      case 'optimizedFrame':
+        console.log("正在渲染optimized frame表格，数据:", calculatedData.frame);
+        tableToRender = <PrintOptimizedFrameTable batchNo={batchNo} calculatedData={calculatedData.frame} />;
+        break;
       case 'sash':
         console.log("正在渲染sash表格，数据:", calculatedData.sash);
         tableToRender = <PrintSashTable batchNo={batchNo} calculatedData={calculatedData.sash} onCellChange={handlePrintTableCellChange} />;
+        break;
+      case 'optimizedSash':
+        console.log("正在渲染optimized sash表格，数据:", calculatedData.sash);
+        tableToRender = <PrintOptimizedSashTable batchNo={batchNo} calculatedData={calculatedData.sash} />;
+        break;
+      case 'optimizedParts':
+        console.log("正在渲染optimized parts表格，数据:", calculatedData.parts);
+        tableToRender = <PrintOptimizedPartsTable batchNo={batchNo} calculatedData={calculatedData.parts} />;
         break;
       case 'sashWelding':
         console.log("正在渲染sashWelding表格，数据:", calculatedData.sashWelding);
@@ -789,7 +784,7 @@ function App() {
                 loading={isExportingDecaCutting}
                 disabled={!calculatedData.materialCutting || calculatedData.materialCutting.length === 0}
               >
-                导出DECA Cutting CSV
+                导出DECA Cutting Excel
               </Button>
             </div>
             <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} onCellChange={handlePrintTableCellChange} />
@@ -953,11 +948,14 @@ function App() {
                       items={[
                         { label: "General Information", key: "general" },
                         { label: "Frame", key: "frame" },
+                        { label: "Frame Print", key: "optimizedFrame" },
                         { label: "Sash", key: "sash" },
+                        { label: "Sash Print", key: "optimizedSash" },
                         { label: "Sash Welding", key: "sashWelding" },
                         { label: "Glass", key: "glass" },
                         { label: "Screen", key: "screen" },
                         { label: "Parts", key: "parts" },
+                        { label: "Parts Print", key: "optimizedParts" },
                         { label: "Grid", key: "grid" },
                         { label: "Glass Order", key: "order" },
                         { label: "Label", key: "label" },

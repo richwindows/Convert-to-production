@@ -41,28 +41,31 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   return (
     <div className="print-container">
-      <div className="print-header glass-order-header">
-        <div className="glass-order-title">Glass Order</div>
+      <div className="print-header glass-order-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+        Glass Order
+      </div>
+      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        Batch: {batchNo}
       </div>
       
-      <table className="glass-order-table bordered-print-table">
+      <table className="glass-order-table bordered-print-table" style={{ tableLayout: 'auto' }}>
         <thead>
           <tr>
-            <th rowSpan="2">Batch NO.</th>
-            <th rowSpan="2">Customer</th>
-            <th rowSpan="2">Style</th>
+            <th rowSpan="2" style={{ width: 'max-content', whiteSpace: 'nowrap' }}>Batch NO.</th>
+            <th rowSpan="2" style={{ width: 'max-content' }}>Customer</th>
+            <th rowSpan="2" style={{ width: 'max-content' }}>Style</th>
             <th rowSpan="2">W</th>
             <th rowSpan="2">H</th>
             <th rowSpan="2">FH</th>
             <th rowSpan="2">ID</th>
             <th rowSpan="2">line #</th>
-            <th rowSpan="2">Quantity</th>
-            <th rowSpan="2">Glass Type</th>
-            <th rowSpan="2">Annealed/Tempered</th>
+            <th rowSpan="2" style={{ width: 'max-content' }}>Quantity</th>
+            <th rowSpan="2" style={{ width: 'max-content' }}>Glass Type</th>
+            <th rowSpan="2" style={{ width: 'max-content' }}>Annealed/Tempered</th>
             <th rowSpan="2">Thickness</th>
             <th rowSpan="2">Width</th>
             <th rowSpan="2">Height</th>
-            <th rowSpan="2">Notes</th>
+            <th rowSpan="2" style={{ width: 'max-content' }}>Notes</th>
           </tr>
           <tr></tr>
         </thead>
@@ -70,7 +73,7 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index} style={getTextStyle(row)}>
-                <td>{batchNo}</td>
+                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
                 <td>
                   <Input 
                     value={row.Customer || ''} 
@@ -182,7 +185,7 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td>{batchNo}</td>
+              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
               <td></td>
               <td></td>
               <td></td>
