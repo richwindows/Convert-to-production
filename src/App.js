@@ -693,6 +693,14 @@ function App() {
 
   // Add a new function to handle cell changes in print tables
   const handlePrintTableCellChange = (dataKey, rowIndex, columnKey, value) => {
+    if (columnKey === 'ADD_ROW') {
+      setCalculatedData(prevData => {
+        const updatedTableData = [...prevData[dataKey], {}]; // Add an empty object for the new row
+        return { ...prevData, [dataKey]: updatedTableData };
+      });
+      return;
+    }
+
     if (columnKey === 'FH') {
       let validatedFH = value;
       let rejectChange = false;

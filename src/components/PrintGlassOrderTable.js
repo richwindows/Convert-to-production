@@ -1,5 +1,6 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Input, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
@@ -39,6 +40,12 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  const handleAddRow = () => {
+    if (onCellChange) {
+      onCellChange('order', null, 'ADD_ROW', null);
+    }
+  };
+
   // 通用的单元格样式
   const cellStyle = {
     width: 'max-content',
@@ -65,6 +72,16 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
       </div>
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
+      </div>
+      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddRow}
+          size="small"
+        >
+          Add Row
+        </Button>
       </div>
       
       <table className="glass-order-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>

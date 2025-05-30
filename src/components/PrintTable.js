@@ -1,11 +1,18 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Input, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
       onCellChange('info', rowIndex, columnKey, e.target.value);
+    }
+  };
+
+  const handleAddRow = () => {
+    if (onCellChange) {
+      onCellChange('info', null, 'ADD_ROW', null);
     }
   };
 
@@ -52,6 +59,16 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
       </div>
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
+      </div>
+      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddRow}
+          size="small"
+        >
+          Add Row
+        </Button>
       </div>
       <table className="bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>

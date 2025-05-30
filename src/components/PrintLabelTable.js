@@ -1,5 +1,6 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Input, Button } from 'antd';
+import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 import { formatSize } from '../utils/formattingUtils';
 
@@ -11,6 +12,12 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
       // For now, assumes direct update to the provided columnKey (e.g., row.Glass_Argon_Combined)
       // Or, if the original data structure has `row.Glass` and `row.PO` as distinct editable fields:
       onCellChange('label', rowIndex, columnKey, e.target.value);
+    }
+  };
+
+  const handleAddRow = () => {
+    if (onCellChange) {
+      onCellChange('label', null, 'ADD_ROW', null);
     }
   };
 
@@ -48,6 +55,16 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
       </div>
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
+      </div>
+      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddRow}
+          size="small"
+        >
+          Add Row
+        </Button>
       </div>
       <table className="label-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>

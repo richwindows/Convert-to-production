@@ -1,6 +1,6 @@
 import React from 'react';
 import { Input, Button, Tooltip } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
+import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 import exportSimpleExcel from '../utils/SimpleExcelExport';
 
@@ -10,6 +10,12 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
       // Ensure consistency if 'tmprd' (lowercase) is used elsewhere, map to 'Tmprd'
       const keyToUpdate = columnKey.toLowerCase() === 'tmprd' ? 'Tmprd' : columnKey;
       onCellChange('glass', rowIndex, keyToUpdate, e.target.value);
+    }
+  };
+
+  const handleAddRow = () => {
+    if (onCellChange) {
+      onCellChange('glass', null, 'ADD_ROW', null);
     }
   };
 
@@ -110,6 +116,16 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
             导出3mm非钢化玻璃优化表
           </Button>
         </Tooltip>
+      </div>
+      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddRow}
+          size="small"
+        >
+          Add Row
+        </Button>
       </div>
       <div className="print-container">
         <div className="print-header glass-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>

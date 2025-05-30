@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Tag, Tooltip, Badge } from 'antd';
-import { FileTextOutlined, TagOutlined, ScissorOutlined } from '@ant-design/icons';
+import { Input, Tag, Tooltip, Badge, Button } from 'antd';
+import { FileTextOutlined, TagOutlined, ScissorOutlined, PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) => {
@@ -18,6 +18,16 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
       const newData = [...sortedData];
       newData[rowIndex] = updatedRow;
       onCellChange('materialCutting', rowIndex, columnKey, e.target.value);
+    }
+  };
+
+  const handleAddRow = () => {
+    if (onCellChange) {
+      // For materialCutting, adding a new row might require specific default values 
+      // or a different handling in App.js depending on how it should integrate with 'sortedData' logic.
+      // For now, we'll send a generic ADD_ROW and App.js will append an empty object.
+      // This might need refinement if newly added rows in this specific table require more structure upfront.
+      onCellChange('materialCutting', null, 'ADD_ROW', null);
     }
   };
 
@@ -112,6 +122,16 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
       <div className="print-header material-cutting-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>DECA Cutting</div>
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
+      </div>
+      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+        <Button 
+          type="primary" 
+          icon={<PlusOutlined />} 
+          onClick={handleAddRow}
+          size="small"
+        >
+          Add Row
+        </Button>
       </div>
       <table className="material-cutting-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>
