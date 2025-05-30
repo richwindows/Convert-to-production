@@ -14,6 +14,25 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
     'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color'
   ];
 
+  // 通用的单元格样式
+  const cellStyle = {
+    width: 'max-content',
+    whiteSpace: 'nowrap',
+    padding: '4px 8px'
+  };
+
+  // 输入框样式
+  const inputStyle = {
+    minWidth: '50px',
+    width: '100%'
+  };
+
+  // 数字列的样式
+  const numberCellStyle = {
+    ...cellStyle,
+    maxWidth: '60px'
+  };
+
   return (
     <div className="print-container">
       <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
@@ -22,17 +41,12 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <table className="parts-table bordered-print-table" style={{ tableLayout: 'auto' }}>
+      <table className="parts-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>
           <tr>
             {headerTitles.map(title => {
-              if (title === 'Batch NO.') {
-                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
-              } else if (title === 'Style' || title.toLowerCase().includes('pcs') || title === 'Color' || 
-                  ['中框', '中铝', '手铝', 'Track', 'Cover--', 'Cover|', '大中', '大中2', 'Slop'].includes(title)) {
-                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
-              }
-              return <th key={title}>{title}</th>;
+              const isNumberColumn = title.toLowerCase().includes('pcs');
+              return <th key={title} style={isNumberColumn ? numberCellStyle : cellStyle}>{title}</th>;
             })}
           </tr>
         </thead>
@@ -40,43 +54,54 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-                <td>{row.ID || ''}</td>
-                <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                <td><Input size="small" bordered={false} value={row.mullion || ''} onChange={(e) => handleInputChange(e, index, 'mullion')} /></td>
-                <td><Input size="small" bordered={false} value={row.mullionA || ''} onChange={(e) => handleInputChange(e, index, 'mullionA')} /></td>
-                <td><Input size="small" bordered={false} value={row.handleA || ''} onChange={(e) => handleInputChange(e, index, 'handleA')} /></td>
-                <td><Input size="small" bordered={false} value={row.quantity || ''} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
-                <td><Input size="small" bordered={false} value={row.track || ''} onChange={(e) => handleInputChange(e, index, 'track')} /></td>
-                <td><Input size="small" bordered={false} value={row.coverH || ''} onChange={(e) => handleInputChange(e, index, 'coverH')} /></td>
-                <td><Input size="small" bordered={false} value={row.coverV || ''} onChange={(e) => handleInputChange(e, index, 'coverV')} /></td>
-                <td><Input size="small" bordered={false} value={row.bigMu1 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1')} /></td>
-                <td><Input size="small" bordered={false} value={row.bigMu1Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1Q')} /></td>
-                <td><Input size="small" bordered={false} value={row.bigMu2 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2')} /></td>
-                <td><Input size="small" bordered={false} value={row.bigMu2Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2Q')} /></td>
-                <td><Input size="small" bordered={false} value={row.slop || ''} onChange={(e) => handleInputChange(e, index, 'slop')} /></td>
-                <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
+                <td style={cellStyle}>{batchNo}</td>
+                <td style={cellStyle}>{row.ID || ''}</td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.mullion || ''} onChange={(e) => handleInputChange(e, index, 'mullion')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.mullionA || ''} onChange={(e) => handleInputChange(e, index, 'mullionA')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.handleA || ''} onChange={(e) => handleInputChange(e, index, 'handleA')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.quantity || ''} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.track || ''} onChange={(e) => handleInputChange(e, index, 'track')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.coverH || ''} onChange={(e) => handleInputChange(e, index, 'coverH')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.coverV || ''} onChange={(e) => handleInputChange(e, index, 'coverV')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu1 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu1Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1Q')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu2 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu2Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2Q')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.slop || ''} onChange={(e) => handleInputChange(e, index, 'slop')} /></td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
               </tr>
             ))
           ) : (
             <tr>
-              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-              {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+              <td style={cellStyle}>{batchNo}</td>
+              {[...Array(headerTitles.length - 1)].map((_, i) => {
+                const isNumberColumn = i === 6 || i === 11 || i === 13;
+                return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              })}
             </tr>
           )}
-          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
-            [...Array(10 - calculatedData.length)].map((_, i) => (
-              <tr key={`empty-fill-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+          {/* 只在最后一行有数据时添加空行 */}
+          {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
+           Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
+           calculatedData.length < 10 &&
+            [...Array(1)].map((_, i) => (
+              <tr key={`empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => {
+                  const isNumberColumn = j === 6 || j === 11 || j === 13;
+                  return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+                })}
               </tr>
             ))
           }
+          {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
-            [...Array(9)].map((_, i) => (
-              <tr key={`initial-empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
-              </tr>
-            ))
+            <tr>
+              {[...Array(headerTitles.length)].map((_, j) => {
+                const isNumberColumn = j === 6 || j === 11 || j === 13;
+                return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              })}
+            </tr>
           }
         </tbody>
       </table>

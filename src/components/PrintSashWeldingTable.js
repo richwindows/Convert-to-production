@@ -10,6 +10,25 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  // 通用的单元格样式
+  const cellStyle = {
+    width: 'max-content',
+    whiteSpace: 'nowrap',
+    padding: '4px 8px'
+  };
+
+  // 输入框样式
+  const inputStyle = {
+    minWidth: '50px',
+    width: '100%'
+  };
+
+  // 数字列的样式
+  const numberCellStyle = {
+    ...cellStyle,
+    maxWidth: '60px'
+  };
+
   return (
     <div className="print-container">
       <div className="print-header sash-welding-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
@@ -18,56 +37,67 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <table className="sash-welding-table bordered-print-table" style={{ tableLayout: 'auto' }}>
+      <table className="sash-welding-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>
           <tr>
-            <th style={{ width: 'max-content', whiteSpace: 'nowrap' }}>Batch NO.</th>
-            <th style={{ width: 'max-content' }}>Customer</th>
-            <th>ID</th>
-            <th style={{ width: 'max-content' }}>Style</th>
-            <th>W</th>
-            <th>H</th>
-            <th>Sashw</th>
-            <th>Sashh</th>
-            <th style={{ width: 'max-content' }}>Pcs</th>
-            <th>No.</th> 
+            <th style={cellStyle}>Batch NO.</th>
+            <th style={cellStyle}>Customer</th>
+            <th style={cellStyle}>ID</th>
+            <th style={cellStyle}>Style</th>
+            <th style={numberCellStyle}>W</th>
+            <th style={numberCellStyle}>H</th>
+            <th style={numberCellStyle}>Sashw</th>
+            <th style={numberCellStyle}>Sashh</th>
+            <th style={numberCellStyle}>Pcs</th>
+            <th style={numberCellStyle}>No.</th> 
           </tr>
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-                <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
-                <td>{row.ID || ''}</td>
-                <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                <td><Input size="small" bordered={false} value={row.SashW || ''} onChange={(e) => handleInputChange(e, index, 'SashW')} /></td>
-                <td><Input size="small" bordered={false} value={row.SashH || ''} onChange={(e) => handleInputChange(e, index, 'SashH')} /></td>
-                <td><Input size="small" bordered={false} value={row.WeldingCutW || ''} onChange={(e) => handleInputChange(e, index, 'WeldingCutW')} /></td>
-                <td><Input size="small" bordered={false} value={row.WeldingCutH || ''} onChange={(e) => handleInputChange(e, index, 'WeldingCutH')} /></td>
-                <td><Input size="small" bordered={false} value={row.Pcs || ''} onChange={(e) => handleInputChange(e, index, 'Pcs')} /></td>
-                <td>{index + 1}</td> 
+                <td style={cellStyle}>{batchNo}</td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
+                <td style={cellStyle}>{row.ID || ''}</td>
+                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.SashW || ''} onChange={(e) => handleInputChange(e, index, 'SashW')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.SashH || ''} onChange={(e) => handleInputChange(e, index, 'SashH')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.WeldingCutW || ''} onChange={(e) => handleInputChange(e, index, 'WeldingCutW')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.WeldingCutH || ''} onChange={(e) => handleInputChange(e, index, 'WeldingCutH')} /></td>
+                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Pcs || ''} onChange={(e) => handleInputChange(e, index, 'Pcs')} /></td>
+                <td style={numberCellStyle}>{index + 1}</td> 
               </tr>
             ))
           ) : (
             <tr>
-              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-              {[...Array(9)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+              <td style={cellStyle}>{batchNo}</td>
+              {[...Array(9)].map((_, i) => {
+                const isNumberColumn = i === 3 || i === 4 || i === 5 || i === 6 || i === 7 || i === 8 || i === 9;
+                return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              })}
             </tr>
           )}
-          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
-            [...Array(10 - calculatedData.length)].map((_, i) => (
-              <tr key={`empty-fill-${i}`}>
-                {[...Array(10)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+          {/* 只在最后一行有数据时添加空行 */}
+          {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
+           Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
+           calculatedData.length < 10 &&
+            [...Array(1)].map((_, i) => (
+              <tr key={`empty-${i}`}>
+                {[...Array(10)].map((_, j) => {
+                  const isNumberColumn = j === 4 || j === 5 || j === 6 || j === 7 || j === 8 || j === 9;
+                  return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+                })}
               </tr>
             ))
           }
+          {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
-            [...Array(9)].map((_, i) => (
-              <tr key={`initial-empty-${i}`}>
-                {[...Array(10)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
-              </tr>
-            ))
+            <tr>
+              {[...Array(10)].map((_, j) => {
+                const isNumberColumn = j === 4 || j === 5 || j === 6 || j === 7 || j === 8 || j === 9;
+                return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              })}
+            </tr>
           }
         </tbody>
       </table>

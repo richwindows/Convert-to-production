@@ -18,6 +18,19 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
     { header: 'Slop', lengthKey: 'slop', pcsKey: 'quantity' },
   ];
 
+  // 通用的单元格样式
+  const cellStyle = {
+    width: 'max-content',
+    whiteSpace: 'nowrap',
+    padding: '4px 8px'
+  };
+
+  // 数字列的样式
+  const numberCellStyle = {
+    ...cellStyle,
+    maxWidth: '60px'
+  };
+
   useEffect(() => {
     if (!calculatedData || calculatedData.length === 0) {
       setProcessedData({ activeMaterialColumns: [], maxRows: 0 });
@@ -28,19 +41,18 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
       const items = [];
       calculatedData.forEach(row => {
         const length = row[material.lengthKey];
-        const pcs = row[material.pcsKey]; // Use the defined pcsKey
+        const pcs = row[material.pcsKey];
         const numericLength = parseFloat(length);
 
-        // Add item if length is a positive number
         if (length && !isNaN(numericLength) && numericLength > 0) {
           items.push({
-            originalId: row.ID, // Assuming 'ID' is the correct key for original ID
+            originalId: row.ID,
             length: numericLength,
-            pcs: pcs || '' // Fallback for Pcs
+            pcs: pcs || ''
           });
         }
       });
-      items.sort((a, b) => b.length - a.length); // Sort by length descending
+      items.sort((a, b) => b.length - a.length);
       return { ...material, sortedItems: items };
     });
 
@@ -65,15 +77,38 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
 
   if (!calculatedData || calculatedData.length === 0 || processedData.activeMaterialColumns.length === 0) {
     return (
-        <div className="print-container optimized-parts-print-container">
-            <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
-                Parts Print
-            </div>
-            <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
-                Batch: {batchNo}
-            </div>
-            <div style={{ textAlign: 'center', marginTop: '20px' }}>No data available for optimized parts view or all materials have zero/invalid length.</div>
+      <div className="print-container optimized-parts-print-container">
+        <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+          Parts Print
         </div>
+        <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+          Batch: {batchNo}
+        </div>
+        <table className="bordered-print-table optimized-parts-table" style={{ tableLayout: 'auto', width: '100%' }}>
+          <thead>
+            <tr>
+              {materialDefinitions.map((col, index) => (
+                <React.Fragment key={index}>
+                  <th style={cellStyle}>ID</th>
+                  <th style={numberCellStyle}>{col.header}</th>
+                  <th style={numberCellStyle}>Pcs</th>
+                </React.Fragment>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              {materialDefinitions.map((col, j) => (
+                <React.Fragment key={`empty-${j}`}>
+                  <td style={cellStyle}></td>
+                  <td style={numberCellStyle}></td>
+                  <td style={numberCellStyle}></td>
+                </React.Fragment>
+              ))}
+            </tr>
+          </tbody>
+        </table>
+      </div>
     );
   }
 
@@ -85,14 +120,14 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <table className="bordered-print-table optimized-parts-table">
+      <table className="bordered-print-table optimized-parts-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>
           <tr>
             {processedData.activeMaterialColumns.map((col, index) => (
               <React.Fragment key={index}>
-                <th>ID</th>
-                <th>{col.header}</th>
-                <th>Pcs</th>
+                <th style={cellStyle}>ID</th>
+                <th style={numberCellStyle}>{col.header}</th>
+                <th style={numberCellStyle}>Pcs</th>
               </React.Fragment>
             ))}
           </tr>
@@ -104,37 +139,27 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
                 const item = col.sortedItems[rowIndex];
                 return (
                   <React.Fragment key={`${rowIndex}-${colIndex}`}>
-                    <td>{item ? item.originalId : ''}</td>
-                    <td>{item ? item.length.toFixed(3) : ''}</td> 
-                    <td>{item ? item.pcs : ''}</td>
+                    <td style={cellStyle}>{item ? item.originalId : ''}</td>
+                    <td style={numberCellStyle}>{item ? item.length.toFixed(3) : ''}</td> 
+                    <td style={numberCellStyle}>{item ? item.pcs : ''}</td>
                   </React.Fragment>
                 );
               })}
             </tr>
           ))}
-          {/* Fill with empty rows to ensure a minimum of 10 rows if there's data */}
+          {/* 只在最后一行有数据时添加空行 */}
           {processedData.maxRows > 0 && processedData.maxRows < 10 &&
-            [...Array(10 - processedData.maxRows)].map((_, i) => (
-              <tr key={`empty-fill-${i}`}>
+           processedData.activeMaterialColumns.some(col => 
+             col.sortedItems[processedData.maxRows - 1] && 
+             (col.sortedItems[processedData.maxRows - 1].length > 0 || col.sortedItems[processedData.maxRows - 1].pcs)
+           ) &&
+            [...Array(1)].map((_, i) => (
+              <tr key={`empty-${i}`}>
                 {processedData.activeMaterialColumns.map((col, j) => (
-                  <React.Fragment key={`empty-fill-${i}-${j}`}>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                  </React.Fragment>
-                ))}
-              </tr>
-            ))
-          }
-          {/* If there are active columns but no data rows (maxRows is 0), show 10 empty rows */}
-          {processedData.activeMaterialColumns.length > 0 && processedData.maxRows === 0 &&
-             [...Array(10)].map((_, i) => (
-              <tr key={`initial-empty-${i}`}>
-                {processedData.activeMaterialColumns.map((col, j) => (
-                  <React.Fragment key={`initial-empty-${i}-${j}`}>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                  <React.Fragment key={`empty-${i}-${j}`}>
+                    <td style={cellStyle}></td>
+                    <td style={numberCellStyle}></td>
+                    <td style={numberCellStyle}></td>
                   </React.Fragment>
                 ))}
               </tr>

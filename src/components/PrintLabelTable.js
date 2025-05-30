@@ -28,6 +28,19 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
     'Customer', 'ID', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Invoice Num. Order Date', 'Barcode'
   ];
 
+  // 通用的单元格样式
+  const cellStyle = {
+    width: 'max-content',
+    whiteSpace: 'nowrap',
+    padding: '4px 8px'
+  };
+
+  // 输入框样式
+  const inputStyle = {
+    minWidth: '50px',
+    width: '100%'
+  };
+
   return (
     <div className="print-container">
       <div className="print-header label-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
@@ -36,17 +49,12 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <table className="label-table bordered-print-table" style={{ tableLayout: 'auto' }}>
+      <table className="label-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>
           <tr>
-            {headerTitles.map(title => {
-              if (title === 'Invoice Num. Order Date') {
-                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
-              } else if (['Customer', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Barcode'].includes(title)) {
-                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
-              }
-              return <th key={title}>{title}</th>;
-            })}
+            {headerTitles.map(title => (
+              <th key={title} style={cellStyle}>{title}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -61,46 +69,47 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
 
               return (
                 <tr key={index}>
-                  <td><Input size="small" bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
-                  <td>{row.ID}</td>
-                  <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                  <td className="label-size-cell">{sizeDisplay}</td>
-                  <td><Input size="small" bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
+                  <td style={cellStyle}>{row.ID}</td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                  <td style={cellStyle} className="label-size-cell">{sizeDisplay}</td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
                   {/* For simplicity, making the combined display string editable. 
                       If row.Glass and row.Argon need to be updated separately, this needs more complex logic 
                       or two separate input fields mapped to row.Glass and row.Argon respectively.*/}
-                  <td><Input size="small" bordered={false} value={glassDisplay} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
-                  <td><Input size="small" bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
-                  <td><Input size="small" bordered={false} value={row.PO || row.Note || ''} onChange={(e) => handleInputChange(e, index, 'PO')} /></td>
-                  <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-                  <td className="label-barcode-cell">{barcode}</td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={glassDisplay} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.PO || row.Note || ''} onChange={(e) => handleInputChange(e, index, 'PO')} /></td>
+                  <td style={cellStyle}>{batchNo}</td>
+                  <td style={cellStyle} className="label-barcode-cell">{barcode}</td>
                 </tr>
               );
             })
           ) : (
             <tr>
-              {/* Render empty cells for all header titles in the placeholder row */}
               {headerTitles.map((title, i) => {
                 if (title === 'Invoice Num. Order Date') {
-                  return <td key={`empty-placeholder-${i}`} style={{ whiteSpace: 'nowrap' }}>{batchNo || ''}</td>;
+                  return <td key={`empty-placeholder-${i}`} style={cellStyle}>{batchNo || ''}</td>;
                 }
-                return <td key={`empty-placeholder-${i}`}></td>;
+                return <td key={`empty-placeholder-${i}`} style={cellStyle}></td>;
               })}
             </tr>
           )}
-          {calculatedData && calculatedData.length > 0 && calculatedData.length < 10 &&
-            [...Array(10 - calculatedData.length)].map((_, i) => (
-              <tr key={`empty-fill-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+          {/* 只在最后一行有数据时添加空行 */}
+          {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
+           Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
+           calculatedData.length < 10 &&
+            [...Array(1)].map((_, i) => (
+              <tr key={`empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-${i}-${j}`} style={cellStyle}></td>)}
               </tr>
             ))
           }
+          {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
-            [...Array(10 -1)].map((_, i) => ( // Assuming 10 rows total including header, so 9 empty data rows initially
-              <tr key={`initial-empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
-              </tr>
-            ))
+            <tr>
+              {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-${j}`} style={cellStyle}></td>)}
+            </tr>
           }
         </tbody>
       </table>

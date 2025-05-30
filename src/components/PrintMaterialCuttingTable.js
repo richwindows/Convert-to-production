@@ -17,11 +17,7 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
       const updatedRow = { ...sortedData[rowIndex], [columnKey]: e.target.value };
       const newData = [...sortedData];
       newData[rowIndex] = updatedRow;
-      // If you want to reflect changes immediately in parent for export or other processing:
       onCellChange('materialCutting', rowIndex, columnKey, e.target.value);
-      // If only local state update is needed until a save/process action, 
-      // then just setSortedData(newData) might be enough and call parent on a specific action.
-      // For now, assuming immediate propagation to parent.
     }
   };
 
@@ -40,9 +36,9 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
       Length: parseFloat(item.Length) || 0,
       cutCount: item.cutCount || item.CutCount || 0,
       cutLoss: item.cutLoss || item.CutLoss || 0,
-      OrderNo: item.OrderNo || item.ID || '', // Ensure OrderNo for display
-      OrderItem: item.OrderItem || '1', // Ensure OrderItem for display
-      BinNo: item.BinNo || item.ID || '', // Ensure BinNo for display
+      OrderNo: item.OrderNo || item.ID || '',
+      OrderItem: item.OrderItem || '1',
+      BinNo: item.BinNo || item.ID || '',
     }));
     
     const sortedItems = [...normalizedData].sort((a, b) => {
@@ -76,6 +72,25 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
     'Length', 'Angles', 'Qty', 'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
   ];
 
+  // 通用的单元格样式
+  const cellStyle = {
+    width: 'max-content',
+    whiteSpace: 'nowrap',
+    padding: '4px 8px'
+  };
+
+  // 输入框样式
+  const inputStyle = {
+    minWidth: '50px',
+    width: '100%'
+  };
+
+  // 数字列的样式
+  const numberCellStyle = {
+    ...cellStyle,
+    maxWidth: '60px'
+  };
+
   const renderOptimizationMetrics = () => {
     if (!sortedData || sortedData.length === 0) return null;
     return (
@@ -98,77 +113,84 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
       <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <table className="material-cutting-table bordered-print-table" style={{ tableLayout: 'auto' }}>
+      <table className="material-cutting-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
         <thead>
           <tr>
             {headerTitles.map(title => {
-              if (title === 'Batch No') {
-                return <th key={title} style={{ width: 'max-content', whiteSpace: 'nowrap' }}>{title}</th>;
-              } else if (['Material Name', 'Qty', 'Position', 'Style', 'Frame', 'Color', 'Painting', 'Angles'].includes(title)) {
-                return <th key={title} style={{ width: 'max-content' }}>{title}</th>;
-              }
-              return <th key={title}>{title}</th>;
+              const isNumberColumn = ['Length', 'Qty'].includes(title);
+              return <th key={title} style={isNumberColumn ? numberCellStyle : cellStyle}>{title}</th>;
             })}
           </tr>
         </thead>
         <tbody>
-          {sortedData.map((row, index) => {
-            const cuttingID = row.CuttingID || '';
-            const piecesID = row.PiecesID || '';
-            let materialType = row.MaterialName;
-            let colorSuffix = '';
-            const lastDashIndex = row.MaterialName.lastIndexOf('-');
-            if (lastDashIndex !== -1) {
-              materialType = row.MaterialName.substring(0, lastDashIndex);
-              colorSuffix = row.MaterialName.substring(lastDashIndex + 1);
-            }
-            return (
-              <tr key={`${row.MaterialName}_${cuttingID}_${piecesID}_${index}_${row.ID || index}`}>
-                <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-                <td>{row.OrderNo}</td>
-                <td>{row.OrderItem}</td>
-                <td>
-                  <Tooltip title={`完整材料名称: ${row.MaterialName}`}>
-                    <span className="material-name">
-                      <span className="material-type">{materialType}</span>
-                      {colorSuffix && <Tag color="blue" className="material-color">{colorSuffix}</Tag>}
-                    </span>
-                  </Tooltip>
-                </td>
-                <td>{cuttingID && <Badge status="processing" text={cuttingID} />}</td>
-                <td>{piecesID && <Badge status="success" text={piecesID} />}</td>
-                <td><Input size="small" bordered={false} value={row.Length} onChange={(e) => handleInputChange(e, index, 'Length')} /></td>
-                <td><Input size="small" bordered={false} value={row.Angles || 'V'} onChange={(e) => handleInputChange(e, index, 'Angles')} /></td>
-                <td><Input size="small" bordered={false} value={row.Qty} onChange={(e) => handleInputChange(e, index, 'Qty')} /></td>
-                <td><Input size="small" bordered={false} value={row.BinNo} onChange={(e) => handleInputChange(e, index, 'BinNo')} /></td>
-                <td><Input size="small" bordered={false} value={row.Position || ''} onChange={(e) => handleInputChange(e, index, 'Position')} /></td>
-                <td><Input size="small" bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                <td><Input size="small" bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
-                <td><Input size="small" bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
-                <td><Input size="small" bordered={false} value={row.Painting || ''} onChange={(e) => handleInputChange(e, index, 'Painting')} /></td>
-              </tr>
-            );
-          })}
-          {sortedData.length === 0 &&
+          {sortedData && sortedData.length > 0 ? (
+            sortedData.map((row, index) => {
+              const cuttingID = row.CuttingID || '';
+              const piecesID = row.PiecesID || '';
+              let materialType = row.MaterialName;
+              let colorSuffix = '';
+              const lastDashIndex = row.MaterialName.lastIndexOf('-');
+              if (lastDashIndex !== -1) {
+                materialType = row.MaterialName.substring(0, lastDashIndex);
+                colorSuffix = row.MaterialName.substring(lastDashIndex + 1);
+              }
+              return (
+                <tr key={`${row.MaterialName}_${cuttingID}_${piecesID}_${index}_${row.ID || index}`}>
+                  <td style={cellStyle}>{batchNo}</td>
+                  <td style={cellStyle}>{row.OrderNo}</td>
+                  <td style={cellStyle}>{row.OrderItem}</td>
+                  <td style={cellStyle}>
+                    <Tooltip title={`完整材料名称: ${row.MaterialName}`}>
+                      <span className="material-name">
+                        <span className="material-type">{materialType}</span>
+                        {colorSuffix && <Tag color="blue" className="material-color">{colorSuffix}</Tag>}
+                      </span>
+                    </Tooltip>
+                  </td>
+                  <td style={cellStyle}>{cuttingID && <Badge status="processing" text={cuttingID} />}</td>
+                  <td style={cellStyle}>{piecesID && <Badge status="success" text={piecesID} />}</td>
+                  <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Length} onChange={(e) => handleInputChange(e, index, 'Length')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Angles || 'V'} onChange={(e) => handleInputChange(e, index, 'Angles')} /></td>
+                  <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Qty} onChange={(e) => handleInputChange(e, index, 'Qty')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.BinNo} onChange={(e) => handleInputChange(e, index, 'BinNo')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Position || ''} onChange={(e) => handleInputChange(e, index, 'Position')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
+                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Painting || ''} onChange={(e) => handleInputChange(e, index, 'Painting')} /></td>
+                </tr>
+              );
+            })
+          ) : (
             <tr>
-              <td style={{ whiteSpace: 'nowrap' }}>{batchNo}</td>
-              {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`}></td>)}
+              <td style={cellStyle}>{batchNo}</td>
+              {[...Array(headerTitles.length - 1)].map((_, i) => {
+                const isNumberColumn = i === 6 || i === 8;
+                return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              })}
             </tr>
-          }
-          {/* Placeholder rows for consistent table height - adjust as needed */}
-          {sortedData.length > 0 && sortedData.length < 10 &&
-            [...Array(10 - sortedData.length)].map((_, i) => (
-              <tr key={`empty-fill-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-fill-${i}-${j}`}></td>)}
+          )}
+          {/* 只在最后一行有数据时添加空行 */}
+          {sortedData && sortedData.length > 0 && sortedData[sortedData.length - 1] && 
+           Object.values(sortedData[sortedData.length - 1]).some(value => value) && 
+           sortedData.length < 10 &&
+            [...Array(1)].map((_, i) => (
+              <tr key={`empty-${i}`}>
+                {[...Array(headerTitles.length)].map((_, j) => {
+                  const isNumberColumn = j === 6 || j === 8;
+                  return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+                })}
               </tr>
             ))
           }
-          {sortedData.length === 0 &&
-            [...Array(9)].map((_, i) => ( // If sortedData is empty, show 9 empty rows plus one with batchNo
-              <tr key={`initial-empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`initial-empty-${i}-${j}`}></td>)}
-              </tr>
-            ))
+          {/* 移除没有数据时的额外空行 */}
+          {(!sortedData || sortedData.length === 0) &&
+            <tr>
+              {[...Array(headerTitles.length)].map((_, j) => {
+                const isNumberColumn = j === 6 || j === 8;
+                return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              })}
+            </tr>
           }
         </tbody>
       </table>
