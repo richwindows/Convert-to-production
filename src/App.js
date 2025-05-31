@@ -575,14 +575,13 @@ function App() {
       fill: { fgColor: { rgb: "FFFF00" } } 
     };
 
-    const headers = ['Batch NO.-ID', 'Customer-ID', 'Style', 'W', 'H', 'Sash W', 'Sash H', 'Pcs'];
+    const headers = ['Batch NO.-ID', 'Customer-ID', 'ID', 'Style', 'Sash W', 'Sash H', 'Pcs'];
     
     const dataForSheet = calculatedData.sashWelding.map((row, index) => [
       `${currentBatchNo}-${row.ID}`,
       `${row.Customer || 'N/A'}-${row.ID}`,
+      row.ID,
       row.Style,
-      row.SashW, // Assuming SashW from writeSashWeldingEntry is BaseSashW
-      row.SashH, // Assuming SashH from writeSashWeldingEntry is BaseSashH
       row.WeldingCutW,
       row.WeldingCutH,
       row.Pcs
@@ -634,7 +633,7 @@ function App() {
     const headers = [
       'Batch No', 'Order No', 'Order Item', 'Material Name',
       'Cutting ID', 'Pieces ID', 'Length', 'Angles', 'Qty',
-      'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
+      'Bin No', 'Cart No', 'Position', 'Label Print', 'Barcode No', 'PO No', 'Style', 'Frame', 'Product Size', 'Color', 'Grid', 'Glass', 'Argon', 'Painting', 'Product Date', 'Balance', 'Shift', 'Ship date', 'Note', 'Customer'
     ];
 
     // Add Header Row and Apply Styles
@@ -668,11 +667,18 @@ function App() {
         item.Angles || 'V',
         item.Qty || '',
         item.BinNo || item.ID || '',
+        item.CartNo || '',
         item.Position || '',
+        item.LabelPrint || '',
+        item.BarcodeNo || '',
+        item.PO || '',
         item.Style || '',
         item.Frame || '',
+        item.ProductSize || '',
         item.Color || '',
-        item.Painting || ''
+        item.Grid || '',
+        item.Glass || '',
+        item.Argon || '',
       ];
       const dataRow = ws.addRow(rowValues);
       dataRow.eachCell(cell => {
