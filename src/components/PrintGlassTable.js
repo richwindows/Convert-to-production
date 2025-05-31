@@ -63,12 +63,14 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   const getGlassTypeCount = (type) => {
     if (!calculatedData || calculatedData.length === 0) return 0;
-    return calculatedData.filter(item => 
-      item.thickness === '3' && 
-      item.Tmprd !== 'T' && 
-      item.glassType && 
-      item.glassType.toLowerCase().includes(type)
-    ).length;
+    return calculatedData
+      .filter(item => 
+        item.thickness === '3' && 
+        item.Tmprd !== 'T' && 
+        item.glassType && 
+        item.glassType.toLowerCase().includes(type)
+      )
+      .reduce((sum, item) => sum + (parseInt(item.quantity, 10) || 0), 0); // Summing quantities
   };
   
   // Simplified header titles for a single row header

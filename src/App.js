@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Layout, Upload, Button, Input, Table, message, Space, Card, Tabs, Modal } from 'antd';
 import { UploadOutlined, PrinterOutlined, FileExcelOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
+import * as ExcelJS from 'exceljs';
 import 'antd/dist/antd.css';
 import './App.css';
 import PrintTable from './components/PrintTable';
@@ -562,8 +563,8 @@ function App() {
     setIsExportingSashWelding(false);
   };
 
-  // New function to export only DECA Cutting data to Excel
-  const exportDecaCuttingToExcel = () => {
+  // New function to export only DECA Cutting data to Excel using ExcelJS
+  const exportDecaCuttingToExcel = async () => {
     if (!calculatedData.materialCutting || calculatedData.materialCutting.length === 0) {
       message.error('No DECA Cutting data available to export.');
       return;
@@ -574,66 +575,95 @@ function App() {
 
     const currentBatchNo = batchNo || 'N/A';
     
-    // Get today's date in MMDDYYYY format (variables month, day, year are not used further)
-    // const today = new Date(); 
-    // const month = String(today.getMonth() + 1).padStart(2, '0');
-    // const day = String(today.getDate()).padStart(2, '0');
-    // const year = today.getFullYear();
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('DECA Cutting');
 
-    // Format headers and data for Excel
+    // Define Headers
     const headers = [
       'Batch No', 'Order No', 'Order Item', 'Material Name',
       'Cutting ID', 'Pieces ID', 'Length', 'Angles', 'Qty',
       'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
     ];
-    
-    const dataForSheet = calculatedData.materialCutting.map(item => [
-      currentBatchNo,
-      item.OrderNo || item.ID || '',
-      item.OrderItem || '1',
-      item.MaterialName || '',
-      item.CuttingID || item['Cutting ID'] || '',
-      item.PiecesID || item['Pieces ID'] || '',
-      item.Length || '',
-      item.Angles || 'V',
-      item.Qty || '',
-      item.BinNo || item.ID || '',
-      item.Position || '',
-      item.Style || '',
-      item.Frame || '',
-      item.Color || '',
-      item.Painting || ''
-    ]);
 
-    // Create the Excel workbook
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet([headers, ...dataForSheet]);
+    // Add Header Row and Apply Styles
+    const headerRow = ws.addRow(headers);
+    headerRow.eachCell((cell, colNumber) => {
+      cell.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFFFFF00' } // Yellow
+      };
+      cell.font = { name: 'Calibri', sz: 12, bold: true };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF000000' } },
+        left: { style: 'thin', color: { argb: 'FF000000' } },
+        bottom: { style: 'thin', color: { argb: 'FF000000' } },
+        right: { style: 'thin', color: { argb: 'FF000000' } }
+      };
+    });
 
-    // Apply styles
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = { c: C, r: R };
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
-        if (!ws[cell_ref]) continue;
-        ws[cell_ref].s = {
-          font: { name: 'Calibri', sz: 12 },
-          border: { top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } }, left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } } },
-          alignment: { horizontal: "center", vertical: "center" }
+    // Prepare and Add Data Rows
+    calculatedData.materialCutting.forEach(item => {
+      const rowValues = [
+        currentBatchNo,
+        item.OrderNo || item.ID || '',
+        item.OrderItem || '1',
+        item.MaterialName || '',
+        item.CuttingID || item['Cutting ID'] || '',
+        item.PiecesID || item['Pieces ID'] || '',
+        item.Length || '',
+        item.Angles || 'V',
+        item.Qty || '',
+        item.BinNo || item.ID || '',
+        item.Position || '',
+        item.Style || '',
+        item.Frame || '',
+        item.Color || '',
+        item.Painting || ''
+      ];
+      const dataRow = ws.addRow(rowValues);
+      dataRow.eachCell(cell => {
+        cell.font = { name: 'Calibri', sz: 12 };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF000000' } },
+          left: { style: 'thin', color: { argb: 'FF000000' } },
+          bottom: { style: 'thin', color: { argb: 'FF000000' } },
+          right: { style: 'thin', color: { argb: 'FF000000' } }
         };
-      }
-    }
-    
-    // Set column widths (optional, but good for readability)
-    const colWidths = headers.map(() => ({ wch: 15 }));
-    ws['!cols'] = colWidths;
+      });
+    });
+
+    // Set Column Widths
+    headers.forEach((header, index) => {
+      const column = ws.getColumn(index + 1); // ExcelJS columns are 1-indexed
+      column.width = 18; // Default width, adjust as needed
+    });
+    ws.getColumn(4).width = 25; // Material Name wider
+    ws.getColumn(12).width = 20; // Style wider
+
 
     // Create the filename
     const fileNameDecaCutting = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_DECA_Cutting.xlsx`;
     
-    // Save the workbook to a file
-    XLSX.writeFile(wb, fileNameDecaCutting);
-    message.success({ content: 'DECA Cutting Excel file generated successfully!', key: 'exportingDecaCutting', duration: 2 });
+    // Generate and Download File
+    try {
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileNameDecaCutting;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 100);
+
+      message.success({ content: 'DECA Cutting Excel file generated successfully with ExcelJS!', key: 'exportingDecaCutting', duration: 2 });
+    } catch (error) {
+      console.error('Error exporting DECA Cutting with ExcelJS:', error);
+      message.error({ content: `Failed to generate DECA Cutting Excel: ${error.message}`, key: 'exportingDecaCutting', duration: 3 });
+    }
     setIsExportingDecaCutting(false);
   };
 

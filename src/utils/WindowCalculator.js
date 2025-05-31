@@ -120,39 +120,60 @@ class WindowCalculator {
   }
 
   writeSashWeldingEntry(data) {
-    const sashw = data.sashw;
-    const sashh = data.sashh;
+    const originalSashW_str = data.sashw;
+    const originalSashH_str = data.sashh;
 
-    console.log('sashw', sashw);
-    const id = data.ID;
-    const customer = data.Customer;
-    const style = data.Style;
+    const id = data.ID; // This is the displaySequentialId
+    const originalCustomer = data.Customer || ''; // Use original customer value
+    const originalStyle = data.Style || '';
 
-    const baseSashW_inches = parseFloat(sashw) || 0;
-    const baseSashH_inches = parseFloat(sashh) || 0;
+    // Helper to append ID, ensuring baseValue is treated as a string
+    const appendId = (baseValue, idToAppend) => {
+      const base = baseValue || ''; // Default to empty string if baseValue is null/undefined
+      return base + "--" + idToAppend;
+    };
+
+    // Style still gets --ID appended
+    const styleWithId = appendId(originalStyle, id);
+
+    // Count occurrences of 'X' (case-insensitive) in the originalStyle string for Pcs calculation
+    let PcsCount = (originalStyle.match(/x/gi) || []).length;
+    const finalPcs = PcsCount > 0 ? PcsCount : 1;
+
+    const originalSashW_numeric = parseFloat(originalSashW_str) || 0;
+    const originalSashH_numeric = parseFloat(originalSashH_str) || 0;
 
     let weldingCutW = '';
-    if (baseSashW_inches > 0) {
-      weldingCutW = (((baseSashW_inches * 25.4) - 6) / 25.4).toFixed(2);
+    if (originalSashW_numeric > 0) {
+      weldingCutW = (((originalSashW_numeric * 25.4) - 6) / 25.4).toFixed(2);
     }
 
     let weldingCutH = '';
-    if (baseSashH_inches > 0) {
-      weldingCutH = (((baseSashH_inches * 25.4) - 6) / 25.4).toFixed(2);
+    if (originalSashH_numeric > 0) {
+      weldingCutH = (((originalSashH_numeric * 25.4) - 6) / 25.4).toFixed(2);
+    }
+
+    let displaySashW_numeric, displaySashH_numeric;
+    if (originalSashW_numeric >= originalSashH_numeric) {
+      displaySashW_numeric = originalSashW_numeric;
+      displaySashH_numeric = originalSashH_numeric;
+    } else {
+      displaySashW_numeric = originalSashH_numeric;
+      displaySashH_numeric = originalSashW_numeric;
     }
 
     const weldingEntry = {
       ID: id,
-      Customer: customer || '',
-      Style: style || '',
-      SashW: sashw,   // Finished sash panel width
-      SashH: sashh,    // Finished sash panel height
-      WeldingCutW: weldingCutW,       // Calculated cut width for welding
-      WeldingCutH: weldingCutH,       // Calculated cut height for welding
-      Pcs: 1
+      Customer: originalCustomer, // Use original customer value directly
+      Style: styleWithId,       // Style with --ID appended
+      SashW: displaySashW_numeric.toFixed(3),
+      SashH: displaySashH_numeric.toFixed(3),
+      WeldingCutW: weldingCutW,
+      WeldingCutH: weldingCutH,
+      Pcs: finalPcs
     };
     this.data.sashWelding.push(weldingEntry);
-    this.log(`写入窗扇焊接数据 - ID: ${id}, Style: ${style}, 基础窗扇 WxH: ${sashw}x${sashh}, 焊接切割 WxH: ${weldingCutW}x${weldingCutH}, Pcs: 1`);
+    this.log(`写入窗扇焊接数据 - ID: ${id}, Customer: ${originalCustomer}, Style: ${styleWithId}, 显示窗扇 WxH: ${displaySashW_numeric.toFixed(3)}x${displaySashH_numeric.toFixed(3)}, 焊接切割 WxH: ${weldingCutW}x${weldingCutH}, Pcs: ${finalPcs}`);
   }
 
   // Process a window and generate all required data
