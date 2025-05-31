@@ -243,12 +243,50 @@ function App() {
       }
     },
     { title: 'Customer', dataIndex: 'Customer', key: 'customer' },
-    { title: 'Style', dataIndex: 'Style', key: 'style' },
+    {
+      title: 'Style',
+      dataIndex: 'Style',
+      key: 'style',
+      render: (text, record) => {
+        // Highlight if Style is empty (basic check)
+        if (!text || text.trim() === '') {
+          return <span style={{ backgroundColor: 'yellow', padding: '5px', display: 'block', width: '100%' }}>{text}</span>;
+        }
+        return text;
+      }
+    },
     { title: 'W', dataIndex: 'W', key: 'w' },
     { title: 'H', dataIndex: 'H', key: 'h' },
     { title: 'FH', dataIndex: 'FH', key: 'fh' },
-    { title: 'Frame', dataIndex: 'Frame', key: 'frame' },
-    { title: 'Glass', dataIndex: 'Glass', key: 'glass' },
+    {
+      title: 'Frame',
+      dataIndex: 'Frame',
+      key: 'frame',
+      render: (text, record) => {
+        const validFrameValues = Object.values(frameMapping);
+        // Highlight if text exists and is not a valid mapped value
+        if (text && !validFrameValues.includes(text)) {
+          return <span style={{ backgroundColor: 'yellow', padding: '5px', display: 'block', width: '100%' }}>{text}</span>;
+        }
+        // Also highlight if the original frame value (before mapping) was problematic, indicated by processExcelFile
+        // This requires processExcelFile to add a flag, e.g., record.originalFrameHadError. 
+        // For now, this only checks the processed value.
+        return text;
+      }
+    },
+    {
+      title: 'Glass',
+      dataIndex: 'Glass',
+      key: 'glass',
+      render: (text, record) => {
+        // record.Glass here is glassStringForFurtherProcessing from processExcelFile
+        // Highlight if Glass is empty after initial B-TP processing
+        if (!text || text.trim() === '') {
+          return <span style={{ backgroundColor: 'yellow', padding: '5px', display: 'block', width: '100%' }}>{text}</span>;
+        }
+        return text;
+      }
+    },
     { title: 'Argon', dataIndex: 'Argon', key: 'argon' },
     { title: 'Grid', dataIndex: 'Grid', key: 'grid' },
     { title: 'Color', dataIndex: 'Color', key: 'color' },
@@ -745,6 +783,23 @@ function App() {
     // Sash Welding Data is now directly from the calculator
     const sashWeldingDataFromCalc = allCalculatedData.sashWelding || [];
 
+    // Sort MaterialCutting data
+    let sortedMaterialCuttingData = allCalculatedData.materialCutting || [];
+    if (Array.isArray(sortedMaterialCuttingData)) {
+      sortedMaterialCuttingData.sort((a, b) => {
+        // Primary sort by MaterialName (alphabetical)
+        const materialNameA = a.MaterialName || '';
+        const materialNameB = b.MaterialName || '';
+        if (materialNameA < materialNameB) return -1;
+        if (materialNameA > materialNameB) return 1;
+
+        // Secondary sort by Length (descending, numerically)
+        const lengthA = parseFloat(a.Length) || 0;
+        const lengthB = parseFloat(b.Length) || 0;
+        return lengthB - lengthA; // For descending order
+      });
+    }
+
     setCalculatedData({
       info: finalInfoData,
       frame: allCalculatedData.frame || [],
@@ -755,8 +810,8 @@ function App() {
       grid: allCalculatedData.grid || [],
       order: allCalculatedData.order || [],
       label: allCalculatedData.label || [],
-      sashWelding: sashWeldingDataFromCalc, // Use directly from calculator
-      materialCutting: allCalculatedData.materialCutting || [],
+      sashWelding: sashWeldingDataFromCalc, 
+      materialCutting: sortedMaterialCuttingData, // Use sorted data
     });
     message.success(`Processed ${selectedData.length} selected rows. Detailed tables generated!`);
     console.log('===== Selective calculation complete =====');
@@ -773,6 +828,7 @@ function App() {
       return;
     }
 
+    // Preserve existing FH validation logic
     if (columnKey === 'FH') {
       let validatedFH = value;
       let rejectChange = false;
@@ -809,16 +865,70 @@ function App() {
         message.error(errorMessage + ' Change rejected.', 5);
         return; // Reject the change by not proceeding to setCalculatedData
       }
-      // If validation passed, value will be updated with validatedFH
-      value = validatedFH;
+      value = validatedFH; // Use the validated FH value
     }
 
+
     setCalculatedData(prevData => {
-      const updatedTableData = [...prevData[dataKey]];
-      if (updatedTableData[rowIndex]) {
-        updatedTableData[rowIndex] = { ...updatedTableData[rowIndex], [columnKey]: value };
+      const newCalculatedData = JSON.parse(JSON.stringify(prevData)); // Deep clone for safety
+
+      if (!newCalculatedData[dataKey] || !newCalculatedData[dataKey][rowIndex]) {
+        console.error("Error: dataKey or rowIndex is invalid in handlePrintTableCellChange", dataKey, rowIndex);
+        return prevData; // Return previous state if invalid access
       }
-      return { ...prevData, [dataKey]: updatedTableData };
+
+      newCalculatedData[dataKey][rowIndex][columnKey] = value;
+
+      // If Tmprd changed in the glass table, update the corresponding order entry
+      if (dataKey === 'glass' && columnKey === 'Tmprd') {
+        const changedGlassEntry = newCalculatedData.glass[rowIndex];
+        if (changedGlassEntry) {
+          const orderEntryIndex = newCalculatedData.order.findIndex(
+            o => o.ID === changedGlassEntry.ID && o.line === changedGlassEntry.line
+          );
+
+          if (orderEntryIndex !== -1) {
+            newCalculatedData.order[orderEntryIndex]['Annealed/Tempered'] = value === 'T' ? 'Tempered' : 'Annealed';
+          } else {
+            // Attempt to find the window info to create a new order entry if one is missing
+            const windowInfo = newCalculatedData.info.find(info => info.ID === changedGlassEntry.ID);
+            if (windowInfo) {
+              console.warn(`No matching order entry found for glass ID: ${changedGlassEntry.ID}, line: ${changedGlassEntry.line}. Attempting to create one.`);
+              const calculator = new WindowCalculator(); // Temporary instance
+              
+              // Mock the structure WindowCalculator's writeOrderEntry might expect or produce.
+              // This is a simplified version; the actual one in WindowCalculator.js might be more complex.
+              let orderGlassTypeName = 'Unknown';
+              if (changedGlassEntry.glassType.toLowerCase().includes('cl')) orderGlassTypeName = 'Clear';
+              if (changedGlassEntry.glassType.toLowerCase().includes('le2')) orderGlassTypeName = 'Lowe2';
+              if (changedGlassEntry.glassType.toLowerCase().includes('le3')) orderGlassTypeName = 'Lowe3';
+              if (changedGlassEntry.glassType.toLowerCase().includes('obs')) orderGlassTypeName = 'OBS';
+
+              const newOrderEntry = {
+                Customer: windowInfo.Customer,
+                Style: windowInfo.Style,
+                W: windowInfo.W,
+                H: windowInfo.H,
+                FH: windowInfo.FH,
+                ID: windowInfo.ID,
+                line: changedGlassEntry.line,
+                Quantity: changedGlassEntry.quantity,
+                'Glass Type': orderGlassTypeName,
+                'Annealed/Tempered': value === 'T' ? 'Tempered' : 'Annealed',
+                Thickness: changedGlassEntry.thickness, // Assuming thickness is on glassEntry
+                Width: changedGlassEntry.width,
+                Height: changedGlassEntry.height,
+                Notes: '', 
+                originalId: windowInfo.originalId,
+              };
+              newCalculatedData.order.push(newOrderEntry);
+            } else {
+              console.error(`Cannot create order entry: Window info not found for ID ${changedGlassEntry.ID}`);
+            }
+          }
+        }
+      }
+      return newCalculatedData;
     });
   };
 

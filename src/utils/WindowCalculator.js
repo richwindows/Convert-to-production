@@ -345,17 +345,45 @@ class WindowCalculator {
 
   // New method to finalize material cutting after all windows are processed
   async finalizeMaterialCutting() {
-    this.log('开始最终化材料切割数据...');
-    if (!this.data.materialCutting || this.data.materialCutting.length === 0) {
-      this.log('没有材料切割数据需要处理。');
+    this.log("Starting material cutting finalization...");
+    if (this.data.materialCutting.length === 0) {
+      this.log("No raw material pieces to optimize.");
       return;
     }
 
-    const allRawPieces = [...this.data.materialCutting]; // Copy of current raw pieces
-    this.data.materialCutting = []; // Clear current materialCutting, will be repopulated with optimized pieces
+    // Create a lookup for window frame types from this.data.info
+    const windowInfoLookup = this.data.info.reduce((acc, infoItem) => {
+      // Assuming infoItem.ID is the displaySequentialId which matches IDs in frame/sash data
+      acc[infoItem.ID] = { Frame: infoItem.Frame, Style: infoItem.Style, Color: infoItem.Color, OrderNo:  infoItem.ID };
+      return acc;
+    }, {});
 
-    // Group pieces by MaterialName
-    const piecesByMaterial = allRawPieces.reduce((acc, piece) => {
+    this.log("Window Info Lookup for Optimizer:", windowInfoLookup);
+
+    // Process raw pieces collected in this.data.materialCutting during window processing
+    // These pieces should already have ID, Style, Color from their origin (frame/sash part calculations)
+    // We now need to ensure they have the correct overall Window Frame type.
+    
+    const piecesWithFullInfo = this.data.materialCutting.map(piece => {
+      const info = windowInfoLookup[piece.ID]; // piece.ID is the displaySequentialId
+      if (info) {
+        return {
+          ...piece,
+          Frame: info.Frame,         // Add the main window Frame type
+          // Style: info.Style,      // Style should already be on the piece from its origin
+          // Color: info.Color,      // Color should already be on the piece from its origin
+          OrderNo: info.OrderNo || piece.ID, // Prefer originalId as OrderNo
+        };
+      } else {
+        this.log(`Warning: No info found in lookup for piece with ID ${piece.ID}. Frame type may be missing.`);
+        return piece; // Return original piece if no lookup match (should ideally not happen)
+      }
+    });
+    
+    this.log("Raw pieces for optimizer with full info:", JSON.stringify(piecesWithFullInfo.slice(0, 5))); // Log first 5
+
+    // Group pieces by MaterialName for the optimizer
+    const piecesByMaterial = piecesWithFullInfo.reduce((acc, piece) => {
       const key = piece.MaterialName;
       if (!acc[key]) {
         acc[key] = [];
@@ -540,17 +568,7 @@ class WindowCalculator {
     this.log(`写入订单数据 - ID: ${id}, 行: ${line}, 类型: ${finalGlassString}, 回火: ${incomingAorT === "Tempered" ? "Tempered" : "Annealed"}, 尺寸: ${orderRow.Width}x${orderRow.Height}${incomingAorT === "Tempered" ? ", 钢化标记: T" : ""}`);
   }
 
-  // Map internal glass type to order glass type names
-  // This function is now OBSOLETE if standardizeGlassType produces the final display strings.
-  // mapGlassType(type) {
-  //   switch(type) {
-  //     case 'clear': return 'Clear';
-  //     case 'lowe2': return 'Lowe270';
-  //     case 'lowe3': return 'Lowe366';
-  //     case 'OBS': return 'P516';
-  //     default: return type;
-  //   }
-  // }
+ 
 
   // Write screen data
   writeScreen(customer, id, style, screenH, screenHQ, screenV, screenVQ, color) {
