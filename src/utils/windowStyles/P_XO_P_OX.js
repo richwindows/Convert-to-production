@@ -28,7 +28,7 @@ const processP_XO_P_OX = (windowData, calculator) => {
   const fixedHeight = parseFloat(windowData.FH) || 0;
   const w = width * 25.4;
   const h = height * 25.4;
-  const fh = fixedHeight * 25.4;
+  let fh = fixedHeight * 25.4;
   const q = parseInt(windowData.Quantity) || 1;
   const id = windowData.ID;
   const style = windowData.Style;
@@ -46,6 +46,10 @@ const processP_XO_P_OX = (windowData, calculator) => {
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
   const isBottomTempered = windowData.TopBottom === '1';
+
+  if (fh === 0) {
+    fh = h/2;
+  }
 
   // 三联窗宽度分配：左右滑动扇+中间固定扇
   // 假设左右滑动扇宽度相等，中间固定扇宽度 = 总宽 - 2*滑动扇宽度 - 相关间隙

@@ -42,6 +42,8 @@ const styleMap = {
   'p-sh': 'P_SH',
   'h-pp': 'H_PP',
   'v-pp': 'V_PP',
+  'hp-p': 'H_PP',
+  'vp-p': 'V_PP',
   'xo-pp': 'XO_PP_OX_PP',
   'ox-pp': 'XO_PP_OX_PP',
   'pp-xo': 'PP_XO_PP_OX',
@@ -249,47 +251,7 @@ const glassMap = {
   'Clear/Lowe270': 'cl/le2',
   'Clear/Lowe366': 'cl/le3',
 
-  // 添加含有特殊后缀的格式
-  'CL/LE3, B-TP': 'cl/le3 TP',
-  'CL/LE2, B-TP': 'cl/le2 TP',
-  'CL/LE3 B-TP': 'cl/le3 TP',
-  'CL/LE2 B-TP': 'cl/le2 TP',
-  'CL/LE3,B-TP': 'cl/le3 TP',
-  'CL/LE2,B-TP': 'cl/le2 TP',
-  'CL/CL, B-TP': 'cl/cl TP',
-  'CL/CL B-TP': 'cl/cl TP',
-  'CL/CL,B-TP': 'cl/cl TP',
-
-  'OBS/LE3, B-TP': 'OBS/le3 TP',
-  'OBS/LE2, B-TP': 'OBS/le2 TP',
-  'OBS/LE3 B-TP': 'OBS/le3 TP',
-  'OBS/LE2 B-TP': 'OBS/le2 TP',
-  'OBS/LE3,B-TP': 'OBS/le3 TP',
-  'OBS/LE2,B-TP': 'OBS/le2 TP',
-  'OBS/CL, B-TP': 'OBS/cl TP',
-  'OBS/CL B-TP': 'OBS/cl TP',
-  'OBS/CL,B-TP': 'OBS/cl TP',
-
-  // 添加含有X-TP格式
-  'CL/LE3, X-TP': 'cl/le3 TP',
-  'CL/LE2, X-TP': 'cl/le2 TP',
-  'CL/LE3 X-TP': 'cl/le3 TP',
-  'CL/LE2 X-TP': 'cl/le2 TP',
-  'CL/LE3,X-TP': 'cl/le3 TP',
-  'CL/LE2,X-TP': 'cl/le2 TP',
-  'CL/CL, X-TP': 'cl/cl TP',
-  'CL/CL X-TP': 'cl/cl TP',
-  'CL/CL,X-TP': 'cl/cl TP',
-
-  'OBS/LE3, X-TP': 'OBS/le3 TP',
-  'OBS/LE2, X-TP': 'OBS/le2 TP',
-  'OBS/LE3 X-TP': 'OBS/le3 TP',
-  'OBS/LE2 X-TP': 'OBS/le2 TP',
-  'OBS/LE3,X-TP': 'OBS/le3 TP',
-  'OBS/LE2,X-TP': 'OBS/le2 TP',
-  'OBS/CL, X-TP': 'OBS/cl TP',
-  'OBS/CL X-TP': 'OBS/cl TP',
-  'OBS/CL,X-TP': 'OBS/cl TP',
+  
 
 
  'CL':'cl',

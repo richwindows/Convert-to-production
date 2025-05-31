@@ -29,7 +29,7 @@ const processSH_P = (windowData, calculator) => {
   const fixedHeight = parseFloat(windowData.FH) || 0;
   const w = width * 25.4;
   const h = height * 25.4;
-  const fh = fixedHeight * 25.4;
+  let fh = fixedHeight * 25.4;
   const q = parseInt(windowData.Quantity) || 1;
   const id = windowData.ID;
   const style = windowData.Style;
@@ -47,6 +47,10 @@ const processSH_P = (windowData, calculator) => {
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
   const isBottomTempered = windowData.TopBottom === '1';
+
+  if (fh === 0) {
+    fh = h/2;
+  }
 
   let framew, frameh, sashw, sashh, screenw, screenh, mullion, mullionA, handleA, slop, coverw, coverh, bigmullion;
   let sashglassw, sashglassh, fixedglassw, fixedglassh, fixedglass2w, fixedglass2h;
@@ -73,7 +77,11 @@ const processSH_P = (windowData, calculator) => {
     sashw = round((w - 47.4 - 2) / 25.4);
     sashh = round(((h - fh) / 2 - 6 - 17.1 + 1) / 25.4);
   }
-  calculator.writeSash('', '', '', '', String(sashw), '1', String(sashw), '1', String(sashh), '2', '', '', '', '', color);
+  calculator.writeSash(id,style, '', '', '', '', String(sashw), '1', String(sashw), '1', String(sashh), '2', '', '', '', color);
+
+  let weldsashw = sashw;
+  let weldsashh = sashh;
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: weldsashw, sashh: weldsashh });
 
   // 3. Screen 尺寸
   if (frameType === 'Nailon') {

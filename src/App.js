@@ -79,10 +79,39 @@ function App() {
       const successfullyProcessedData = [];
       const errorItems = [];
       const extractableColors = ['white', 'almond']; // lowercase for matching
+      const validFrameTypes = Object.values(frameMapping);
 
       json.forEach((item, index) => {
         const excelRowNumber = index + 2;
         const idForErrorMessage = item.ID || `Excel Row ${excelRowNumber}`;
+        let itemIsValid = true;
+        const currentItemErrors = [];
+
+        // 0. Pre-process Glass for "B-TP"
+        let originalGlassString = item.Glass || '';
+        let bottomTemperedValue = 0;
+        let glassStringForFurtherProcessing = originalGlassString;
+        const btpPattern = new RegExp("\\bB\\s*-\\s*TP\\b", "i"); // Match "B-TP" case-insensitive, as a whole word
+
+        // Add console.log here for debugging Excel processing
+        console.log(`[Excel Import] Item ID [${idForErrorMessage}]: Original Glass: '${originalGlassString}'`);
+
+        if (btpPattern.test(glassStringForFurtherProcessing)) {
+            console.log(`[Excel Import] Item ID [${idForErrorMessage}]: 'B-TP' FOUND in '${glassStringForFurtherProcessing}'`);
+            bottomTemperedValue = 1;
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(btpPattern, '');
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[\s,\\/]+|[\s,\\/]+$/g, '');
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/([,\\/])\\s*\\1+/g, '$1');
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
+            if (glassStringForFurtherProcessing === "," || glassStringForFurtherProcessing === "/") {
+                glassStringForFurtherProcessing = "";
+            }
+            console.log(`[Excel Import] Item ID [${idForErrorMessage}]: Glass after B-TP removal: '${glassStringForFurtherProcessing}', bottomTemperedValue: ${bottomTemperedValue}`);
+        } else {
+            console.log(`[Excel Import] Item ID [${idForErrorMessage}]: 'B-TP' NOT FOUND in '${glassStringForFurtherProcessing}', bottomTemperedValue will be ${bottomTemperedValue}`);
+        }
+        // End of B-TP processing
 
         // 1. Process Frame and Color
         let rawFrameFromExcel = item.Frame || '';
@@ -95,57 +124,63 @@ function App() {
             const partBeforeHyphen = rawFrameFromExcel.substring(0, lastHyphenIndex).trim();
             const partAfterHyphen = rawFrameFromExcel.substring(lastHyphenIndex + 1).trim();
 
-            if (partBeforeHyphen && partAfterHyphen) { // Both parts must exist
+            if (partBeforeHyphen && partAfterHyphen) { 
                 const potentialColorKey = partAfterHyphen.toLowerCase();
                 if (extractableColors.includes(potentialColorKey)) {
                     processedFrame = partBeforeHyphen;
-                    // Normalize capitalization for the extracted color
                     if (potentialColorKey === 'white') processedColor = 'White';
                     else if (potentialColorKey === 'almond') processedColor = 'Almond';
                 }
             }
         }
 
-        let mappedFrame = processedFrame;
+        let mappedFrame = processedFrame; // Default to processedFrame if not in mapping
         if (frameMapping.hasOwnProperty(processedFrame)) {
             mappedFrame = frameMapping[processedFrame];
         }
 
+        // Validate Frame (after potential mapping)
+        if (!validFrameTypes.includes(mappedFrame)) {
+            itemIsValid = false;
+            currentItemErrors.push(`Invalid Frame: "${rawFrameFromExcel}" (maps to "${mappedFrame}", which is not a recognized type)`);
+        }
+
         // 2. Validate FH (using item.FH directly from Excel)
         let fhValue = item.FH;
-        let isValidFH = true;
-        let specificFHValidationError = '';
+        // let isValidFH = true; // Replaced by itemIsValid logic
+        // let specificFHValidationError = ''; // Replaced by currentItemErrors
 
         if (fhValue == null || (typeof fhValue === 'string' && fhValue.trim() === '')) {
           fhValue = '';
         } else if (typeof fhValue === 'number') {
           if (!isFinite(fhValue)) {
-             isValidFH = false;
-             specificFHValidationError = `Item [${idForErrorMessage}]: FH value is a non-finite number (${fhValue}).`;
+             itemIsValid = false;
+             currentItemErrors.push(`FH value is a non-finite number (${fhValue})`);
           }
         } else if (typeof fhValue === 'string') {
           const fhStrTrimmed = fhValue.trim();
           if (/[a-zA-Z]/.test(fhStrTrimmed)) {
-            isValidFH = false;
-            specificFHValidationError = `Item [${idForErrorMessage}]: FH value "${fhStrTrimmed}" contains letters and is invalid. Only numbers are allowed.`;
+            itemIsValid = false;
+            currentItemErrors.push(`FH value "${fhStrTrimmed}" contains letters. Only numbers are allowed.`);
           } else {
             const parsedNum = parseFloat(fhStrTrimmed);
             if (isFinite(parsedNum)) {
               fhValue = parsedNum;
             } else {
-              isValidFH = false;
-              specificFHValidationError = `Item [${idForErrorMessage}]: FH value "${fhStrTrimmed}" is not a valid number.`;
+              itemIsValid = false;
+              currentItemErrors.push(`FH value "${fhStrTrimmed}" is not a valid number.`);
             }
           }
         } else {
-          isValidFH = false;
-          specificFHValidationError = `Item [${idForErrorMessage}]: FH value has an unexpected type (${typeof fhValue}).`;
+          itemIsValid = false;
+          currentItemErrors.push(`FH value has an unexpected type (${typeof fhValue})`);
         }
 
         // 3. Push data or error
-        if (!isValidFH) {
-          message.error(specificFHValidationError + " This item will not be processed.", 6);
-          errorItems.push({ id: idForErrorMessage, value: item.FH, error: specificFHValidationError });
+        if (!itemIsValid) {
+          const errorString = currentItemErrors.join('; ');
+          message.error(`Item [${idForErrorMessage}]: ${errorString}. This item will not be processed.`, 7);
+          errorItems.push({ id: idForErrorMessage, value: item, errors: currentItemErrors });
         } else {
           successfullyProcessedData.push({
             Customer: item.Customer || '',
@@ -154,13 +189,14 @@ function App() {
             W: item.W || '',
             H: item.H || '',
             FH: fhValue, // Validated FH
-            Frame: mappedFrame, // Processed and mapped Frame
-            Glass: item.Glass || '',
+            Frame: mappedFrame, // Validated and mapped Frame
+            Glass: glassStringForFurtherProcessing, // Use the processed glass string
             Argon: item.Argon || '',
             Grid: item.Grid || '',
             Color: processedColor, // Potentially extracted and overridden Color
             Note: item.Note || '',
             Quantity: item.Quantity || 1,
+            bottomtempered: bottomTemperedValue, // Add the extracted value here
           });
         }
       });
@@ -173,12 +209,14 @@ function App() {
       setIsDataLoaded(successfullyProcessedData.length > 0);
 
       if (errorItems.length > 0) {
-        message.warning(`Excel import complete. ${successfullyProcessedData.length} items loaded. ${errorItems.length} items were skipped due to invalid FH values. Check console for details.`, 7);
-        console.warn("The following items were skipped due to invalid FH values:", errorItems);
+        message.warning(`Excel import complete. ${successfullyProcessedData.length} items loaded. ${errorItems.length} items were skipped due to validation errors. Check console for details.`, 7);
+        console.warn("The following items were skipped due to validation errors:", errorItems);
       } else if (json.length === 0 && file.size > 0) {
         message.info("The Excel file appears to be empty or has no data rows after the header.");
-      } else if (successfullyProcessedData.length === 0 && json.length > 0) {
-        message.error("No items could be processed from the Excel file. Check FH values or file content.", 7);
+      } else if (successfullyProcessedData.length === 0 && json.length > 0 && errorItems.length === json.length) { // All items had errors
+        message.error(`No items could be processed from the Excel file. All ${json.length} items had validation errors.`, 7);
+      } else if (successfullyProcessedData.length === 0 && json.length > 0) { // No items processed, but not all were errors (e.g. empty after header but header existed)
+         message.error("No items could be processed from the Excel file. Please check file content and data validity.", 7);
       } else if (successfullyProcessedData.length > 0) {
         message.success(`${file.name} imported successfully. ${successfullyProcessedData.length} items loaded.`);
       }
@@ -618,11 +656,14 @@ function App() {
 
   // Renamed from recalculateFromGeneralInfo
   const generateDetailedDataAndNotify = async () => {
-    if (!isDataLoaded || excelData.length === 0) {
+    console.log('generateDetailedDataAndNotify called'); // Log when function is called
+    console.log('isDataLoaded:', isDataLoaded, 'excelData.length:', excelData ? excelData.length : 'excelData is null/undefined');
+    if (!isDataLoaded || !excelData || excelData.length === 0) {
       message.error('No base data available. Please upload an Excel file or add data first.');
       return;
     }
 
+    console.log('selectedRowKeys:', selectedRowKeys, 'selectedRowKeys.length:', selectedRowKeys ? selectedRowKeys.length : 'selectedRowKeys is null/undefined');
     if (!selectedRowKeys || selectedRowKeys.length === 0) {
       message.info('Please select rows from the table to process detailed data.');
       setCalculatedData({ info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: [] });
@@ -658,7 +699,8 @@ function App() {
         ID: sequentialId,      
         originalId: originalId, 
         Frame: mappedFrameType, 
-        BatchNO: batchNo        
+        BatchNO: batchNo,
+        bottomtempered: windowData.bottomtempered, // Pass the extracted value
       };
       
       calculator.processWindow(windowDataForCalc);
@@ -756,6 +798,31 @@ function App() {
       ? (Math.max(...excelData.map(item => parseInt(item.ID) || 0)) + 1).toString()
       : "1";
     
+    // B-TP processing for manually added window
+    let originalGlassString = windowDataFromForm.Glass || '';
+    let bottomTemperedValue = 0;
+    let glassStringForFurtherProcessing = originalGlassString;
+    const btpPattern = new RegExp("\\bB\\s*-\\s*TP\\b", "i");
+
+    console.log(`[Manual Add] Item ID [${newId}]: Original Glass: '${originalGlassString}'`);
+
+    if (btpPattern.test(glassStringForFurtherProcessing)) {
+        console.log(`[Manual Add] Item ID [${newId}]: 'B-TP' FOUND in '${glassStringForFurtherProcessing}'`);
+        bottomTemperedValue = 1;
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(btpPattern, '');
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[\s,\\/]+|[\s,\\/]+$/g, '');
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/([,\\/])\\s*\\1+/g, '$1');
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
+        if (glassStringForFurtherProcessing === "," || glassStringForFurtherProcessing === "/") {
+            glassStringForFurtherProcessing = "";
+        }
+        console.log(`[Manual Add] Item ID [${newId}]: Glass after B-TP removal: '${glassStringForFurtherProcessing}', bottomTemperedValue: ${bottomTemperedValue}`);
+    } else {
+        console.log(`[Manual Add] Item ID [${newId}]: 'B-TP' NOT FOUND in '${glassStringForFurtherProcessing}', bottomTemperedValue will be ${bottomTemperedValue}`);
+    }
+    // End of B-TP processing for manually added window
+
     const newWindowExcelRow = {
       Customer: windowDataFromForm.Customer || '',
       ID: newId,
@@ -763,13 +830,14 @@ function App() {
       W: windowDataFromForm.W || '',
       H: windowDataFromForm.H || '',
       FH: windowDataFromForm.FH || '',
-      Frame: windowDataFromForm.Frame || '', // Original frame type from form
-      Glass: windowDataFromForm.Glass || '',
+      Frame: windowDataFromForm.Frame || '', 
+      Glass: glassStringForFurtherProcessing, // Use processed glass string
       Argon: windowDataFromForm.Argon || '',
       Grid: windowDataFromForm.Grid || '',
       Color: windowDataFromForm.Color || '',
       Note: windowDataFromForm.Note || '',
       Quantity: parseInt(windowDataFromForm.Quantity) || 1,
+      bottomtempered: bottomTemperedValue, // Add the extracted value here
     };
     
     setExcelData(prevExcelData => [...prevExcelData, newWindowExcelRow]);

@@ -35,7 +35,7 @@ const processXO_P_OX_P = (windowData, calculator) => {
   const fixedHeight = parseFloat(windowData.FH) || 0;
   const w = width * 25.4;
   const h = height * 25.4;
-  const fh = fixedHeight * 25.4;
+  let fh = fixedHeight * 25.4;
   const q = parseInt(windowData.Quantity) || 1;
   const id = windowData.ID;
   const style = windowData.Style;
@@ -54,6 +54,10 @@ const processXO_P_OX_P = (windowData, calculator) => {
   const argon = windowData.Argon || '';
   const isBottomTempered = windowData.TopBottom === '1'; // Assuming TopBottom field exists
   
+  if (fh === 0) {
+    fh = h/2;
+  }
+
   // 添加日志信息
   console.log('===== 处理XO-P/OX-P窗口数据 =====');
   console.log(`ID: ${id} | 样式: ${style} | 客户: ${customer}`);
@@ -158,20 +162,7 @@ const processXO_P_OX_P = (windowData, calculator) => {
         "1", "102", String(fixedgrid2h), "2",
         "102", gridNote, color
       );
-    } else if (grid === 'Standard') {
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), "", "", 
-        String(sashgridh), "", "", String(fixedgridw),
-        "", "", String(fixedgridh), "",
-        "", gridNote, color
-      );
-      calculator.writeGrid(
-        id, style, grid, "", "", "", 
-        "", "", "", String(fixedgrid2w),
-        "", "", String(fixedgrid2h), "",
-        "", gridNote, color
-      );
-    }
+    } 
     
     // Process glass based on glass type
     processGlass(customer, style, width, height, fixedHeight, id, q, glassType, 
@@ -289,26 +280,15 @@ const processXO_P_OX_P = (windowData, calculator) => {
         "1", "102", String(fixedgrid2h), "2",
         "102", gridNote, color
       );
-    } else if (grid === 'Standard') {
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), "", "", 
-        String(sashgridh), "", "", String(fixedgridw),
-        "", "", String(fixedgridh), "",
-        "", gridNote, color
-      );
-      calculator.writeGrid(
-        id, style, grid, "", "", "", 
-        "", "", "", String(fixedgrid2w),
-        "", "", String(fixedgrid2h), "",
-        "", gridNote, color
-      );
-    }
+    } 
     
     // Process glass based on glass type
     processGlass(customer, style, width, height, fixedHeight, id, q, glassType, 
                 sashglassw, sashglassh, fixedglassw, fixedglassh, fixedglass2w, fixedglass2h,
                 grid, argon, isBottomTempered, calculator);
   }
+
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
   
   console.log('===== XO-P/OX-P窗口处理完成 =====\n');
 };

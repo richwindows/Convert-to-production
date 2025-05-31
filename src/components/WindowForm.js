@@ -12,8 +12,7 @@ const WindowForm = ({ onAdd, onClear }) => {
     "XO", "OX", "XOX", "XOX-1/3", "SH", "Picture", 
     "XO-P", "OX-P", "P-XO", "P-OX", "SH-P", "P-SH", 
     "H-PP", "V-PP", "XO-PP", "OX-PP", "PP-XO", "PP-OX", 
-    "XOX-PPP", "PPP-XOX", "XOX-PP", "PP-XOX", "SH-SH", 
-    "SH-O-SH", "3/4 IGU", "1 IGU", "5/8 IGU", "Screen", 
+    "XOX-PPP", "PPP-XOX", "XOX-PP", "PP-XOX",  "3/4 IGU", "1 IGU", "5/8 IGU", "Screen", 
     "1/2 IGU", "7/8 IGU", "P-PP", "3mm","3.9mm","4.7mm",
     "5.7mm",
   ];
