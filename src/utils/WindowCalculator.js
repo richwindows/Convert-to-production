@@ -247,6 +247,13 @@ class WindowCalculator {
 
   // Write info data
   writeInfo(data) {
+    let glassValue = data.Glass || '';
+    
+    // 如果bottomtempered字段为1，则在Glass后添加' B-TP'
+    if (data.bottomtempered === 1 && glassValue) {
+      glassValue += ' B-TP';
+    }
+    
     const infoRow = {
       Customer: data.Customer || '',
       ID: data.ID, // This IS the sequential display ID from App.js
@@ -256,7 +263,7 @@ class WindowCalculator {
       H: data.H || '',
       FH: data.FH || '',
       Frame: data.Frame || '',
-      Glass: data.Glass || '',
+      Glass: glassValue, // 使用处理后的Glass值
       Argon: data.Argon || '',
       Grid: data.Grid || '',
       Color: data.Color || '',

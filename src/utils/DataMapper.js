@@ -214,6 +214,10 @@ const glassMap = {
   'OBS/Clear Tmp': 'OBS/cl TP',
   'OBS/Lowe2 Tmp': 'OBS/le2 TP',
   'OBS/Lowe3 Tmp': 'OBS/le3 TP',
+  'CL/Lowe3': 'cl/le3', // Handling for "CL/Lowe3"
+  'CL/Lowe2': 'cl/le2', // Handling for "CL/Lowe2"
+  // Handling for "CL/Lowe3"  
+  
   
   // Tempered的其他写法
   'Clear/Clear T': 'cl/cl TP',
@@ -242,6 +246,10 @@ const glassMap = {
   'Clear/Low-e3': 'cl/le3',
   'OBS/Low-e2': 'OBS/le2',
   'OBS/Low-e3': 'OBS/le3',
+  'CL/lowe2': 'cl/le2',
+  'CL/lowe3': 'cl/le3',
+  'OBS/lowe2': 'OBS/le2',
+  'OBS/lowe3': 'OBS/le3',
   
   // Lowe编号写法
   'clear/lowe270': 'cl/le2',

@@ -39,13 +39,27 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
     whiteSpace: 'nowrap',
     padding: '4px 8px'
   };
-
+  
+  // Glass列专用样式（允许更宽的显示）
+  const glassCellStyle = {
+    ...cellStyle,
+    minWidth: '120px',  // 设置最小宽度确保Glass内容能完整显示
+    maxWidth: '200px',  // 设置最大宽度避免过宽
+    whiteSpace: 'normal', // 允许换行
+    wordBreak: 'break-word' // 长单词可以断行
+  };
+  
   // 输入框样式
   const inputStyle = {
     minWidth: '50px',  // 最小宽度
     width: '100%'      // 填充单元格
   };
-
+  
+  // Glass输入框样式
+  const glassInputStyle = {
+    ...inputStyle,
+    minWidth: '120px'  // 确保输入框有足够宽度
+  };
   // 数字列的样式（更窄的宽度）
   const numberCellStyle = {
     ...cellStyle,
@@ -101,7 +115,7 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
                 <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.H || ''} onChange={(e) => handleInputChange(e, index, 'H')} /></td>
                 <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.FH || ''} onChange={(e) => handleInputChange(e, index, 'FH')} /></td>
                 <td style={cellStyle}><Input size="small" style={{ ...inputStyle, width: 'auto', minWidth: '60px'}} bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Glass || ''} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
+                <td style={glassCellStyle}><Input size="small" style={glassInputStyle} bordered={false} value={row.Glass || ''} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Argon || ''} onChange={(e) => handleInputChange(e, index, 'Argon')} /></td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>

@@ -46,7 +46,7 @@ const processXO_PP_OX_PP = (windowData, calculator) => {
   }
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
-  const isBottomTempered = windowData.TopBottom === '1';
+  const isBottomTempered = windowData.bottomtempered  === 1;
 
   if (fh === 0) {
     fh = h/2;

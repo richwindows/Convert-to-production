@@ -51,7 +51,7 @@ const processXOX_PPP = (windowData, calculator) => {
   
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
-  const isTopBottomTempered = windowData.TopBottom === '1';
+  const isTopBottomTempered = windowData.bottomtempered  === 1;
 
   let framew, frameh, sashw, sashh, screenw, screenh, mullion, mullionA, handleA, track, slop, coverw, coverh, bigmullion, bigmullion2;
   let sashglassw, sashglassh, fixedglassw, fixedglassh, fixedglass2w, fixedglass2h, fixedglass3w, fixedglass3h;

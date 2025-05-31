@@ -46,7 +46,7 @@ const processPPP_XOX = (windowData, calculator) => {
   }
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
-  const isTopBottomTempered = windowData.TopBottom === '1'; // Keep this line if TopBottom is used for some tempering
+  const isTopBottomTempered = windowData.bottomtempered  === 1; // Keep this line if TopBottom is used for some tempering
   
   
 

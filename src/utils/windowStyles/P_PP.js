@@ -45,7 +45,7 @@ const processP_PP = (windowData, calculator) => {
   }
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
-  const isTopBottomTempered = windowData.TopBottom === '1'; // VBA: cmbTopButtom.ListIndex = 1
+  const isTopBottomTempered = windowData.bottomtempered  === 1; // VBA: cmbTopButtom.ListIndex = 1
 
   let framew, frameh, coverw, coverh, coverw2, coverh2, bigmullion, bigmullion2, slop;
   let fixedglassw, fixedglassh, fixedglass2w, fixedglass2h;

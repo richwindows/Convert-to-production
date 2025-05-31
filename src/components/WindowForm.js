@@ -59,6 +59,12 @@ const WindowForm = ({ onAdd, onClear }) => {
       // For now, it will only change if both W and H are valid positive numbers.
     }
 
+    // --- BTP and Glass merging logic ---
+    if (values.BTP === 'Buttom Tempered' && values.Glass) {
+      values.Glass = values.Glass + ' B-TP';
+    }
+    // --- End BTP and Glass merging ---
+
     // --- FH Validation before submitting ---
     let fhValue = values.FH;
     if (fhValue != null && typeof fhValue === 'string') {
@@ -280,4 +286,4 @@ const WindowForm = ({ onAdd, onClear }) => {
   );
 };
 
-export default WindowForm; 
+export default WindowForm;

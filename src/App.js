@@ -92,22 +92,31 @@ function App() {
         let originalGlassString = item.Glass || '';
         let bottomTemperedValue = 0;
         let glassStringForFurtherProcessing = originalGlassString;
-        const btpPattern = new RegExp("\\bB\\s*-\\s*TP\\b", "i"); // Match "B-TP" case-insensitive, as a whole word
 
-        // Add console.log here for debugging Excel processing
+        // 改进的B-TP匹配模式，能更好地处理各种格式
+        const btpPattern = /[,\s]*B\s*-\s*TP[,\s]*/gi; // 匹配前后可能有逗号或空格的B-TP
+
         console.log(`[Excel Import] Item ID [${idForErrorMessage}]: Original Glass: '${originalGlassString}'`);
 
         if (btpPattern.test(glassStringForFurtherProcessing)) {
             console.log(`[Excel Import] Item ID [${idForErrorMessage}]: 'B-TP' FOUND in '${glassStringForFurtherProcessing}'`);
             bottomTemperedValue = 1;
-            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(btpPattern, '');
+            
+            // 移除B-TP及其前后的逗号和空格
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(btpPattern, ' ');
+            
+            // 清理多余的空格、逗号和斜杠
             glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
-            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[\s,\\/]+|[\s,\\/]+$/g, '');
-            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/([,\\/])\\s*\\1+/g, '$1');
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[,\s\/]+|[,\s\/]+$/g, ''); // 移除开头结尾的分隔符
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s*,\s*,\s*/g, ', '); // 处理连续逗号
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s+/g, ' '); // 合并多个空格
             glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
-            if (glassStringForFurtherProcessing === "," || glassStringForFurtherProcessing === "/") {
+            
+            // 如果只剩下分隔符，则清空
+            if (/^[,\s\/]*$/.test(glassStringForFurtherProcessing)) {
                 glassStringForFurtherProcessing = "";
             }
+            
             console.log(`[Excel Import] Item ID [${idForErrorMessage}]: Glass after B-TP removal: '${glassStringForFurtherProcessing}', bottomTemperedValue: ${bottomTemperedValue}`);
         } else {
             console.log(`[Excel Import] Item ID [${idForErrorMessage}]: 'B-TP' NOT FOUND in '${glassStringForFurtherProcessing}', bottomTemperedValue will be ${bottomTemperedValue}`);
@@ -279,12 +288,17 @@ function App() {
       dataIndex: 'Glass',
       key: 'glass',
       render: (text, record) => {
-        // record.Glass here is glassStringForFurtherProcessing from processExcelFile
-        // Highlight if Glass is empty after initial B-TP processing
-        if (!text || text.trim() === '') {
-          return <span style={{ backgroundColor: 'yellow', padding: '5px', display: 'block', width: '100%' }}>{text}</span>;
+        // 如果bottomtempered字段为1，则在Glass后添加' B-TP'
+        let displayText = text || '';
+        if (record.bottomtempered === 1 && displayText) {
+          displayText = displayText + ' B-TP';
         }
-        return text;
+        
+        // Highlight if Glass is empty after initial B-TP processing
+        if (!displayText || displayText.trim() === '') {
+          return <span style={{ backgroundColor: 'yellow', padding: '5px', display: 'block', width: '100%' }}>{displayText}</span>;
+        }
+        return displayText;
       }
     },
     { title: 'Argon', dataIndex: 'Argon', key: 'argon' },
@@ -942,21 +956,31 @@ function App() {
     let originalGlassString = windowDataFromForm.Glass || '';
     let bottomTemperedValue = 0;
     let glassStringForFurtherProcessing = originalGlassString;
-    const btpPattern = new RegExp("\\bB\\s*-\\s*TP\\b", "i");
+
+    // 改进的B-TP匹配模式，能更好地处理各种格式
+    const btpPattern = /[,\s]*B\s*-\s*TP[,\s]*/gi; // 匹配前后可能有逗号或空格的B-TP
 
     console.log(`[Manual Add] Item ID [${newId}]: Original Glass: '${originalGlassString}'`);
 
     if (btpPattern.test(glassStringForFurtherProcessing)) {
         console.log(`[Manual Add] Item ID [${newId}]: 'B-TP' FOUND in '${glassStringForFurtherProcessing}'`);
         bottomTemperedValue = 1;
-        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(btpPattern, '');
+        
+        // 移除B-TP及其前后的逗号和空格
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(btpPattern, ' ');
+        
+        // 清理多余的空格、逗号和斜杠
         glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
-        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[\s,\\/]+|[\s,\\/]+$/g, '');
-        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/([,\\/])\\s*\\1+/g, '$1');
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[,\s\/]+|[,\s\/]+$/g, ''); // 移除开头结尾的分隔符
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s*,\s*,\s*/g, ', '); // 处理连续逗号
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s+/g, ' '); // 合并多个空格
         glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
-        if (glassStringForFurtherProcessing === "," || glassStringForFurtherProcessing === "/") {
+        
+        // 如果只剩下分隔符，则清空
+        if (/^[,\s\/]*$/.test(glassStringForFurtherProcessing)) {
             glassStringForFurtherProcessing = "";
         }
+        
         console.log(`[Manual Add] Item ID [${newId}]: Glass after B-TP removal: '${glassStringForFurtherProcessing}', bottomTemperedValue: ${bottomTemperedValue}`);
     } else {
         console.log(`[Manual Add] Item ID [${newId}]: 'B-TP' NOT FOUND in '${glassStringForFurtherProcessing}', bottomTemperedValue will be ${bottomTemperedValue}`);

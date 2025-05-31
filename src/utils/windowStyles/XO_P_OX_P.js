@@ -52,8 +52,14 @@ const processXO_P_OX_P = (windowData, calculator) => {
   }
   const gridNote = windowData.GridNote || '';
   const argon = windowData.Argon || '';
-  const isBottomTempered = windowData.TopBottom === '1'; // Assuming TopBottom field exists
+  const isBottomTempered = windowData.bottomtempered  === 1; // Assuming TopBottom field exists
   
+
+  console.log('isBottomTempered', isBottomTempered);
+
+
+
+  // 如果没有固定高度，使用默认值
   if (fh === 0) {
     fh = h/2;
   }
