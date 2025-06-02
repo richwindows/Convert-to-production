@@ -52,16 +52,14 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
     }));
     
     const sortedItems = [...normalizedData].sort((a, b) => {
+      // 1. 首先按材料名称分组
       if (a.MaterialName !== b.MaterialName) return a.MaterialName.localeCompare(b.MaterialName);
-      if (a.CuttingID !== '' && b.CuttingID !== '') {
-        const cuttingA = parseInt(a.CuttingID); const cuttingB = parseInt(b.CuttingID);
-        if (cuttingA !== cuttingB) return cuttingA - cuttingB;
-      }
-      if (a.PiecesID !== '' && b.PiecesID !== '') {
-        const piecesA = parseInt(a.PiecesID); const piecesB = parseInt(b.PiecesID);
-        if (piecesA !== piecesB) return piecesA - piecesB;
-      }
-      return 0;
+      
+      // 2. 然后按数量从小到大排序
+      if (a.Qty !== b.Qty) return a.Qty - b.Qty;
+      
+      // 3. 最后在相同数量内按长度从大到小排序
+      return b.Length - a.Length;
     });
     
     const materials = [...new Set(sortedItems.map(item => item.MaterialName))];
@@ -218,4 +216,4 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
   );
 };
 
-export default PrintMaterialCuttingTable; 
+export default PrintMaterialCuttingTable;

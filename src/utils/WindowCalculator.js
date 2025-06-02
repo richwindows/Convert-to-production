@@ -143,15 +143,7 @@ class WindowCalculator {
     const originalSashW_numeric = parseFloat(originalSashW_str) || 0;
     const originalSashH_numeric = parseFloat(originalSashH_str) || 0;
 
-    let weldingCutW = '';
-    if (originalSashW_numeric > 0) {
-      weldingCutW = (((originalSashW_numeric * 25.4) - 6) / 25.4).toFixed(2);
-    }
-
-    let weldingCutH = '';
-    if (originalSashH_numeric > 0) {
-      weldingCutH = (((originalSashH_numeric * 25.4) - 6) / 25.4).toFixed(2);
-    }
+   
 
     let displaySashW_numeric, displaySashH_numeric;
     if (originalSashW_numeric >= originalSashH_numeric) {
@@ -160,6 +152,18 @@ class WindowCalculator {
     } else {
       displaySashW_numeric = originalSashH_numeric;
       displaySashH_numeric = originalSashW_numeric;
+    }
+
+
+
+    let weldingCutW = '';
+    if (displaySashW_numeric > 0) {
+      weldingCutW = (((displaySashW_numeric * 25.4) - 6) / 25.4).toFixed(2);
+    }
+
+    let weldingCutH = '';
+    if (displaySashH_numeric > 0) {
+      weldingCutH = (((displaySashH_numeric * 25.4) - 6) / 25.4).toFixed(2);
     }
 
     const weldingEntry = {

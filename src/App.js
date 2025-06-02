@@ -614,101 +614,78 @@ function App() {
     setIsExportingSashWelding(false);
   };
 
-  // New function to export only DECA Cutting data to Excel using ExcelJS
-  const exportDecaCuttingToExcel = async () => {
+  // Function to export DECA Cutting data to CSV format
+  const exportDecaCuttingToCSV = async () => {
     if (!calculatedData.materialCutting || calculatedData.materialCutting.length === 0) {
       message.error('No DECA Cutting data available to export.');
       return;
     }
     
     setIsExportingDecaCutting(true);
-    message.loading({ content: 'Generating DECA Cutting Excel file...', key: 'exportingDecaCutting' });
+    message.loading({ content: 'Generating DECA Cutting CSV file...', key: 'exportingDecaCutting' });
 
     const currentBatchNo = batchNo || 'N/A';
     
-    const wb = new ExcelJS.Workbook();
-    const ws = wb.addWorksheet('DECA Cutting');
-
-    // Define Headers
-    const headers = [
-      'Batch No', 'Order No', 'Order Item', 'Material Name',
-      'Cutting ID', 'Pieces ID', 'Length', 'Angles', 'Qty',
-      'Bin No', 'Cart No', 'Position', 'Label Print', 'Barcode No', 'PO No', 'Style', 'Frame', 'Product Size', 'Color', 'Grid', 'Glass', 'Argon', 'Painting', 'Product Date', 'Balance', 'Shift', 'Ship date', 'Note', 'Customer'
-    ];
-
-    // Add Header Row and Apply Styles
-    const headerRow = ws.addRow(headers);
-    headerRow.eachCell((cell, colNumber) => {
-      cell.fill = {
-        type: 'pattern',
-        pattern: 'solid',
-        fgColor: { argb: 'FFFFFF00' } // Yellow
-      };
-      cell.font = { name: 'Calibri', sz: 12, bold: true };
-      cell.alignment = { horizontal: 'center', vertical: 'middle' };
-      cell.border = {
-        top: { style: 'thin', color: { argb: 'FF000000' } },
-        left: { style: 'thin', color: { argb: 'FF000000' } },
-        bottom: { style: 'thin', color: { argb: 'FF000000' } },
-        right: { style: 'thin', color: { argb: 'FF000000' } }
-      };
-    });
-
-    // Prepare and Add Data Rows
-    calculatedData.materialCutting.forEach(item => {
-      const rowValues = [
-        currentBatchNo,
-        item.OrderNo || item.ID || '',
-        item.OrderItem || '1',
-        item.MaterialName || '',
-        item.CuttingID || item['Cutting ID'] || '',
-        item.PiecesID || item['Pieces ID'] || '',
-        item.Length || '',
-        item.Angles || 'V',
-        item.Qty || '',
-        item.BinNo || item.ID || '',
-        item.CartNo || '',
-        item.Position || '',
-        item.LabelPrint || '',
-        item.BarcodeNo || '',
-        item.PO || '',
-        item.Style || '',
-        item.Frame || '',
-        item.ProductSize || '',
-        item.Color || '',
-        item.Grid || '',
-        item.Glass || '',
-        item.Argon || '',
-      ];
-      const dataRow = ws.addRow(rowValues);
-      dataRow.eachCell(cell => {
-        cell.font = { name: 'Calibri', sz: 12 };
-        cell.alignment = { horizontal: 'center', vertical: 'middle' };
-        cell.border = {
-          top: { style: 'thin', color: { argb: 'FF000000' } },
-          left: { style: 'thin', color: { argb: 'FF000000' } },
-          bottom: { style: 'thin', color: { argb: 'FF000000' } },
-          right: { style: 'thin', color: { argb: 'FF000000' } }
-        };
-      });
-    });
-
-    // Set Column Widths
-    headers.forEach((header, index) => {
-      const column = ws.getColumn(index + 1); // ExcelJS columns are 1-indexed
-      column.width = 18; // Default width, adjust as needed
-    });
-    ws.getColumn(4).width = 25; // Material Name wider
-    ws.getColumn(12).width = 20; // Style wider
-
-
-    // Create the filename
-    const fileNameDecaCutting = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_DECA_Cutting.xlsx`;
-    
-    // Generate and Download File
     try {
-      const buffer = await wb.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      // 定义CSV列头
+      const headers = [
+        'Batch No', 'Order No', 'Order Item', 'Material Name',
+        'Cutting ID', 'Pieces ID', 'Length', 'Angles', 'Qty',
+        'Bin No', 'Cart No', 'Position', 'Label Print', 'Barcode No', 'PO No', 'Style', 'Frame', 'Product Size', 'Color', 'Grid', 'Glass', 'Argon', 'Painting', 'Product Date', 'Balance', 'Shift', 'Ship date', 'Note', 'Customer'
+      ];
+      
+      // 创建CSV内容，添加表头
+      let csvContent = headers.join(',') + '\n';
+      
+      // 添加数据行
+      calculatedData.materialCutting.forEach(item => {
+        const rowValues = [
+          currentBatchNo,
+          item.OrderNo || item.ID || '',
+          item.OrderItem || '1',
+          item.MaterialName || '',
+          item.CuttingID || item['Cutting ID'] || '',
+          item.PiecesID || item['Pieces ID'] || '',
+          item.Length || '',
+          item.Angles || 'V',
+          item.Qty || '',
+          item.BinNo || item.ID || '',
+          item.CartNo || '',
+          item.Position || '',
+          item.LabelPrint || '',
+          item.BarcodeNo || '',
+          item.PO || '',
+          item.Style || '',
+          item.Frame || '',
+          item.ProductSize || '',
+          item.Color || '',
+          item.Grid || '',
+          item.Glass || '',
+          item.Argon || '',
+          item.Painting || '',
+          item.ProductDate || '',
+          item.Balance || '',
+          item.Shift || '',
+          item.ShipDate || '',
+          item.Note || '',
+          item.Customer || ''
+        ];
+        
+        // 处理CSV中的特殊字符（逗号、引号等）
+        const escapedValues = rowValues.map(value => {
+          const stringValue = String(value);
+          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+            return '"' + stringValue.replace(/"/g, '""') + '"';
+          }
+          return stringValue;
+        });
+        
+        csvContent += escapedValues.join(',') + '\n';
+      });
+      
+      // 创建并下载CSV文件
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const fileNameDecaCutting = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_DECA_Cutting.csv`;
       
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -716,11 +693,11 @@ function App() {
       a.download = fileNameDecaCutting;
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 100);
-
-      message.success({ content: 'DECA Cutting Excel file generated successfully with ExcelJS!', key: 'exportingDecaCutting', duration: 2 });
+      
+      message.success({ content: 'DECA Cutting CSV file generated successfully!', key: 'exportingDecaCutting', duration: 2 });
     } catch (error) {
-      console.error('Error exporting DECA Cutting with ExcelJS:', error);
-      message.error({ content: `Failed to generate DECA Cutting Excel: ${error.message}`, key: 'exportingDecaCutting', duration: 3 });
+      console.error('Error exporting DECA Cutting CSV:', error);
+      message.error({ content: `Failed to generate DECA Cutting CSV: ${error.message}`, key: 'exportingDecaCutting', duration: 3 });
     }
     setIsExportingDecaCutting(false);
   };
@@ -807,16 +784,21 @@ function App() {
     let sortedMaterialCuttingData = allCalculatedData.materialCutting || [];
     if (Array.isArray(sortedMaterialCuttingData)) {
       sortedMaterialCuttingData.sort((a, b) => {
-        // Primary sort by MaterialName (alphabetical)
+        // 1. 首先按材料名称分组（字母顺序）
         const materialNameA = a.MaterialName || '';
         const materialNameB = b.MaterialName || '';
         if (materialNameA < materialNameB) return -1;
         if (materialNameA > materialNameB) return 1;
-
-        // Secondary sort by Length (descending, numerically)
-        const lengthA = parseFloat(a.Length) || 0;
-        const lengthB = parseFloat(b.Length) || 0;
-        return lengthB - lengthA; // For descending order
+        
+        // 2. 然后按数量从小到大排序
+        const qtyA = parseInt(a.Qty );
+        const qtyB = parseInt(b.Qty );
+        if (qtyA !== qtyB) return qtyA - qtyB;
+        
+        // 3. 最后在相同数量内按长度从大到小排序
+        const lengthA = parseFloat(a.Length) ;
+        const lengthB = parseFloat(b.Length) ;
+        return lengthB - lengthA; // 从大到小排序
       });
     }
 
@@ -1139,11 +1121,11 @@ function App() {
               <Button 
                 type="primary"
                 icon={<FileExcelOutlined />} 
-                onClick={exportDecaCuttingToExcel}
+                onClick={exportDecaCuttingToCSV}
                 loading={isExportingDecaCutting}
                 disabled={!calculatedData.materialCutting || calculatedData.materialCutting.length === 0}
               >
-                导出DECA Cutting Excel
+                导出DECA Cutting CSV
               </Button>
             </div>
             <PrintMaterialCuttingTable batchNo={batchNo} calculatedData={calculatedData.materialCutting} onCellChange={handlePrintTableCellChange} />
