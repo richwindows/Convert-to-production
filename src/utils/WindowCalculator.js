@@ -363,10 +363,17 @@ class WindowCalculator {
     }
 
     // Create a lookup for window frame types from this.data.info
+    // 在第378行附近，修改windowInfoLookup的创建
     const windowInfoLookup = this.data.info.reduce((acc, infoItem) => {
-      // Assuming infoItem.ID is the displaySequentialId which matches IDs in frame/sash data
-      acc[infoItem.ID] = { Frame: infoItem.Frame, Style: infoItem.Style, Color: infoItem.Color, OrderNo:  infoItem.ID };
-      return acc;
+    // Assuming infoItem.ID is the displaySequentialId which matches IDs in frame/sash data
+    acc[infoItem.ID] = { 
+    Frame: infoItem.Frame, 
+    Style: infoItem.Style, 
+    Color: infoItem.Color, 
+    OrderNo: infoItem.ID,
+    Customer: infoItem.Customer  // 添加Customer字段
+    };
+    return acc;
     }, {});
 
     this.log("Window Info Lookup for Optimizer:", windowInfoLookup);
@@ -375,20 +382,22 @@ class WindowCalculator {
     // These pieces should already have ID, Style, Color from their origin (frame/sash part calculations)
     // We now need to ensure they have the correct overall Window Frame type.
     
+    // 在第378行附近，修改piecesWithFullInfo的映射
     const piecesWithFullInfo = this.data.materialCutting.map(piece => {
-      const info = windowInfoLookup[piece.ID]; // piece.ID is the displaySequentialId
-      if (info) {
-        return {
-          ...piece,
-          Frame: info.Frame,         // Add the main window Frame type
-          // Style: info.Style,      // Style should already be on the piece from its origin
-          // Color: info.Color,      // Color should already be on the piece from its origin
-          OrderNo: info.OrderNo || piece.ID, // Prefer originalId as OrderNo
-        };
-      } else {
-        this.log(`Warning: No info found in lookup for piece with ID ${piece.ID}. Frame type may be missing.`);
-        return piece; // Return original piece if no lookup match (should ideally not happen)
-      }
+    const info = windowInfoLookup[piece.ID]; // piece.ID is the displaySequentialId
+    if (info) {
+    return {
+    ...piece,
+    Frame: info.Frame,         // Add the main window Frame type
+    // Style: info.Style,      // Style should already be on the piece from its origin
+    // Color: info.Color,      // Color should already be on the piece from its origin
+    OrderNo: info.OrderNo || piece.ID, // Prefer originalId as OrderNo
+    Customer: info.Customer    // 添加Customer字段
+    };
+    } else {
+    this.log(`Warning: No info found in lookup for piece with ID ${piece.ID}. Frame type may be missing.`);
+    return piece; // Return original piece if no lookup match (should ideally not happen)
+    }
     });
     
     this.log("Raw pieces for optimizer with full info:", JSON.stringify(piecesWithFullInfo.slice(0, 5))); // Log first 5

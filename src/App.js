@@ -634,8 +634,9 @@ function App() {
         'Bin No', 'Cart No', 'Position', 'Label Print', 'Barcode No', 'PO No', 'Style', 'Frame', 'Product Size', 'Color', 'Grid', 'Glass', 'Argon', 'Painting', 'Product Date', 'Balance', 'Shift', 'Ship date', 'Note', 'Customer'
       ];
       
-      // 创建CSV内容，添加表头
-      let csvContent = headers.join(',') + '\n';
+      // 创建CSV内容数组，模拟csv.writer的行为
+      const csvRows = [];
+      csvRows.push(headers);
       
       // 添加数据行
       calculatedData.materialCutting.forEach(item => {
@@ -670,22 +671,27 @@ function App() {
           item.Note || '',
           item.Customer || ''
         ];
-        
-        // 处理CSV中的特殊字符（逗号、引号等）
-        const escapedValues = rowValues.map(value => {
-          const stringValue = String(value);
-          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
-            return '"' + stringValue.replace(/"/g, '""') + '"';
-          }
-          return stringValue;
-        });
-        
-        csvContent += escapedValues.join(',') + '\n';
+        csvRows.push(rowValues);
       });
       
-      // 创建并下载CSV文件
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const fileNameDecaCutting = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_DECA_Cutting.csv`;
+      // 使用标准CSV格式化，模拟Python csv.writer的"excel"方言
+      const formatCSVValue = (value) => {
+        const stringValue = String(value);
+        // 如果包含逗号、引号、换行符或以空格开头/结尾，则需要引号包围
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n') || stringValue.includes('\r') || stringValue.trim() !== stringValue) {
+          return '"' + stringValue.replace(/"/g, '""') + '"';
+        }
+        return stringValue;
+      };
+      
+      // 生成CSV内容，使用\r\n作为行分隔符（Excel标准）
+      const csvContent = csvRows.map(row => 
+        row.map(formatCSVValue).join(',')
+      ).join('\r\n') + '\r\n';
+      
+      // 创建并下载CSV文件，使用与Python相同的文件名格式
+      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const fileNameDecaCutting = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_CutFrame.csv`;
       
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
