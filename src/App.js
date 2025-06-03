@@ -35,7 +35,9 @@ const frameMapping = {
 };
 
 function App() {
-  const [excelData, setExcelData] = useState([]);
+  const [uploadedFiles, setUploadedFiles] = useState([]); // 存储多个文件信息
+  const [allExcelData, setAllExcelData] = useState([]); // 合并后的所有数据
+  const [selectedFileIds, setSelectedFileIds] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [batchNo, setBatchNo] = useState('');
   const [isDataLoaded, setIsDataLoaded] = useState(false);
@@ -94,7 +96,7 @@ function App() {
         let glassStringForFurtherProcessing = originalGlassString;
 
         // 改进的B-TP匹配模式，能更好地处理各种格式
-        const btpPattern = /[,\s]*B\s*-\s*TP[,\s]*/gi; // 匹配前后可能有逗号或空格的B-TP
+        const btpPattern = /[\s,]*B\s*-\s*TP[\s,]*/gi; // 匹配前后可能有逗号或空格的B-TP
 
         console.log(`[Excel Import] Item ID [${idForErrorMessage}]: Original Glass: '${originalGlassString}'`);
 
@@ -107,13 +109,13 @@ function App() {
             
             // 清理多余的空格、逗号和斜杠
             glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
-            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[,\s\/]+|[,\s\/]+$/g, ''); // 移除开头结尾的分隔符
+            glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[\s,/]+|[\s,/]+$/g, ''); // 移除开头结尾的分隔符
             glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s*,\s*,\s*/g, ', '); // 处理连续逗号
             glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s+/g, ' '); // 合并多个空格
             glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
             
             // 如果只剩下分隔符，则清空
-            if (/^[,\s\/]*$/.test(glassStringForFurtherProcessing)) {
+            if (/^[\s,/]*$/.test(glassStringForFurtherProcessing)) {
                 glassStringForFurtherProcessing = "";
             }
             
@@ -211,12 +213,30 @@ function App() {
         }
       });
 
-      setExcelData(successfullyProcessedData);
+      // 创建文件信息对象
+      const fileId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
+      const now = new Date();
+      const uploadTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      
+      const fileInfo = {
+        id: fileId,
+        name: file.name,
+        uploadTime: uploadTime,
+        data: successfullyProcessedData,
+        rowCount: successfullyProcessedData.length
+      };
+
+      // 更新文件列表
+      setUploadedFiles(prevFiles => [...prevFiles, fileInfo]);
+      
+      // 更新合并数据
+      setAllExcelData(prevData => [...prevData, ...successfullyProcessedData]);
+      
       setSelectedRowKeys([]);
       setCalculatedData({ 
         info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
       });
-      setIsDataLoaded(successfullyProcessedData.length > 0);
+      setIsDataLoaded(true);
 
       if (errorItems.length > 0) {
         message.warning(`Excel import complete. ${successfullyProcessedData.length} items loaded. ${errorItems.length} items were skipped due to validation errors. Check console for details.`, 7);
@@ -728,8 +748,8 @@ function App() {
   // Renamed from recalculateFromGeneralInfo
   const generateDetailedDataAndNotify = async () => {
     console.log('generateDetailedDataAndNotify called'); // Log when function is called
-    console.log('isDataLoaded:', isDataLoaded, 'excelData.length:', excelData ? excelData.length : 'excelData is null/undefined');
-    if (!isDataLoaded || !excelData || excelData.length === 0) {
+    console.log('isDataLoaded:', isDataLoaded, 'allExcelData.length:', allExcelData ? allExcelData.length : 'allExcelData is null/undefined');
+    if (!isDataLoaded || !allExcelData || allExcelData.length === 0) {
       message.error('No base data available. Please upload an Excel file or add data first.');
       return;
     }
@@ -744,7 +764,7 @@ function App() {
     setIsProcessing(true);
     message.loading({ content: 'Processing selected rows...', key: 'processing' });
 
-    const selectedData = excelData.filter(item => selectedRowKeys.includes(item.ID.toString()));
+    const selectedData = allExcelData.filter(item => selectedRowKeys.includes(item.ID.toString()));
 
     if (selectedData.length === 0) {
       message.error('No rows selected for processing.');
@@ -902,7 +922,7 @@ function App() {
             const windowInfo = newCalculatedData.info.find(info => info.ID === changedGlassEntry.ID);
             if (windowInfo) {
               console.warn(`No matching order entry found for glass ID: ${changedGlassEntry.ID}, line: ${changedGlassEntry.line}. Attempting to create one.`);
-              const calculator = new WindowCalculator(); // Temporary instance
+              // const calculator = new WindowCalculator(); // Temporary instance
               
               // Mock the structure WindowCalculator's writeOrderEntry might expect or produce.
               // This is a simplified version; the actual one in WindowCalculator.js might be more complex.
@@ -942,8 +962,8 @@ function App() {
 
   // Add a new function to handle adding a window manually
   const handleAddWindow = (windowDataFromForm) => {
-    const newId = excelData.length > 0 
-      ? (Math.max(...excelData.map(item => parseInt(item.ID) || 0)) + 1).toString()
+    const newId = allExcelData.length > 0 
+      ? (Math.max(...allExcelData.map(item => parseInt(item.ID) || 0)) + 1).toString()
       : "1";
     
     // B-TP processing for manually added window
@@ -952,7 +972,7 @@ function App() {
     let glassStringForFurtherProcessing = originalGlassString;
 
     // 改进的B-TP匹配模式，能更好地处理各种格式
-    const btpPattern = /[,\s]*B\s*-\s*TP[,\s]*/gi; // 匹配前后可能有逗号或空格的B-TP
+    const btpPattern = /[\s,]*B\s*-\s*TP[\s,]*/gi; // 匹配前后可能有逗号或空格的B-TP
 
     console.log(`[Manual Add] Item ID [${newId}]: Original Glass: '${originalGlassString}'`);
 
@@ -965,13 +985,13 @@ function App() {
         
         // 清理多余的空格、逗号和斜杠
         glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
-        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[,\s\/]+|[,\s\/]+$/g, ''); // 移除开头结尾的分隔符
+        glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/^[\s,/]+|[\s,/]+$/g, ''); // 移除开头结尾的分隔符
         glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s*,\s*,\s*/g, ', '); // 处理连续逗号
         glassStringForFurtherProcessing = glassStringForFurtherProcessing.replace(/\s+/g, ' '); // 合并多个空格
         glassStringForFurtherProcessing = glassStringForFurtherProcessing.trim();
         
         // 如果只剩下分隔符，则清空
-        if (/^[,\s\/]*$/.test(glassStringForFurtherProcessing)) {
+        if (/^[\s,/]*$/.test(glassStringForFurtherProcessing)) {
             glassStringForFurtherProcessing = "";
         }
         
@@ -998,7 +1018,22 @@ function App() {
       bottomtempered: bottomTemperedValue, // Add the extracted value here
     };
     
-    setExcelData(prevExcelData => [...prevExcelData, newWindowExcelRow]);
+    // 创建新的文件信息对象用于手动添加的数据
+    const fileId = Date.now().toString() + '_manual_' + Math.random().toString(36).substr(2, 9);
+    const now = new Date();
+    const uploadTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+    
+    const fileInfo = {
+      id: fileId,
+      name: '手动添加',
+      uploadTime: uploadTime,
+      data: [newWindowExcelRow],
+      rowCount: 1
+    };
+
+    // 更新文件列表和合并数据
+    setUploadedFiles(prevFiles => [...prevFiles, fileInfo]);
+    setAllExcelData(prevData => [...prevData, newWindowExcelRow]);
     setSelectedRowKeys([]); // Clear selections
 
     // Reset all calculated data
@@ -1006,7 +1041,7 @@ function App() {
       info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
     });
 
-    setIsDataLoaded(true); // excelData has content
+    setIsDataLoaded(true); // allExcelData has content
     message.info('New window added to the preview table. Please select rows and process to update detailed data.');
   };
 
@@ -1256,21 +1291,112 @@ function App() {
                       )}
                     </div>
                     {isDataLoaded && (
-                      <Table 
-                        dataSource={excelData} 
-                        columns={columns} 
-                        rowKey="ID" 
-                        rowSelection={rowSelectionConfig}
-                        loading={!isDataLoaded && excelData.length === 0}
-                        bordered
-                        className="data-table"
-                        pagination={{ 
-                          defaultPageSize: 10, 
-                          showSizeChanger: true, 
-                          pageSizeOptions: ['10', '20', '50', '100'],
-                          showTotal: (total) => `共 ${total} 条记录`
-                        }}
-                      />
+                      <>
+                        {/* 文件管理区域 */}
+                        <Card 
+                          title="已上传文件" 
+                          size="small" 
+                          style={{ marginBottom: 16 }}
+                          extra={
+                            <Button 
+                              size="small" 
+                              danger 
+                              onClick={() => {
+                                setUploadedFiles([]);
+                                setAllExcelData([]);
+                                setSelectedFileIds([]);
+                                setSelectedRowKeys([]);
+                                setIsDataLoaded(false);
+                                setCalculatedData({ 
+                                  info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
+                                });
+                                message.success('所有文件已清除');
+                              }}
+                            >
+                              清除所有文件
+                            </Button>
+                          }
+                        >
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {uploadedFiles.map(file => (
+                              <div 
+                                key={file.id}
+                                style={{
+                                  padding: '8px 12px',
+                                  border: selectedFileIds.includes(file.id) ? '2px solid #1890ff' : '1px solid #d9d9d9',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  backgroundColor: selectedFileIds.includes(file.id) ? '#f0f8ff' : '#fafafa',
+                                  minWidth: '200px'
+                                }}
+                                onClick={() => {
+                                  setSelectedFileIds(prev => 
+                                    prev.includes(file.id) 
+                                      ? prev.filter(id => id !== file.id)
+                                      : [...prev, file.id]
+                                  );
+                                }}
+                              >
+                                <div style={{ fontWeight: 'bold', fontSize: '12px' }}>{file.name}</div>
+                                <div style={{ fontSize: '11px', color: '#666' }}>上传时间: {file.uploadTime}</div>
+                                <div style={{ fontSize: '11px', color: '#666' }}>数据行数: {file.rowCount}</div>
+                                <Button 
+                                  size="small" 
+                                  danger 
+                                  type="text"
+                                  style={{ marginTop: '4px', padding: '0 4px', height: '20px', fontSize: '10px' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // 从文件列表中移除
+                                    setUploadedFiles(prev => prev.filter(f => f.id !== file.id));
+                                    // 从合并数据中移除该文件的数据
+                                    setAllExcelData(prev => prev.filter(item => {
+                                      // 这里需要一个方法来识别数据属于哪个文件
+                                      // 简单的方法是重新构建allExcelData
+                                      return true; // 暂时保留所有数据，下面会重新构建
+                                    }));
+                                    // 重新构建allExcelData
+                                    const remainingFiles = uploadedFiles.filter(f => f.id !== file.id);
+                                    const newAllData = remainingFiles.flatMap(f => f.data);
+                                    setAllExcelData(newAllData);
+                                    // 清除选择
+                                    setSelectedFileIds(prev => prev.filter(id => id !== file.id));
+                                    setSelectedRowKeys([]);
+                                    // 如果没有文件了，设置为未加载状态
+                                    if (remainingFiles.length === 0) {
+                                      setIsDataLoaded(false);
+                                    }
+                                    message.success(`文件 ${file.name} 已删除`);
+                                  }}
+                                >
+                                  删除
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                          {selectedFileIds.length > 0 && (
+                            <div style={{ marginTop: '8px', fontSize: '12px', color: '#1890ff' }}>
+                              已选择 {selectedFileIds.length} 个文件，共 {uploadedFiles.filter(f => selectedFileIds.includes(f.id)).reduce((sum, f) => sum + f.rowCount, 0)} 行数据
+                            </div>
+                          )}
+                        </Card>
+                        
+                        <Table 
+                          dataSource={allExcelData} 
+                          columns={columns} 
+                          rowKey="ID" 
+                          rowSelection={rowSelectionConfig}
+                          loading={!isDataLoaded && allExcelData.length === 0}
+                          bordered
+                          className="data-table"
+                          pagination={{ 
+                            defaultPageSize: 10, 
+                            showSizeChanger: true, 
+                            pageSizeOptions: ['10', '20', '50', '100'],
+                            showTotal: (total) => `共 ${total} 条记录`
+                          }}
+                        />
+                      </>
                     )}
                   </Space>
                 </Card>

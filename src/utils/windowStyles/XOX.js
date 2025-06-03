@@ -66,7 +66,7 @@ const processXOX = (windowData, calculator) => {
     // Frame calculations
     framew = round((w + 3 * 2) / 25.4);
     frameh = round((h + 3 * 2) / 25.4);
-    calculator.writeFrame(id, style, "", "", "", "", "", String(framew), "2", String(frameh), "2", "", "", "", "", color);
+    calculator.writeFrame(id, style, "", "", "", "", String(framew), "2", String(frameh), "2", "", "", "", "", color);
     console.log(`框架计算 - Nailon | 框架宽: ${framew} | 框架高: ${frameh}`);
     
     // Sash calculations for XOX
