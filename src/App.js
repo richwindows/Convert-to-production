@@ -83,6 +83,11 @@ function App() {
       const errorItems = [];
       const extractableColors = ['white', 'almond']; // lowercase for matching
       const validFrameTypes = Object.values(frameMapping);
+      
+      // 获取当前最大ID
+      const currentMaxId = allExcelData.length > 0 
+        ? Math.max(...allExcelData.map(item => parseInt(item.ID) || 0))
+        : 0;
 
       json.forEach((item, index) => {
         const excelRowNumber = index + 2;
@@ -213,6 +218,12 @@ function App() {
         }
       });
 
+      // 为新数据分配连续的ID
+      const successfullyProcessedDataWithNewIds = successfullyProcessedData.map((item, index) => ({
+        ...item,
+        ID: (currentMaxId + index + 1).toString() // 确保ID连续
+      }));
+      
       // 创建文件信息对象
       const fileId = Date.now().toString() + '_' + Math.random().toString(36).substr(2, 9);
       const now = new Date();
@@ -222,15 +233,15 @@ function App() {
         id: fileId,
         name: file.name,
         uploadTime: uploadTime,
-        data: successfullyProcessedData,
-        rowCount: successfullyProcessedData.length
+        data: successfullyProcessedDataWithNewIds,
+        rowCount: successfullyProcessedDataWithNewIds.length
       };
 
       // 更新文件列表
       setUploadedFiles(prevFiles => [...prevFiles, fileInfo]);
       
       // 更新合并数据
-      setAllExcelData(prevData => [...prevData, ...successfullyProcessedData]);
+      setAllExcelData(prevData => [...prevData, ...successfullyProcessedDataWithNewIds]);
       
       setSelectedRowKeys([]);
       setCalculatedData({ 
@@ -413,156 +424,190 @@ function App() {
   };
 
   // Function to export data to Excel
-  const exportToExcel = () => {
+  const exportToExcel = async () => { // Changed to async for ExcelJS
     if (!isDataLoaded || Object.values(calculatedData).every(arr => arr.length === 0 && arr !== calculatedData.info && arr !== calculatedData.sashWelding)) {
-      // Check if info or sashWelding has data even if others don't
       if ((!calculatedData.info || calculatedData.info.length === 0) && (!calculatedData.sashWelding || calculatedData.sashWelding.length === 0 )) {
         message.error('No data available to export.');
         return;
       }
     }
     setIsExporting(true);
-    message.loading({ content: 'Generating Excel file...', key: 'exporting' });
+    message.loading({ content: 'Generating Excel file with ExcelJS...', key: 'exporting' });
 
-    const wb = XLSX.utils.book_new();
+    const workbook = new ExcelJS.Workbook();
     const currentBatchNo = batchNo || 'N/A';
-
-    const defaultCellStyle = {
-      font: { name: 'Calibri', sz: 12 },
-      border: {
-        top: { style: 'thin', color: { rgb: "000000" } },
-        bottom: { style: 'thin', color: { rgb: "000000" } },
-        left: { style: 'thin', color: { rgb: "000000" } },
-        right: { style: 'thin', color: { rgb: "000000" } }
-      },
-      alignment: { horizontal: "center", vertical: "center" }
-    };
-    
-    const headerCellStyle = {
-      ...defaultCellStyle,
-      font: { ...defaultCellStyle.font, bold: true },
-      fill: { fgColor: { rgb: "FFFF00" } } // Example: Yellow fill for headers
-    };
 
     // Sheet definitions: name, dataKey, headers, mapFn
     const sheetDefinitions = [
       {
         name: 'General Info',
         dataKey: 'info',
-        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'W', 'H', 'FH', 'Frame', 'Glass', 'Argon', 'Grid', 'Color', 'Note', 'Quantity', 'Original ID'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.ID, row.Style, row.W, row.H, row.FH, row.Frame, row.Glass, row.Argon, row.Grid, row.Color, row.Note, row.Quantity, row.originalId]
+        headers: ['Customer', 'ID', 'Style', 'W', 'H', 'FH', 'Frame', 'Glass', 'Argon', 'Grid', 'Color', 'Note'],
+        mapFn: (row) => [row.Customer, row.ID, row.Style, row.W, row.H, row.FH, row.Frame, row.Glass, row.Argon, row.Grid, row.Color, row.Note]
       },
       {
         name: 'Frame',
         dataKey: 'frame',
-        headers: ['Batch NO.', 'ID', 'Style', '82-02B —', 'Pcs', '82-02B |', 'Pcs', '82-10 —', 'Pcs', '82-10 |', 'Pcs', '82-01 —', 'Pcs', '82-01 |', 'Pcs', 'Color'],
-        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row['82-02B-H'] || '', row['82-02B-H-Pcs'] || '', row['82-02B-V'] || '', row['82-02B-V-Pcs'] || '', row['82-10-H'] || '', row['82-10-H-Pcs'] || '', row['82-10-V'] || '', row['82-10-V-Pcs'] || '', row['82-01-H'] || '', row['82-01-H-Pcs'] || '', row['82-01-V'] || '', row['82-01-V-Pcs'] || '', row.Color || '']
+        headers: ['ID', 'Style', '82-02B —', 'Pcs', '82-02B |', 'Pcs', '82-10 —', 'Pcs', '82-10 |', 'Pcs', '82-01 —', 'Pcs', '82-01 |', 'Pcs', 'Color'],
+        mapFn: (row) => [row.ID, row.Style, row['82-02B-H'] || '', row['82-02B-H-Pcs'] || '', row['82-02B-V'] || '', row['82-02B-V-Pcs'] || '', row['82-10-H'] || '', row['82-10-H-Pcs'] || '', row['82-10-V'] || '', row['82-10-V-Pcs'] || '', row['82-01-H'] || '', row['82-01-H-Pcs'] || '', row['82-01-V'] || '', row['82-01-V-Pcs'] || '', row.Color || '']
       },
       {
         name: 'Sash',
         dataKey: 'sash',
-        headers: ['Batch NO.', 'ID', 'Style', '82-03--', 'Pcs', '82-03 |', 'Pcs', '82-05', 'Pcs', '82-04--', 'Pcs', '82-04|', 'Pcs', 'Color'],
-        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row['82-03-H'] || '', row['82-03-H-Pcs'] || '', row['82-03-V'] || '', row['82-03-V-Pcs'] || '', row['82-05'] || '', row['82-05-Pcs'] || '', row['82-04-H'] || '', row['82-04-H-Pcs'] || '', row['82-04-V'] || '', row['82-04-V-Pcs'] || '', row.Color || '']
+        headers: ['ID', 'Style', '82-03--', 'Pcs', '82-03 |', 'Pcs', '82-05', 'Pcs', '82-04--', 'Pcs', '82-04|', 'Pcs', 'Color'],
+        mapFn: (row) => [row.ID, row.Style, row['82-03-H'] || '', row['82-03-H-Pcs'] || '', row['82-03-V'] || '', row['82-03-V-Pcs'] || '', row['82-05'] || '', row['82-05-Pcs'] || '', row['82-04-H'] || '', row['82-04-H-Pcs'] || '', row['82-04-V'] || '', row['82-04-V-Pcs'] || '', row.Color || '']
       },
       {
         name: 'Sash Welding',
         dataKey: 'sashWelding',
-        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'W', 'H', 'Sashw', 'Sashh', 'Pcs'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.ID, row.Style,row.SashW, row.SashH,row.WeldingCutW, row.WeldingCutH,row.Pcs]
+        headers: ['Customer', 'ID', 'Style', 'W', 'H', 'Sashw', 'Sashh', 'Pcs'],
+        mapFn: (row) => [row.Customer, row.ID, row.Style, row.SashW, row.SashH, row.WeldingCutW, row.WeldingCutH, row.Pcs]
       },
       {
         name: 'Glass',
         dataKey: 'glass',
-        headers: ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Tempered', 'Thickness', 'Width', 'Height', 'Grid', 'Argon'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.quantity, row.glassType, row.Tmprd, row.thickness, row.width, row.height, row.grid, row.argon]
+        headers: ['Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Tempered', 'Thickness', 'Width', 'Height', 'Grid', 'Argon'],
+        mapFn: (row) => [row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.quantity, row.glassType, row.Tmprd, row.thickness, row.width, row.height, row.grid, row.argon]
       },
       {
         name: 'Screen',
         dataKey: 'screen',
-        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.ID, row.Style, row.screenSize || '', row.screenPcs || '', row.screenT || '', row.screenTPcs || '', row.Color || '']
+        headers: ['Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color'],
+        mapFn: (row) => [row.Customer, row.ID, row.Style, row.screenSize || '', row.screenPcs || '', row.screenT || '', row.screenTPcs || '', row.Color || '']
       },
       {
         name: 'Parts',
         dataKey: 'parts',
-        headers: ['Batch NO.', 'ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track', 'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color'],
-        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row.mullion || '', row.mullionA || '', row.handleA || '', row.quantity || '', row.track || '', row.coverH || '', row.coverV || '', row.bigMu1 || '', row.bigMu1Q || '', row.bigMu2 || '', row.bigMu2Q || '', row.slop || '', row.Color || '']
+        headers: ['ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track', 'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color'],
+        mapFn: (row) => [row.ID, row.Style, row.mullion || '', row.mullionA || '', row.handleA || '', row.quantity || '', row.track || '', row.coverH || '', row.coverV || '', row.bigMu1 || '', row.bigMu1Q || '', row.bigMu2 || '', row.bigMu2Q || '', row.slop || '', row.Color || '']
       },
       {
         name: 'Grid',
         dataKey: 'grid',
-        headers: ['Batch NO.', 'ID', 'Style', 'Grid Style', 'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀', 'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀', 'Note', 'Color'],
-        mapFn: (row) => [currentBatchNo, row.ID, row.Style, row.Grid || '', row.sashW || '', row.sashWq || '', row.holeW1 || '', row.sashH || '', row.sashHq || '', row.holeH1 || '', row.fixW || '', row.fixWq || '', row.holeW2 || '', row.fixH || '', row.fixHq || '', row.holeH2 || '', row.Note || '', row.Color || '']
+        headers: ['ID', 'Style', 'Grid Style', 'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀', 'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀', 'Note', 'Color'],
+        mapFn: (row) => [row.ID, row.Style, row.Grid || '', row.sashW || '', row.sashWq || '', row.holeW1 || '', row.sashH || '', row.sashHq || '', row.holeH1 || '', row.fixW || '', row.fixWq || '', row.holeW2 || '', row.fixH || '', row.fixHq || '', row.holeH2 || '', row.Note || '', row.Color || '']
       },
       {
         name: 'Glass Order',
         dataKey: 'order',
-        headers: ['Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'],
-        mapFn: (row) => [currentBatchNo, row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row.Width, row.Height, row.Notes]
+        headers: ['Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity', 'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'],
+        mapFn: (row) => [row.Customer, row.Style, row.W, row.H, row.FH, row.ID, row.line, row.Quantity, row['Glass Type'], row['Annealed/Tempered'], row.Thickness, row.Width, row.Height, row.Notes]
       },
-      { // Label data comes from calculatedData.info
+      { 
         name: 'Label',
-        dataKey: 'info', // Source from 'info'
-        headers: ['Batch NO.', 'Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.'],
+        dataKey: 'label',
+        headers: ['Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.'],
         mapFn: (row) => [
-          currentBatchNo,
           row.Customer,
           row.ID,
           row.Style,
-          (row.W && row.H) ? `${row.W}x${row.H}` : '',
+          row.Size,
           row.Frame,
-          (row.Glass ? (row.Argon && row.Argon !== 'None' ? `${row.Glass}+${row.Argon}` : row.Glass) : ''),
+          row.Glass,
           row.Grid,
-          row.Note || (row.PO || ''), // Use Note as fallback for P.O.
-          currentBatchNo // 'Invoice Num. Batch NO.' is the same as currentBatchNo
+          row.PO || row.Note || '', 
+          currentBatchNo
         ]
       }
     ];
 
-    sheetDefinitions.forEach(def => {
+    const thinBorder = { style: 'thin', color: { argb: 'FF000000' } };
+    const allSideBorders = {
+      top: thinBorder,
+      left: thinBorder,
+      bottom: thinBorder,
+      right: thinBorder
+    };
+
+    for (const def of sheetDefinitions) {
+      const worksheet = workbook.addWorksheet(def.name);
       const dataToExport = calculatedData[def.dataKey];
-      let ws;
+      const numCols = def.headers.length;
+
+      // Row 1: Sheet Name
+      const titleRow = worksheet.addRow([def.name]);
+      worksheet.mergeCells(1, 1, 1, numCols); // 合并第一行的单元格
+      titleRow.getCell(1).font = { name: 'Calibri', size: 16, bold: true };
+      titleRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }; // 居中对齐
+      titleRow.getCell(1).border = allSideBorders;
+      titleRow.height = 30;
+
+      // Row 2: Batch Number
+      const batchRow = worksheet.addRow([`Batch NO.: ${currentBatchNo}`]);
+      worksheet.mergeCells(2, 1, 2, numCols); // 合并第二行的单元格
+      batchRow.getCell(1).font = { name: 'Calibri', size: 12, bold: true };
+      batchRow.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' }; // 居中对齐
+      batchRow.getCell(1).border = allSideBorders;
+      batchRow.height = 25;
+
+      // Row 3: Headers
+      const headerRow = worksheet.addRow(def.headers);
+      headerRow.eachCell((cell, colNumber) => {
+        cell.font = { name: 'Calibri', size: 12, bold: true };
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD3D3D3' } // 浅灰色 (Light Gray)
+        };
+        cell.border = allSideBorders;
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        // Set column width based on header - adjust as needed
+        const column = worksheet.getColumn(colNumber);
+        column.width = Math.max(15, (def.headers[colNumber-1] || '').length + 2);
+      });
+      headerRow.height = 20;
+
+      // Data Rows
       if (dataToExport && dataToExport.length > 0) {
-        const sheetRows = dataToExport.map((row, index) => def.mapFn(row, index)); // Pass index to mapFn
-        const aoaData = [def.headers, ...sheetRows];
-        ws = XLSX.utils.aoa_to_sheet(aoaData);
-
-        // Apply styles
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let R = range.s.r; R <= range.e.r; ++R) {
-          for (let C = range.s.c; C <= range.e.c; ++C) {
-            const cell_address = { c: C, r: R };
-            const cell_ref = XLSX.utils.encode_cell(cell_address);
-            if (!ws[cell_ref]) continue; // Create cell if it doesn't exist (should not happen with aoa_to_sheet for full data)
-            ws[cell_ref].s = (R === 0) ? headerCellStyle : defaultCellStyle; // Header style for first row
-          }
-        }
-        
-        // Attempt to set column widths (basic example: all columns 15 wide)
-        // More sophisticated width calculation might be needed based on content.
-        const colWidths = def.headers.map(() => ({ wch: 15 })); // or {width: 15} in some versions
-        ws['!cols'] = colWidths;
-
+        dataToExport.forEach((rowDataItem, index) => {
+          const rowValues = def.mapFn(rowDataItem, index);
+          const dataRow = worksheet.addRow(rowValues);
+          dataRow.eachCell((cell) => {
+            cell.font = { name: 'Calibri', size: 12 };
+            cell.border = allSideBorders;
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          });
+        });
       } else {
-        // Create sheet with only headers if no data
-        ws = XLSX.utils.aoa_to_sheet([def.headers]);
-        // Apply styles to header row
-         const range = XLSX.utils.decode_range(ws['!ref']);
-         for (let C = range.s.c; C <= range.e.c; ++C) {
-            const cell_address = { c: C, r: 0 }; // Only header row
-            const cell_ref = XLSX.utils.encode_cell(cell_address);
-            if (!ws[cell_ref]) ws[cell_ref] = { t: 's', v: def.headers[C]}; // create cell if it doesn't exist
-            ws[cell_ref].s = headerCellStyle;
-         }
-        const colWidths = def.headers.map(() => ({ wch: 15 }));
-        ws['!cols'] = colWidths;
+        // Add a row indicating no data if sheet is empty, below headers
+        const noDataRow = worksheet.addRow(Array(numCols).fill('')); // Add an empty row first
+        worksheet.mergeCells(noDataRow.number, 1, noDataRow.number, numCols);
+        const cell = noDataRow.getCell(1);
+        cell.value = 'No data available for this sheet.';
+        cell.font = { name: 'Calibri', size: 12, italic: true };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = allSideBorders;
       }
-      XLSX.utils.book_append_sheet(wb, ws, def.name);
-    });
+       // Adjust column widths dynamically based on content including data, after all rows are added.
+      worksheet.columns.forEach((column, i) => {
+        let maxLength = 0;
+        column.eachCell({ includeEmpty: true }, (cell) => {
+          let columnLength = cell.value ? cell.value.toString().length : 0;
+          if (cell.font && cell.font.bold){ // Make bold text count a bit more
+             columnLength *= 1.1;
+          }
+          if (columnLength > maxLength) {
+            maxLength = columnLength;
+          }
+        });
+        column.width = Math.max(15, Math.min(50, maxLength + 2)); // Min 15, Max 50
+      });
+    }
     
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const fileName = `${currentBatchNo.replace(/[^a-zA-Z0-9_-]/g, '_')}_ProductionData.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    message.success({ content: 'Excel file generated successfully!', key: 'exporting', duration: 2 });
+    
+    // Use FileSaver.js logic (or a similar approach for download)
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href); // Clean up
+
+    message.success({ content: 'Excel file generated successfully with ExcelJS!', key: 'exporting', duration: 2 });
     setIsExporting(false);
   };
 
@@ -764,7 +809,17 @@ function App() {
     setIsProcessing(true);
     message.loading({ content: 'Processing selected rows...', key: 'processing' });
 
-    const selectedData = allExcelData.filter(item => selectedRowKeys.includes(item.ID.toString()));
+    // 获取选中的数据，但保持原始顺序
+    const selectedDataUnsorted = allExcelData.filter(item => selectedRowKeys.includes(item.ID.toString()));
+    
+    // 按照用户选择的顺序排序数据
+    const selectedData = [];
+    selectedRowKeys.forEach(key => {
+      const item = selectedDataUnsorted.find(data => data.ID.toString() === key);
+      if (item) {
+        selectedData.push(item);
+      }
+    });
 
     if (selectedData.length === 0) {
       message.error('No rows selected for processing.');
@@ -778,7 +833,6 @@ function App() {
 
     selectedData.forEach((windowData, index) => {
       const sequentialId = index + customStartId; // 使用自定义起始ID
-      const originalId = windowData.ID;
 
       let mappedFrameType = windowData.Frame || '';
       if (mappedFrameType in frameMapping) {
@@ -788,7 +842,6 @@ function App() {
       const windowDataForCalc = {
         ...windowData, 
         ID: sequentialId,      
-        originalId: originalId, 
         Frame: mappedFrameType, 
         BatchNO: batchNo,
         bottomtempered: windowData.bottomtempered, // Pass the extracted value
@@ -848,10 +901,27 @@ function App() {
 
   // Add a new function to handle cell changes in print tables
   const handlePrintTableCellChange = (dataKey, rowIndex, columnKey, value) => {
+    // 处理添加行
     if (columnKey === 'ADD_ROW') {
       setCalculatedData(prevData => {
         const updatedTableData = [...prevData[dataKey], {}]; // Add an empty object for the new row
         return { ...prevData, [dataKey]: updatedTableData };
+      });
+      return;
+    }
+    
+    // 处理行颜色变更
+    if (columnKey === 'ROW_COLOR') {
+      setCalculatedData(prevData => {
+        const newCalculatedData = JSON.parse(JSON.stringify(prevData)); // Deep clone for safety
+        
+        if (!newCalculatedData[dataKey] || !newCalculatedData[dataKey][rowIndex]) {
+          console.error("Error: dataKey or rowIndex is invalid in handlePrintTableCellChange", dataKey, rowIndex);
+          return prevData; // Return previous state if invalid access
+        }
+        
+        newCalculatedData[dataKey][rowIndex].rowColor = value;
+        return newCalculatedData;
       });
       return;
     }
@@ -947,7 +1017,7 @@ function App() {
                 Width: changedGlassEntry.width,
                 Height: changedGlassEntry.height,
                 Notes: '', 
-                originalId: windowInfo.originalId,
+                // originalId removed as per requirements
               };
               newCalculatedData.order.push(newOrderEntry);
             } else {

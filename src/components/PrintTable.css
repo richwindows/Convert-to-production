@@ -397,6 +397,14 @@
   }
 }
 
+.highlight-blue {
+  background-color: #e6f7ff;
+}
+
+.highlight-green {
+  background-color: #f6ffed;
+}
+
 /* Added to increase font size for screen view */
 .bordered-print-table th,
 .material-cutting-table th,
@@ -409,4 +417,4 @@
 .label-table td {
   font-size: 14px;
 }
-/* End of added styles */ 
+/* End of added styles */

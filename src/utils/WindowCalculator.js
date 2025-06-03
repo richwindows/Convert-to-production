@@ -184,18 +184,19 @@ class WindowCalculator {
   processWindow(windowData) {
     // DO NOT Reset data here anymore
     // this.data = { ... }; 
-
+  
     // windowData.ID is now the sequential display ID from App.js
-    // windowData.originalId is the stable underlying ID from Excel/manual add
     const displaySequentialId = windowData.ID; 
-    const originalStableId = windowData.originalId || displaySequentialId; // Fallback if originalId is somehow missing
-
+    // 移除 originalStableId，只使用 displaySequentialId
+    // const originalStableId = windowData.originalId || displaySequentialId;
+  
     // 记录开始处理窗户的日志
     this.log('\n========================================');
-    this.log(`开始处理窗口 DisplayID: ${displaySequentialId} (OriginalID: ${originalStableId})`);
+    // 修改日志输出，移除 originalId 的引用
+    this.log(`开始处理窗口 DisplayID: ${displaySequentialId}`);
     this.log(`数据: 样式=${windowData.Style}, 尺寸=${windowData.W}x${windowData.H}, 框架=${windowData.Frame}, 玻璃=${windowData.Glass}`);
     this.log('========================================');
-
+  
     // Write general info
     this.writeInfo(windowData);
     
@@ -662,7 +663,8 @@ class WindowCalculator {
     const labelRow = {
       Customer: data.Customer || '',
       ID: data.ID, // This IS the sequential display ID from App.js
-      originalId: data.originalId, // Preserve original for reference if needed
+      // 移除这一行
+      // originalId: data.originalId, // Preserve original for reference if needed
       Style: data.Style || '',
       Size: formatSize(data.W, data.H), // Use formatSize here
       Frame: data.Frame || '',
