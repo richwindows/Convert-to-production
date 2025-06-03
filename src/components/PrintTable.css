@@ -395,4 +395,18 @@
     font-size: 12pt !important; /* Match other table headers */
     text-align: center !important; /* Center align text */
   }
-} 
+}
+
+/* Added to increase font size for screen view */
+.bordered-print-table th,
+.material-cutting-table th,
+.label-table th {
+  font-size: 15px;
+}
+
+.bordered-print-table td,
+.material-cutting-table td,
+.label-table td {
+  font-size: 14px;
+}
+/* End of added styles */ 

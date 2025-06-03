@@ -1,9 +1,18 @@
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
+  // Adjusted initialWidths for Frame table columns
+  // ID, Style, 82-02B —, Pcs, 82-02B |, Pcs, 82-10 —, Pcs, 82-10 |, Pcs, 82-01 —, Pcs, 82-01 |, Pcs, Color
+  const initialWidths = [60, 80, 70, 50, 70, 50, 70, 50, 70, 50, 70, 50, 70, 50, 70]; 
+  const [columnWidths, setColumnWidths] = useState(initialWidths);
+  const tableRef = useRef(null);
+  const currentlyResizingColumnIndex = useRef(null);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
       onCellChange('frame', rowIndex, columnKey, e.target.value);
@@ -17,7 +26,8 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
   };
 
   const headerTitles = [
-    'Batch NO.', 'ID', 'Style',
+    // 'Batch NO.', 
+    'ID', 'Style',
     '82-02B —', 'Pcs', '82-02B |', 'Pcs',
     '82-10 —', 'Pcs', '82-10 |', 'Pcs',
     '82-01 —', 'Pcs', '82-01 |', 'Pcs',
@@ -26,9 +36,11 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   // 通用的单元格样式
   const cellStyle = {
-    width: 'max-content',
+    // width: 'max-content', 
     whiteSpace: 'nowrap',
-    padding: '4px 8px'
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
 
   // 输入框样式
@@ -36,6 +48,41 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
     minWidth: '50px',
     width: '100%'
   };
+
+  const startResize = useCallback((event, index) => {
+    currentlyResizingColumnIndex.current = index;
+    startX.current = event.clientX;
+    startWidth.current = columnWidths[index];
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+    event.preventDefault();
+  }, [columnWidths]);
+
+  const doResize = useCallback((event) => {
+    if (currentlyResizingColumnIndex.current === null) return;
+    const currentIndex = currentlyResizingColumnIndex.current;
+    const diffX = event.clientX - startX.current;
+    let newWidth = startWidth.current + diffX;
+    if (newWidth < 40) newWidth = 40;
+
+    setColumnWidths(prevWidths => {
+      const newWidths = [...prevWidths];
+      newWidths[currentIndex] = newWidth;
+      return newWidths;
+    });
+  }, []);
+
+  const stopResize = useCallback(() => {
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
+    currentlyResizingColumnIndex.current = null;
+  }, [doResize]);
+
+  useEffect(() => {
+    return () => {
+      stopResize();
+    };
+  }, [stopResize]);
 
   return (
     <div className="print-container">
@@ -55,11 +102,37 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
           Add Row
         </Button>
       </div>
-      <table className="frame-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
+      <table ref={tableRef} className="frame-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+        <colgroup>
+          {columnWidths.map((width, index) => (
+            <col key={`col-${index}`} style={{ width: `${width}px` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
-            {headerTitles.map(title => (
-              <th key={title} style={cellStyle}>{title}</th>
+            {headerTitles.filter(title => title !== 'Batch NO.').map((title, index) => (
+              <th 
+                key={title} 
+                style={{ 
+                  ...cellStyle, // All cells use basic cellStyle for structure
+                  position: 'relative',
+                }}
+              >
+                {title}
+                {index < headerTitles.filter(title => title !== 'Batch NO.').length -1 && (
+                  <div
+                    onMouseDown={(e) => startResize(e, index)}
+                    style={{
+                      position: 'absolute',
+                      right: 0,
+                      top: 0,
+                      bottom: 0,
+                      width: '5px',
+                      cursor: 'col-resize',
+                    }}
+                  />
+                )}
+              </th>
             ))}
           </tr>
         </thead>
@@ -67,7 +140,7 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, rowIndex) => (
               <tr key={rowIndex}>
-                <td style={cellStyle}>{batchNo}</td>
+                {/* <td style={cellStyle}>{batchNo}</td> */}
                 <td style={cellStyle}>{row.ID || ''}</td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Style')} /></td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row['82-02B-H'] || ''} onChange={(e) => handleInputChange(e, rowIndex, '82-02B-H')} /></td>
@@ -87,8 +160,8 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td style={cellStyle}>{batchNo}</td>
-              {[...Array(headerTitles.length - 1)].map((_, i) => <td key={`empty-placeholder-${i}`} style={cellStyle}></td>)}
+              {/* <td style={cellStyle}>{batchNo}</td> */}
+              {[...Array(headerTitles.filter(title => title !== 'Batch NO.').length)].map((_, i) => <td key={`empty-placeholder-${i}`} style={cellStyle}></td>)}
             </tr>
           )}
           {/* 只在最后一行有数据时添加空行 */}
@@ -97,14 +170,14 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
            calculatedData.length < 10 &&
             [...Array(1)].map((_, i) => (
               <tr key={`empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-${i}-${j}`} style={cellStyle}></td>)}
+                {[...Array(headerTitles.filter(title => title !== 'Batch NO.').length)].map((_, j) => <td key={`empty-${i}-${j}`} style={cellStyle}></td>)}
               </tr>
             ))
           }
           {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
             <tr>
-              {[...Array(headerTitles.length)].map((_, j) => <td key={`empty-${j}`} style={cellStyle}></td>)}
+              {[...Array(headerTitles.filter(title => title !== 'Batch NO.').length)].map((_, j) => <td key={`empty-${j}`} style={cellStyle}></td>)}
             </tr>
           }
         </tbody>

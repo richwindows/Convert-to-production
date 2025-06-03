@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
+  // Customer, Style, W, H, FH, ID, line #, Quantity, Glass Type, Annealed/Tempered, Thickness, Glass Width, Glass Height, Notes
+  const initialWidths = [100, 80, 60, 60, 60, 60, 60, 70, 100, 100, 70, 80, 80, 120];
+  const [columnWidths, setColumnWidths] = useState(initialWidths);
+  const tableRef = useRef(null);
+  const currentlyResizingColumnIndex = useRef(null);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
   // 添加条件样式逻辑，根据各种条件为尺寸格子添加颜色
   const getCellStyle = (row, field) => {
     if (field === 'Width' || field === 'Height') {
@@ -46,11 +54,18 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  const originalHeaderTitles = [
+    'Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity',
+    'Glass Type', 'Annealed/Tempered', 'Thickness', 'Glass Width', 'Glass Height', 'Notes'
+  ];
+  const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
+
   // 通用的单元格样式
   const cellStyle = {
-    width: 'max-content',
     whiteSpace: 'nowrap',
-    padding: '4px 8px'
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
 
   // 输入框样式
@@ -61,9 +76,56 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   // 数字列的样式
   const numberCellStyle = {
-    ...cellStyle,
-    maxWidth: '60px'
+    whiteSpace: 'nowrap',
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
+
+  // Notes 列特定样式
+  const notesCellStyle = {
+    ...cellStyle,
+    whiteSpace: 'normal', // Allow wrapping for notes
+    wordBreak: 'break-word'
+  };
+  const notesInputStyle = {
+    ...inputStyle,
+  };
+
+  const startResize = useCallback((event, index) => {
+    currentlyResizingColumnIndex.current = index;
+    startX.current = event.clientX;
+    startWidth.current = columnWidths[index];
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+    event.preventDefault();
+  }, [columnWidths]);
+
+  const doResize = useCallback((event) => {
+    if (currentlyResizingColumnIndex.current === null) return;
+    const currentIndex = currentlyResizingColumnIndex.current;
+    const diffX = event.clientX - startX.current;
+    let newWidth = startWidth.current + diffX;
+    if (newWidth < 40) newWidth = 40;
+
+    setColumnWidths(prevWidths => {
+      const newWidths = [...prevWidths];
+      newWidths[currentIndex] = newWidth;
+      return newWidths;
+    });
+  }, []);
+
+  const stopResize = useCallback(() => {
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
+    currentlyResizingColumnIndex.current = null;
+  }, [doResize]);
+
+  useEffect(() => {
+    return () => {
+      stopResize();
+    };
+  }, [stopResize]);
 
   return (
     <div className="print-container">
@@ -84,32 +146,50 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
         </Button>
       </div>
       
-      <table className="glass-order-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
+      <table ref={tableRef} className="glass-order-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+        <colgroup>
+          {columnWidths.map((width, index) => (
+            <col key={`col-${index}`} style={{ width: `${width}px` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
-            <th rowSpan="2" style={cellStyle}>Batch NO.</th>
-            <th rowSpan="2" style={cellStyle}>Customer</th>
-            <th rowSpan="2" style={cellStyle}>Style</th>
-            <th rowSpan="2" style={numberCellStyle}>W</th>
-            <th rowSpan="2" style={numberCellStyle}>H</th>
-            <th rowSpan="2" style={numberCellStyle}>FH</th>
-            <th rowSpan="2" style={cellStyle}>ID</th>
-            <th rowSpan="2" style={cellStyle}>line #</th>
-            <th rowSpan="2" style={numberCellStyle}>Quantity</th>
-            <th rowSpan="2" style={cellStyle}>Glass Type</th>
-            <th rowSpan="2" style={cellStyle}>Annealed/Tempered</th>
-            <th rowSpan="2" style={numberCellStyle}>Thickness</th>
-            <th rowSpan="2" style={numberCellStyle}>Width</th>
-            <th rowSpan="2" style={numberCellStyle}>Height</th>
-            <th rowSpan="2" style={cellStyle}>Notes</th>
+            {visibleHeaderTitles.map((title, index) => {
+              const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Thickness', 'Glass Width', 'Glass Height'].includes(title);
+              let thStyle = cellStyle;
+              if (isNumberColumn) thStyle = numberCellStyle;
+              if (title === 'Notes') thStyle = notesCellStyle;
+              return (
+                <th 
+                  key={title} 
+                  style={{
+                    ...thStyle,
+                    position: 'relative',
+                  }}
+                >
+                  {title}
+                  {index < visibleHeaderTitles.length -1 && (
+                    <div
+                      onMouseDown={(e) => startResize(e, index)}
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '5px',
+                        cursor: 'col-resize',
+                      }}
+                    />
+                  )}
+                </th>
+              );
+            })}
           </tr>
-          <tr></tr>
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index} style={getTextStyle(row)}>
-                <td style={cellStyle}>{batchNo}</td>
                 <td style={cellStyle}>
                   <Input 
                     value={row.Customer || ''} 
@@ -232,10 +312,13 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td style={cellStyle}>{batchNo}</td>
-              {[...Array(14)].map((_, i) => {
-                const isNumberColumn = i === 2 || i === 3 || i === 4 || i === 8 || i === 11 || i === 12 || i === 13;
-                return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              {[...Array(visibleHeaderTitles.length)].map((_, i) => {
+                const currentTitle = visibleHeaderTitles[i];
+                const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Thickness', 'Glass Width', 'Glass Height'].includes(currentTitle);
+                let tdStyle = cellStyle;
+                if (isNumberColumn) tdStyle = numberCellStyle;
+                if (currentTitle === 'Notes') tdStyle = notesCellStyle;
+                return <td key={`empty-placeholder-${i}`} style={tdStyle}></td>;
               })}
             </tr>
           )}
@@ -245,9 +328,13 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
            calculatedData.length < 10 &&
             [...Array(1)].map((_, i) => (
               <tr key={`empty-${i}`}>
-                {[...Array(15)].map((_, j) => {
-                  const isNumberColumn = j === 3 || j === 4 || j === 5 || j === 8 || j === 11 || j === 12 || j === 13;
-                  return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+                {[...Array(visibleHeaderTitles.length)].map((_, j) => {
+                  const currentTitle = visibleHeaderTitles[j];
+                  const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Thickness', 'Glass Width', 'Glass Height'].includes(currentTitle);
+                  let tdStyle = cellStyle;
+                  if (isNumberColumn) tdStyle = numberCellStyle;
+                  if (currentTitle === 'Notes') tdStyle = notesCellStyle;
+                  return <td key={`empty-${i}-${j}`} style={tdStyle}></td>;
                 })}
               </tr>
             ))
@@ -255,9 +342,13 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
           {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
             <tr>
-              {[...Array(15)].map((_, j) => {
-                const isNumberColumn = j === 3 || j === 4 || j === 5 || j === 8 || j === 11 || j === 12 || j === 13;
-                return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
+              {[...Array(visibleHeaderTitles.length)].map((_, j) => {
+                const currentTitle = visibleHeaderTitles[j];
+                const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Thickness', 'Glass Width', 'Glass Height'].includes(currentTitle);
+                let tdStyle = cellStyle;
+                if (isNumberColumn) tdStyle = numberCellStyle;
+                if (currentTitle === 'Notes') tdStyle = notesCellStyle;
+                return <td key={`empty-${j}`} style={tdStyle}></td>;
               })}
             </tr>
           }

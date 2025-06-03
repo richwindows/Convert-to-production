@@ -1,9 +1,16 @@
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
+  const initialWidths = [100, 60, 80, 100, 50, 100, 50, 70]; 
+  const [columnWidths, setColumnWidths] = useState(initialWidths);
+  const tableRef = useRef(null);
+  const currentlyResizingColumnIndex = useRef(null);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
       onCellChange('screen', rowIndex, columnKey, e.target.value);
@@ -16,15 +23,17 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
-  const headerTitles = [
+  const originalHeaderTitles = [
     'Batch NO.', 'Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color'
   ];
+  const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
 
   // 通用的单元格样式
   const cellStyle = {
-    width: 'max-content',
     whiteSpace: 'nowrap',
-    padding: '4px 8px'
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
 
   // 输入框样式
@@ -35,9 +44,46 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   // 数字列的样式
   const numberCellStyle = {
-    ...cellStyle,
-    maxWidth: '60px'
+    whiteSpace: 'nowrap',
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
+
+  const startResize = useCallback((event, index) => {
+    currentlyResizingColumnIndex.current = index;
+    startX.current = event.clientX;
+    startWidth.current = columnWidths[index];
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+    event.preventDefault();
+  }, [columnWidths]);
+
+  const doResize = useCallback((event) => {
+    if (currentlyResizingColumnIndex.current === null) return;
+    const currentIndex = currentlyResizingColumnIndex.current;
+    const diffX = event.clientX - startX.current;
+    let newWidth = startWidth.current + diffX;
+    if (newWidth < 40) newWidth = 40;
+
+    setColumnWidths(prevWidths => {
+      const newWidths = [...prevWidths];
+      newWidths[currentIndex] = newWidth;
+      return newWidths;
+    });
+  }, []);
+
+  const stopResize = useCallback(() => {
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
+    currentlyResizingColumnIndex.current = null;
+  }, [doResize]);
+
+  useEffect(() => {
+    return () => {
+      stopResize();
+    };
+  }, [stopResize]);
 
   return (
     <div className="print-container">
@@ -57,12 +103,40 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
           Add Row
         </Button>
       </div>
-      <table className="screen-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
+      <table ref={tableRef} className="screen-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+        <colgroup>
+          {columnWidths.map((width, index) => (
+            <col key={`col-${index}`} style={{ width: `${width}px` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
-            {headerTitles.map(title => {
+            {visibleHeaderTitles.map((title, index) => {
               const isNumberColumn = title.toLowerCase() === 'pcs';
-              return <th key={title} style={isNumberColumn ? numberCellStyle : cellStyle}>{title}</th>;
+              return (
+                <th 
+                  key={title} 
+                  style={{
+                    ...(isNumberColumn ? numberCellStyle : cellStyle),
+                    position: 'relative',
+                  }}
+                >
+                  {title}
+                  {index < visibleHeaderTitles.length -1 && (
+                    <div
+                      onMouseDown={(e) => startResize(e, index)}
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '5px',
+                        cursor: 'col-resize',
+                      }}
+                    />
+                  )}
+                </th>
+              );
             })}
           </tr>
         </thead>
@@ -70,7 +144,6 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td style={cellStyle}>{batchNo}</td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
                 <td style={cellStyle}>{row.ID || ''}</td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
@@ -83,31 +156,31 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td style={cellStyle}>{batchNo}</td>
-              {[...Array(headerTitles.length - 1)].map((_, i) => {
-                const isNumberColumn = i === 5 || i === 7;
+              {[...Array(visibleHeaderTitles.length)].map((_, i) => {
+                const currentTitle = visibleHeaderTitles[i];
+                const isNumberColumn = currentTitle.toLowerCase() === 'pcs';
                 return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
               })}
             </tr>
           )}
-          {/* 只在最后一行有数据时添加空行 */}
           {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
            Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
            calculatedData.length < 10 &&
             [...Array(1)].map((_, i) => (
               <tr key={`empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => {
-                  const isNumberColumn = j === 5 || j === 7;
+                {[...Array(visibleHeaderTitles.length)].map((_, j) => {
+                  const currentTitle = visibleHeaderTitles[j];
+                  const isNumberColumn = currentTitle.toLowerCase() === 'pcs';
                   return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
                 })}
               </tr>
             ))
           }
-          {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
             <tr>
-              {[...Array(headerTitles.length)].map((_, j) => {
-                const isNumberColumn = j === 5 || j === 7;
+              {[...Array(visibleHeaderTitles.length)].map((_, j) => {
+                const currentTitle = visibleHeaderTitles[j];
+                const isNumberColumn = currentTitle.toLowerCase() === 'pcs';
                 return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
               })}
             </tr>

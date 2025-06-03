@@ -1,9 +1,17 @@
-import React from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input, Button } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
+  // ID, Style, Grid Style, Sash W1, Pcs, 一刀, Sash H1, Pcs, 一刀, Fixed W2, Pcs, 一刀, Fixed H2, Pcs, 一刀, Note, Color
+  const initialWidths = [60, 80, 80, 70, 50, 50, 70, 50, 50, 70, 50, 50, 70, 50, 50, 100, 70];
+  const [columnWidths, setColumnWidths] = useState(initialWidths);
+  const tableRef = useRef(null);
+  const currentlyResizingColumnIndex = useRef(null);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
+
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
       onCellChange('grid', rowIndex, columnKey, e.target.value);
@@ -16,18 +24,23 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
-  const headerTitles = [
+  const originalHeaderTitles = [
     'Batch NO.', 'ID', 'Style', 'Grid Style',
-    'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀',
-    'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀',
+    'Sash W1', 'Pcs', '一刀',
+    'Sash H1', 'Pcs', '一刀',
+    'Fixed W2', 'Pcs', '一刀',
+    'Fixed H2', 'Pcs', '一刀',
     'Note', 'Color'
   ];
+  const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
 
   // 通用的单元格样式
   const cellStyle = {
-    width: 'max-content',
+    // width: 'max-content',
     whiteSpace: 'nowrap',
-    padding: '4px 8px'
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
 
   // 输入框样式
@@ -38,9 +51,48 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   // 数字列的样式
   const numberCellStyle = {
-    ...cellStyle,
-    maxWidth: '60px'
+    // ...cellStyle,
+    // maxWidth: '60px'
+    whiteSpace: 'nowrap',
+    padding: '4px 8px',
+    overflow: 'hidden', 
+    textOverflow: 'ellipsis' 
   };
+
+  const startResize = useCallback((event, index) => {
+    currentlyResizingColumnIndex.current = index;
+    startX.current = event.clientX;
+    startWidth.current = columnWidths[index];
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+    event.preventDefault();
+  }, [columnWidths]);
+
+  const doResize = useCallback((event) => {
+    if (currentlyResizingColumnIndex.current === null) return;
+    const currentIndex = currentlyResizingColumnIndex.current;
+    const diffX = event.clientX - startX.current;
+    let newWidth = startWidth.current + diffX;
+    if (newWidth < 40) newWidth = 40;
+
+    setColumnWidths(prevWidths => {
+      const newWidths = [...prevWidths];
+      newWidths[currentIndex] = newWidth;
+      return newWidths;
+    });
+  }, []);
+
+  const stopResize = useCallback(() => {
+    document.removeEventListener('mousemove', doResize);
+    document.removeEventListener('mouseup', stopResize);
+    currentlyResizingColumnIndex.current = null;
+  }, [doResize]);
+
+  useEffect(() => {
+    return () => {
+      stopResize();
+    };
+  }, [stopResize]);
 
   return (
     <div className="print-container">
@@ -60,12 +112,40 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
           Add Row
         </Button>
       </div>
-      <table className="grid-table bordered-print-table" style={{ tableLayout: 'auto', width: '100%' }}>
+      <table ref={tableRef} className="grid-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>
+        <colgroup>
+          {columnWidths.map((width, index) => (
+            <col key={`col-${index}`} style={{ width: `${width}px` }} />
+          ))}
+        </colgroup>
         <thead>
           <tr>
-            {headerTitles.map(title => {
-              const isNumberColumn = title.includes('Pcs') || title === 'Sash W1' || title === 'Sash H1' || title === 'Fixed W2' || title === 'Fixed H2';
-              return <th key={title} style={isNumberColumn ? numberCellStyle : cellStyle}>{title}</th>;
+            {visibleHeaderTitles.map((title, index) => {
+              const isNumberColumn = title.toLowerCase().includes('pcs') || title.toLowerCase().includes('w') || title.toLowerCase().includes('h') || title === '一刀';
+              return (
+                <th 
+                  key={title} 
+                  style={{
+                    ...(isNumberColumn ? numberCellStyle : cellStyle),
+                    position: 'relative',
+                  }}
+                >
+                  {title}
+                  {index < visibleHeaderTitles.length -1 && (
+                    <div
+                      onMouseDown={(e) => startResize(e, index)}
+                      style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '5px',
+                        cursor: 'col-resize',
+                      }}
+                    />
+                  )}
+                </th>
+              );
             })}
           </tr>
         </thead>
@@ -73,7 +153,7 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, index) => (
               <tr key={index}>
-                <td style={cellStyle}>{batchNo}</td>
+                {/* <td style={cellStyle}>{batchNo}</td> */}
                 <td style={cellStyle}>{row.ID || ''}</td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
                 <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
@@ -95,9 +175,10 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              <td style={cellStyle}>{batchNo}</td>
-              {[...Array(headerTitles.length - 1)].map((_, i) => {
-                const isNumberColumn = i === 4 || i === 5 || i === 7 || i === 8 || i === 10 || i === 11 || i === 13 || i === 14;
+              {/* <td style={cellStyle}>{batchNo}</td> */}
+              {[...Array(visibleHeaderTitles.length)].map((_, i) => {
+                const currentTitle = visibleHeaderTitles[i];
+                const isNumberColumn = currentTitle.toLowerCase().includes('pcs') || currentTitle.toLowerCase().includes('w') || currentTitle.toLowerCase().includes('h') || currentTitle === '一刀';
                 return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
               })}
             </tr>
@@ -108,8 +189,9 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
            calculatedData.length < 10 &&
             [...Array(1)].map((_, i) => (
               <tr key={`empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => {
-                  const isNumberColumn = j === 4 || j === 5 || j === 7 || j === 8 || j === 10 || j === 11 || j === 13 || j === 14;
+                {[...Array(visibleHeaderTitles.length)].map((_, j) => {
+                  const currentTitle = visibleHeaderTitles[j];
+                  const isNumberColumn = currentTitle.toLowerCase().includes('pcs') || currentTitle.toLowerCase().includes('w') || currentTitle.toLowerCase().includes('h') || currentTitle === '一刀';
                   return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
                 })}
               </tr>
@@ -118,8 +200,9 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
           {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
             <tr>
-              {[...Array(headerTitles.length)].map((_, j) => {
-                const isNumberColumn = j === 4 || j === 5 || j === 7 || j === 8 || j === 10 || j === 11 || j === 13 || j === 14;
+              {[...Array(visibleHeaderTitles.length)].map((_, j) => {
+                const currentTitle = visibleHeaderTitles[j];
+                const isNumberColumn = currentTitle.toLowerCase().includes('pcs') || currentTitle.toLowerCase().includes('w') || currentTitle.toLowerCase().includes('h') || currentTitle === '一刀';
                 return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
               })}
             </tr>
