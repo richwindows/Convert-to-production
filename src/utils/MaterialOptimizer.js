@@ -16,13 +16,13 @@ export const getMaterialLength = async (materialName) => {
         
         if (!material) {
             // console.warn(`未找到材料 ${materialName} 的配置，使用默认长度233`);
-            return 233; // Default to 233 if material not found
+            return 232; // Default to 233 if material not found
         }
         return material.length;
     } catch (error) {
         // console.error('获取材料长度失败:', error);
         // Default value in case of errors
-        return 233;
+        return 232;
     }
 };
 
