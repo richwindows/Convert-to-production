@@ -91,7 +91,7 @@ const PrintOptimizedSashTable = ({ batchNo, calculatedData }) => {
         <div className="print-header sash-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
           Sash
         </div>
-        <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
           Batch: {batchNo}
         </div>
         <div style={{ marginBottom: '10px', textAlign: 'right' }}>
@@ -162,7 +162,7 @@ const PrintOptimizedSashTable = ({ batchNo, calculatedData }) => {
       <div className="print-header sash-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Sash
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>

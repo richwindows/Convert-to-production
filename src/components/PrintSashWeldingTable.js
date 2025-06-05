@@ -1,12 +1,20 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Input, Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Input, Button, Dropdown, Menu, Checkbox } from 'antd';
+import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
-  // Customer, ID, Style, W, H, Sashw, Sashh, Pcs, No.
-  const initialWidths = [100, 60, 80, 60, 60, 70, 70, 50, 50]; 
-  const [columnWidths, setColumnWidths] = useState(initialWidths);
+  const headerTitles = ['Customer', 'ID', 'Style', 'W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'];
+  const initialFullWidths = [100, 60, 80, 60, 60, 70, 70, 50, 50]; 
+  const dataKeys = ['Customer', 'ID', 'Style', 'SashW', 'SashH', 'WeldingCutW', 'WeldingCutH', 'Pcs', 'calculatedNo']; // 'calculatedNo' for rowIndex + 1
+
+  const [columnVisibility, setColumnVisibility] = useState(() => headerTitles.map(() => true));
+  const [columnWidths, setColumnWidths] = useState(() => initialFullWidths.filter((_, index) => columnVisibility[index]));
+
+  useEffect(() => {
+    setColumnWidths(initialFullWidths.filter((_, index) => columnVisibility[index]));
+  }, [columnVisibility]);
+
   const tableRef = useRef(null);
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
@@ -24,29 +32,42 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  const handleColumnVisibilityChange = (columnIndex, checked) => {
+    setColumnVisibility(prev => {
+      const newVisibility = [...prev];
+      newVisibility[columnIndex] = checked;
+      return newVisibility;
+    });
+  };
+
+  const visibleRenderedHeaders = headerTitles.filter((_, i) => columnVisibility[i]);
+
   // 通用的单元格样式
   const cellStyle = {
-    // width: 'max-content',
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   // 输入框样式
   const inputStyle = {
     minWidth: '50px',
-    width: '100%'
+    width: '100%',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   // 数字列的样式
   const numberCellStyle = {
-    // ...cellStyle, // Base styles will be inherited or applied directly
-    // maxWidth: '60px' // Width is now controlled by colgroup
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   const startResize = useCallback((event, index) => {
@@ -84,18 +105,35 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
     };
   }, [stopResize]);
 
-  const originalHeaderTitles = ['Batch NO.', 'Customer', 'ID', 'Style', 'W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'];
-  const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
+  const columnsDropdownMenu = (
+    <Menu>
+      {headerTitles.map((title, index) => (
+        <Menu.Item key={title}>
+          <Checkbox
+            checked={columnVisibility[index]}
+            onChange={(e) => handleColumnVisibilityChange(index, e.target.checked)}
+          >
+            {title}
+          </Checkbox>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
 
   return (
     <div className="print-container">
       <div className="print-header sash-welding-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Sash Welding List
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+      <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Dropdown overlay={columnsDropdownMenu} trigger={['click']}>
+          <Button>
+            Columns <SettingOutlined />
+          </Button>
+        </Dropdown>
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
@@ -108,26 +146,27 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
       <table ref={tableRef} className="sash-welding-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>
         <colgroup>
           {columnWidths.map((width, index) => (
-            <col key={`col-${index}`} style={{ width: `${width}px` }} />
+            <col key={`col-visible-${index}`} style={{ width: `${width}px` }} />
           ))}
         </colgroup>
         <thead>
           <tr>
-            {/* <th style={cellStyle}>Batch NO.</th> */}
-            {visibleHeaderTitles.map((title, index) => {
+            {headerTitles.map((title, colIndex) => {
+              if (!columnVisibility[colIndex]) return null;
               const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
+              const currentHeaderStyle = isNumCol ? numberCellStyle : cellStyle;
               return (
                 <th 
                   key={title} 
                   style={{ 
-                    ...(isNumCol ? numberCellStyle : cellStyle),
+                    ...currentHeaderStyle,
                     position: 'relative',
                   }}
                 >
                   {title}
-                  {index < visibleHeaderTitles.length -1 && (
+                  {visibleRenderedHeaders.indexOf(title) < visibleRenderedHeaders.length - 1 && (
                     <div
-                      onMouseDown={(e) => startResize(e, index)}
+                      onMouseDown={(e) => startResize(e, visibleRenderedHeaders.indexOf(title))}
                       style={{
                         position: 'absolute',
                         right: 0,
@@ -145,51 +184,66 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
-            calculatedData.map((row, index) => (
-              <tr key={index}>
-                {/* <td style={cellStyle}>{batchNo}</td> */}
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
-                <td style={cellStyle}>{row.ID || ''}</td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.SashW || ''} onChange={(e) => handleInputChange(e, index, 'SashW')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.SashH || ''} onChange={(e) => handleInputChange(e, index, 'SashH')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.WeldingCutW || ''} onChange={(e) => handleInputChange(e, index, 'WeldingCutW')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.WeldingCutH || ''} onChange={(e) => handleInputChange(e, index, 'WeldingCutH')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Pcs || ''} onChange={(e) => handleInputChange(e, index, 'Pcs')} /></td>
-                <td style={numberCellStyle}>{index + 1}</td> 
+            calculatedData.map((row, rowIndex) => (
+              <tr key={rowIndex}>
+                {headerTitles.map((title, colIndex) => {
+                  if (!columnVisibility[colIndex]) return null;
+                  const dataKey = dataKeys[colIndex];
+                  const cellValue = row[dataKey] || '';
+                  const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
+                  const currentTDStyle = isNumCol ? numberCellStyle : cellStyle;
+
+                  if (title === 'ID') {
+                    return <td key={dataKey} style={currentTDStyle}>{row.ID || ''}</td>;
+                  }
+                  if (title === 'No.') {
+                    return <td key={dataKey} style={currentTDStyle}>{rowIndex + 1}</td>;
+                  }
+                  return (
+                    <td key={dataKey} style={currentTDStyle}>
+                      <Input 
+                        size="small" 
+                        style={inputStyle} 
+                        bordered={false} 
+                        value={cellValue} 
+                        onChange={(e) => handleInputChange(e, rowIndex, dataKey)} 
+                      />
+                    </td>
+                  );
+                })}
               </tr>
             ))
           ) : (
             <tr>
-              {/* <td style={cellStyle}>{batchNo}</td> */}
-              {[...Array(visibleHeaderTitles.length)].map((_, i) => { 
-                const currentTitle = visibleHeaderTitles[i]; 
-                const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(currentTitle);
-                return <td key={`empty-placeholder-${i}`} style={isNumCol ? numberCellStyle : cellStyle}></td>;
+              {headerTitles.map((title, colIndex) => {
+                if (!columnVisibility[colIndex]) return null;
+                const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
+                const currentPlaceholderStyle = isNumCol ? numberCellStyle : cellStyle;
+                return <td key={`empty-placeholder-${colIndex}`} style={currentPlaceholderStyle}></td>;
               })}
             </tr>
           )}
-          {/* 只在最后一行有数据时添加空行 */}
           {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
            Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
            calculatedData.length < 10 &&
             [...Array(1)].map((_, i) => (
               <tr key={`empty-${i}`}>
-                {[...Array(visibleHeaderTitles.length)].map((_, j) => { 
-                  const currentTitle = visibleHeaderTitles[j];
-                  const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(currentTitle);
-                  return <td key={`empty-${i}-${j}`} style={isNumCol ? numberCellStyle : cellStyle}></td>;
+                {headerTitles.map((title, colIndex) => {
+                  if (!columnVisibility[colIndex]) return null;
+                  const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
+                  const currentPlaceholderStyle = isNumCol ? numberCellStyle : cellStyle;
+                  return <td key={`empty-${i}-${colIndex}`} style={currentPlaceholderStyle}></td>;
                 })}
               </tr>
             ))
           }
-          {/* 移除没有数据时的额外空行 */}
           {(!calculatedData || calculatedData.length === 0) &&
             <tr>
-              {[...Array(visibleHeaderTitles.length)].map((_, j) => { 
-                const currentTitle = visibleHeaderTitles[j];
-                const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(currentTitle);
-                return <td key={`empty-${j}`} style={isNumCol ? numberCellStyle : cellStyle}></td>;
+              {headerTitles.map((title, colIndex) => {
+                if (!columnVisibility[colIndex]) return null;
+                const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
+                const currentPlaceholderStyle = isNumCol ? numberCellStyle : cellStyle;
+                return <td key={`empty-final-${colIndex}`} style={currentPlaceholderStyle}></td>;
               })}
             </tr>
           }

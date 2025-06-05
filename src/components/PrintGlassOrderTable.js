@@ -26,20 +26,24 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   // 添加文字颜色样式逻辑
   const getTextStyle = (row) => {
+    let styles = {
+      fontSize: '21px',    // Added for screen view
+      fontWeight: 'bold'   // Added for screen view
+    };
     // 根据玻璃类型设置不同的文字颜色
     if (row['Glass Type'] === 'lowe2' || row['Glass Type'] === 'Lowe270') {
-      return { color: '#FF0000' }; // 红色文字
+      return { ...styles, color: '#FF0000' }; // 红色文字
     }
     
     if (row['Glass Type'] === 'lowe3' || row['Glass Type'] === 'Lowe366') {
-      return { color: '#800080' }; // 紫色文字
+      return { ...styles, color: '#800080' }; // 紫色文字
     }
     
     if (row['Glass Type'] === 'OBS' || row['Glass Type'] === 'P516') {
-      return { color: '#008000' }; // 绿色文字
+      return { ...styles, color: '#008000' }; // 绿色文字
     }
     
-    return {};
+    return styles;
   };
 
   const handleInputChange = (e, rowIndex, columnKey) => {
@@ -65,13 +69,17 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',    // Added for screen view
+    fontWeight: 'bold'   // Added for screen view
   };
 
   // 输入框样式
   const inputStyle = {
     minWidth: '50px',
-    width: '100%'
+    width: '100%',
+    fontSize: '21px',    // Added for screen view
+    fontWeight: 'bold'   // Added for screen view
   };
 
   // 数字列的样式
@@ -79,7 +87,9 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',    // Added for screen view
+    fontWeight: 'bold'   // Added for screen view
   };
 
   // Notes 列特定样式
@@ -132,7 +142,7 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
       <div className="print-header glass-order-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Glass Order
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>

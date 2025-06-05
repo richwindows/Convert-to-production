@@ -40,13 +40,17 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',    // Added for screen view
+    fontWeight: 'bold'   // Added for screen view
   };
 
   // 输入框样式
   const inputStyle = {
     minWidth: '50px',
-    width: '100%'
+    width: '100%',
+    fontSize: '21px',    // Added for screen view
+    fontWeight: 'bold'   // Added for screen view
   };
 
   const startResize = useCallback((event, index) => {
@@ -89,7 +93,7 @@ const PrintFrameTable = ({ batchNo, calculatedData, onCellChange }) => {
       <div className="print-header frame-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Frame
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>

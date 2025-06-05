@@ -58,6 +58,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* General table cell styling for screen - apply broadly first */
+th,
+td {
+  font-size: 21px !important;
+  font-weight: bold !important;
+}
+
 /* 整体布局 */
 .layout {
   min-height: 100vh;
@@ -318,6 +325,13 @@ body {
 
 .ant-table-tbody > tr:hover > td {
   background: rgba(24, 144, 255, 0.05);
+}
+
+/* Added to increase font size for Ant Design tables on screen */
+.ant-table-thead > tr > th,
+.ant-table-tbody > tr > td {
+  font-size: 21px !important;
+  font-weight: bold !important;
 }
 
 /* 打印视图样式 */

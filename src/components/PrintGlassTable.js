@@ -36,16 +36,20 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   };
 
   const getTextStyle = (row) => {
+    let styles = {
+      fontSize: '21px',
+      fontWeight: 'bold'
+    };
     if (row.glassType === 'lowe2' || row.glassType === 'Lowe270') {
-      return { color: '#FF0000' };
+      return { ...styles, color: '#FF0000' };
     }
     if (row.glassType === 'lowe3' || row.glassType === 'Lowe366') {
-      return { color: '#800080' };
+      return { ...styles, color: '#800080' };
     }
     if (row.glassType === 'OBS' || row.glassType === 'P516') {
-      return { color: '#008000' };
+      return { ...styles, color: '#008000' };
     }
-    return {};
+    return styles;
   };
 
   const handleExportExcel = () => {
@@ -92,13 +96,17 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   // 输入框样式
   const inputStyle = {
     minWidth: '50px',
-    width: '100%'
+    width: '100%',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   // 数字列的样式
@@ -106,7 +114,9 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   const startResize = useCallback((event, index) => {
@@ -179,7 +189,7 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
         <div className="print-header glass-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
           Glass
         </div>
-        <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
           Batch: {batchNo}
         </div>
         <table ref={tableRef} className="glass-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>

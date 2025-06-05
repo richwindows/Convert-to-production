@@ -105,7 +105,7 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
         <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
           Parts Print
         </div>
-        <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
           Batch: {batchNo}
         </div>
         <div style={{ marginBottom: '10px', textAlign: 'right' }}>
@@ -176,7 +176,7 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
       <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Parts Print
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>

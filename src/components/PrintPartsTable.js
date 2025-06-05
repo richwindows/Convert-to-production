@@ -32,27 +32,30 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   // 通用的单元格样式
   const cellStyle = {
-    // width: 'max-content',
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   // 输入框样式
   const inputStyle = {
     minWidth: '50px',
-    width: '100%'
+    width: '100%',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   // 数字列的样式
   const numberCellStyle = {
-    // ...cellStyle,
-    // maxWidth: '60px'
     whiteSpace: 'nowrap',
     padding: '4px 8px',
     overflow: 'hidden', 
-    textOverflow: 'ellipsis' 
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
 
   const startResize = useCallback((event, index) => {
@@ -95,7 +98,7 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
       <div className="print-header parts-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Parts
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>

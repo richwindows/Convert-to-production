@@ -1,15 +1,46 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Input, Button, Dropdown, Menu } from 'antd';
-import { PlusOutlined, BgColorsOutlined } from '@ant-design/icons';
+import { Input, Button, Dropdown, Menu, Checkbox } from 'antd';
+import { PlusOutlined, BgColorsOutlined, SettingOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
-  const initialWidths = [150, 60, 80, 75, 75, 75, 80, 120, 70, 70, 70, 100]; // Customer, ID, Style, W, H, FH, Frame, Glass, Argon, Grid, Color, Note
-  const [columnWidths, setColumnWidths] = useState(initialWidths);
+  const headerTitles = [
+    // 'Batch NO.', // It's not used directly for rendering, but good to keep consistent
+    'Customer',
+    'ID',
+    'Style',
+    'W',
+    'H',
+    'FH',
+    'Frame',
+    'Glass',
+    'Argon',
+    'Grid',
+    'Color',
+    'Note',
+    // 'Quantity',
+  ];
+
+  const initialFullWidths = [150, 60, 80, 75, 75, 75, 80, 120, 70, 70, 70, 100]; // Renamed to avoid conflict
+
+  const [columnVisibility, setColumnVisibility] = useState(
+    () => headerTitles.map(() => true) // All columns visible initially
+  );
+
+  // Initialize columnWidths based on initially visible columns
+  const [columnWidths, setColumnWidths] = useState(() =>
+    initialFullWidths.filter((_, index) => columnVisibility[index])
+  );
+
   const tableRef = useRef(null);
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  // Update columnWidths when visibility changes
+  useEffect(() => {
+    setColumnWidths(initialFullWidths.filter((_, index) => columnVisibility[index]));
+  }, [columnVisibility]);
 
   // 可选的行背景颜色
   const rowColors = [
@@ -33,6 +64,12 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  const handleColumnVisibilityChange = (columnIndex, checked) => {
+    const newVisibility = [...columnVisibility];
+    newVisibility[columnIndex] = checked;
+    setColumnVisibility(newVisibility);
+  };
+
   // 处理行颜色变更
   const handleRowColorChange = (rowIndex, color) => {
     if (onCellChange) {
@@ -40,67 +77,59 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
-  const headerTitles = [
-    // 'Batch NO.', // It's not used directly for rendering, but good to keep consistent
-    'Customer',
-    'ID',
-    'Style',
-    'W',
-    'H',
-    'FH',
-    'Frame',
-    'Glass',
-    'Argon',
-    'Grid',
-    'Color',
-    'Note',
-    // 'Quantity',
-  ];
-
   // 通用的单元格样式
   const cellStyle = {
-    // width: 'max-content', // Max-content might interfere with fixed layout
     whiteSpace: 'nowrap',
     padding: '4px 8px',
-    overflow: 'hidden', // Prevent content spillover
-    textOverflow: 'ellipsis' // Add ellipsis for overflow
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    fontSize: '21px',
+    fontWeight: 'bold'
   };
   
   // Glass列专用样式（允许更宽的显示）
   const glassCellStyle = {
     ...cellStyle,
-    minWidth: '120px',  // 设置最小宽度确保Glass内容能完整显示
-    maxWidth: '200px',  // 设置最大宽度避免过宽
-    whiteSpace: 'normal', // 允许换行
-    wordBreak: 'break-word' // 长单词可以断行
+    minWidth: '120px',
+    maxWidth: '200px',
+    whiteSpace: 'normal',
+    wordBreak: 'break-word',
+    fontSize: '21px',    // Explicitly ensure
+    fontWeight: 'bold'   // Explicitly ensure
   };
   
   // 输入框样式
   const inputStyle = {
-    minWidth: '50px',  // 最小宽度
-    width: '100%'      // 填充单元格
+    minWidth: '50px',
+    width: '100%',
+    fontSize: '21px',    // Added for consistent styling
+    fontWeight: 'bold'   // Added for consistent styling
   };
   
   // Glass输入框样式
   const glassInputStyle = {
     ...inputStyle,
-    minWidth: '120px'  // 确保输入框有足够宽度
+    minWidth: '120px'
   };
   // 数字列的样式（更窄的宽度）
   const numberCellStyle = {
     ...cellStyle,
-    minWidth: '75px'   // Increased to accommodate three decimal places (e.g., XXX.XXX)
+    minWidth: '75px',
+    fontSize: '21px',    // Explicitly ensure
+    fontWeight: 'bold'   // Explicitly ensure
   };
 
   // Customer列专用样式
   const customerCellStyle = {
     ...cellStyle,
     minWidth: '150px',
+    fontSize: '21px',    // Explicitly ensure
+    fontWeight: 'bold'   // Explicitly ensure
   };
 
   const customerInputStyle = {
     ...inputStyle,
-    minWidth: '100%', // Ensure input uses cell width
+    minWidth: '100%',
   };
 
   const startResize = useCallback((event, index) => {
@@ -139,16 +168,35 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
     };
   }, [stopResize]);
 
-  // 在表格行渲染部分添加颜色选择菜单
+  const columnsDropdownMenu = (
+    <Menu>
+      {headerTitles.map((title, index) => (
+        <Menu.Item key={title}>
+          <Checkbox
+            checked={columnVisibility[index]}
+            onChange={(e) => handleColumnVisibilityChange(index, e.target.checked)}
+          >
+            {title}
+          </Checkbox>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
+
   return (
     <div className="print-container">
-      <div className="print-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
+      <div className="print-header general-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         General Information
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
-      <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+      <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between' }}>
+        <Dropdown overlay={columnsDropdownMenu} trigger={['click']}>
+          <Button>
+            Columns <SettingOutlined />
+          </Button>
+        </Dropdown>
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
@@ -168,47 +216,58 @@ const PrintTable = ({ batchNo, calculatedData, onCellChange }) => {
           <thead>
             <tr>
               {headerTitles.map((title, index) => (
-                <th 
-                  key={title} 
-                  style={{ 
-                    ...(title === 'Customer' ? customerCellStyle : (['W', 'H', 'FH'].includes(title) ? numberCellStyle : cellStyle)),
-                    position: 'relative', // For resizer positioning
-                  }}
-                >
-                  {title}
-                  {index < headerTitles.length -1 && (
-                    <div
-                      onMouseDown={(e) => startResize(e, index)}
-                      style={{
-                        position: 'absolute',
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: '5px',
-                        cursor: 'col-resize',
-                      }}
-                    />
-                  )}
-                </th>
+                columnVisibility[index] && (
+                  <th 
+                    key={title} 
+                    style={{ 
+                      ...(title === 'Customer' ? customerCellStyle : (['W', 'H', 'FH'].includes(title) ? numberCellStyle : cellStyle)),
+                      position: 'relative', // For resizer positioning
+                    }}
+                  >
+                    {title}
+                    {headerTitles.filter(t => columnVisibility[headerTitles.indexOf(t)]).indexOf(title) < headerTitles.filter(t => columnVisibility[headerTitles.indexOf(t)]).length - 1 && (
+                      <div
+                        onMouseDown={(e) => {
+                          // Find the index among visible columns for resizing
+                          const visibleColumnIndex = headerTitles
+                            .map((ht, i) => columnVisibility[i] ? ht : null)
+                            .filter(ht => ht !== null)
+                            .indexOf(title);
+                          if (visibleColumnIndex !== -1) {
+                            startResize(e, visibleColumnIndex);
+                          }
+                        }}
+                        style={{
+                          position: 'absolute',
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: '5px',
+                          cursor: 'col-resize',
+                        }}
+                      />
+                    )}
+                  </th>
+                )
               ))}
             </tr>
           </thead>
           <tbody>
             {calculatedData && calculatedData.length > 0 ? (
-              calculatedData.map((row, index) => (
-                <tr key={index} style={{ backgroundColor: row.rowColor || '' }}>
-                  <td style={customerCellStyle}><Input size="small" style={customerInputStyle} bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, index, 'Customer')} /></td>
-                  <td style={cellStyle}>{row.ID || ''}</td>
-                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                  <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.W || ''} onChange={(e) => handleInputChange(e, index, 'W')} /></td>
-                  <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.H || ''} onChange={(e) => handleInputChange(e, index, 'H')} /></td>
-                  <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.FH || ''} onChange={(e) => handleInputChange(e, index, 'FH')} /></td>
-                  <td style={cellStyle}><Input size="small" style={{ ...inputStyle, width: 'auto', minWidth: '50px'}} bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
-                  <td style={glassCellStyle}><Input size="small" style={glassInputStyle} bordered={false} value={row.Glass || ''} onChange={(e) => handleInputChange(e, index, 'Glass')} /></td>
-                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Argon || ''} onChange={(e) => handleInputChange(e, index, 'Argon')} /></td>
-                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, index, 'Grid')} /></td>
-                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
-                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Note || ''} onChange={(e) => handleInputChange(e, index, 'Note')} /></td>
+              calculatedData.map((row, rowIndex) => (
+                <tr key={rowIndex} style={{ backgroundColor: row.rowColor || '' }}>
+                  {columnVisibility[0] && <td style={customerCellStyle}><Input size="small" style={customerInputStyle} bordered={false} value={row.Customer || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Customer')} /></td>}
+                  {columnVisibility[1] && <td style={cellStyle}>{row.ID || ''}</td>}
+                  {columnVisibility[2] && <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Style')} /></td>}
+                  {columnVisibility[3] && <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.W || ''} onChange={(e) => handleInputChange(e, rowIndex, 'W')} /></td>}
+                  {columnVisibility[4] && <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.H || ''} onChange={(e) => handleInputChange(e, rowIndex, 'H')} /></td>}
+                  {columnVisibility[5] && <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.FH || ''} onChange={(e) => handleInputChange(e, rowIndex, 'FH')} /></td>}
+                  {columnVisibility[6] && <td style={cellStyle}><Input size="small" style={{ ...inputStyle, width: 'auto', minWidth: '50px'}} bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Frame')} /></td>}
+                  {columnVisibility[7] && <td style={glassCellStyle}><Input size="small" style={glassInputStyle} bordered={false} value={row.Glass || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Glass')} /></td>}
+                  {columnVisibility[8] && <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Argon || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Argon')} /></td>}
+                  {columnVisibility[9] && <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Grid || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Grid')} /></td>}
+                  {columnVisibility[10] && <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Color')} /></td>}
+                  {columnVisibility[11] && <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Note || ''} onChange={(e) => handleInputChange(e, rowIndex, 'Note')} /></td>}
                 </tr>
               ))
             ) : (

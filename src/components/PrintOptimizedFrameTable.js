@@ -94,7 +94,7 @@ const PrintOptimizedFrameTable = ({ batchNo, calculatedData }) => {
         <div className="print-header frame-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
           Frame
         </div>
-        <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+        <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
           Batch: {batchNo}
         </div>
         <div style={{ marginBottom: '10px', textAlign: 'right' }}>
@@ -144,7 +144,7 @@ const PrintOptimizedFrameTable = ({ batchNo, calculatedData }) => {
       <div className="print-header frame-header" style={{ textAlign: 'center', fontSize: '18px', fontWeight: 'bold' }}>
         Frame
       </div>
-      <div style={{ textAlign: 'center', fontSize: '14px', marginBottom: '10px' }}>
+      <div style={{ textAlign: 'center', fontSize: '21px', fontWeight: 'bold', marginBottom: '10px' }}>
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>
