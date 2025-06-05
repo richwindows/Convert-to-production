@@ -157,7 +157,8 @@ function App() {
         }
 
         // Validate Frame (after potential mapping)
-        if (!validFrameTypes.includes(mappedFrame)) {
+        // Allow empty frame during initial import, it can be defaulted or handled later.
+        if (mappedFrame && !validFrameTypes.includes(mappedFrame)) {
             itemIsValid = false;
             currentItemErrors.push(`Invalid Frame: "${rawFrameFromExcel}" (maps to "${mappedFrame}", which is not a recognized type)`);
         }
