@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { Input, Button, Tooltip } from 'antd';
 import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
 import './PrintTable.css';
@@ -11,6 +11,13 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  // Helper function to determine if a value is effectively empty or "None"
+  const isEffectivelyEmptyOrNone = (value) => {
+    if (value == null) return true; // Covers null and undefined
+    const trimmed = String(value).trim();
+    return trimmed === '' || trimmed.toLowerCase() === 'none';
+  };
 
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
@@ -54,15 +61,18 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
 
   const handleExportExcel = () => {
     if (calculatedData && calculatedData.length > 0) {
-      const hasValidGlass = calculatedData.some(item => 
+      // Filter data specifically for 3mm non-tempered glass
+      const dataToExport = calculatedData.filter(item => 
         item.thickness === '3' && item.Tmprd !== 'T'
       );
-      if (!hasValidGlass) {
+
+      if (dataToExport.length === 0) {
         alert('没有找到符合条件的3mm非钢化玻璃！');
         return;
       }
+
       try {
-        exportSimpleExcel(calculatedData, batchNo);
+        exportSimpleExcel(dataToExport, batchNo); // Pass the filtered data
       } catch (error) {
         console.error('导出Excel时发生错误:', error);
         alert(`导出失败: ${error.message}`);
@@ -84,12 +94,26 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
       .reduce((sum, item) => sum + (parseInt(item.quantity, 10) || 0), 0); // Summing quantities
   };
   
-  // Simplified header titles for a single row header
   const originalHeaderTitles = [
     'Batch NO.', 'Customer', 'Style', 'W', 'H', 'FH', 'ID', 'line #', 'Quantity',
     'Glass Type', 'Tmprd', 'Thick', 'Width', 'Height', 'Grid', 'Argon'
   ];
-  const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
+
+  const shouldDisplayArgonColumn = useMemo(() => {
+    if (!calculatedData || calculatedData.length === 0) {
+      return true;
+    }
+    const allArgonEffectivelyEmpty = calculatedData.every(row => isEffectivelyEmptyOrNone(row.argon));
+    return !allArgonEffectivelyEmpty;
+  }, [calculatedData]);
+
+  const shouldDisplayGridColumn = useMemo(() => {
+    if (!calculatedData || calculatedData.length === 0) {
+      return true;
+    }
+    const allGridEffectivelyEmpty = calculatedData.every(row => isEffectivelyEmptyOrNone(row.grid));
+    return !allGridEffectivelyEmpty;
+  }, [calculatedData]);
 
   // 通用的单元格样式
   const cellStyle = {
@@ -154,6 +178,15 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
     };
   }, [stopResize]);
 
+  // Prepare headers to be rendered, respecting shouldDisplayArgonColumn and shouldDisplayGridColumn
+  const headersToRenderDetails = useMemo(() => {
+    return originalHeaderTitles
+      .filter(title => title !== 'Batch NO.')
+      .map((title, originalDisplayIndex) => ({ title, originalDisplayIndex }))
+      .filter(detail => !((detail.title === 'Argon' && !shouldDisplayArgonColumn) || 
+                         (detail.title === 'Grid' && !shouldDisplayGridColumn)));
+  }, [shouldDisplayArgonColumn, shouldDisplayGridColumn]); // Depends on shouldDisplayArgonColumn and shouldDisplayGridColumn, originalHeaderTitles is stable
+
   return (
     <div>
       <div className="export-button-container" style={{ marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -194,39 +227,74 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
         </div>
         <table ref={tableRef} className="glass-table bordered-print-table" style={{ tableLayout: 'fixed', width: '100%' }}>
           <colgroup>
-            {columnWidths.map((width, index) => (
-              <col key={`col-${index}`} style={{ width: `${width}px` }} />
-            ))}
+            {originalHeaderTitles
+              .filter(title => title !== 'Batch NO.')
+              .map((title, originalDisplayIndex) => {
+                if (title === 'Argon' && !shouldDisplayArgonColumn) {
+                  return null;
+                }
+                if (title === 'Grid' && !shouldDisplayGridColumn) {
+                  return null;
+                }
+                return (
+                  <col
+                    key={`col-${originalDisplayIndex}`}
+                    style={{ width: `${columnWidths[originalDisplayIndex]}px` }}
+                  />
+                );
+              })
+              .filter(Boolean)}
           </colgroup>
           <thead>
             <tr>
-              {visibleHeaderTitles.map((title, index) => {
-                const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Width', 'Height', 'Thick'].includes(title);
-                return (
-                  <th 
-                    key={title} 
-                    style={{
-                      ...(isNumberColumn ? numberCellStyle : cellStyle),
-                      position: 'relative',
-                    }}
-                  >
-                    {title}
-                    {index < visibleHeaderTitles.length -1 && (
-                      <div
-                        onMouseDown={(e) => startResize(e, index)}
+              {(() => {
+                let visibleHeaderCount = 0;
+                headersToRenderDetails.forEach(() => visibleHeaderCount++);
+                
+                let currentVisibleIndex = 0;
+                return originalHeaderTitles
+                  .filter(title => title !== 'Batch NO.')
+                  .map((title, originalDisplayIndex) => {
+                    if (title === 'Argon' && !shouldDisplayArgonColumn) {
+                      return null;
+                    }
+                    if (title === 'Grid' && !shouldDisplayGridColumn) {
+                      return null;
+                    }
+
+                    const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Width', 'Height', 'Thick'].includes(title);
+                    const thStyleToApply = isNumberColumn ? numberCellStyle : cellStyle;
+                    
+                    const isLastVisibleColumn = currentVisibleIndex === visibleHeaderCount - 1;
+                    currentVisibleIndex++;
+
+                    return (
+                      <th
+                        key={title}
                         style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: '5px',
-                          cursor: 'col-resize',
+                          ...thStyleToApply,
+                          position: 'relative',
                         }}
-                      />
-                    )}
-                  </th>
-                );
-              })}
+                      >
+                        {title}
+                        {!isLastVisibleColumn && (
+                          <div
+                            onMouseDown={(e) => startResize(e, originalDisplayIndex)}
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: 0,
+                              bottom: 0,
+                              width: '5px',
+                              cursor: 'col-resize',
+                            }}
+                          />
+                        )}
+                      </th>
+                    );
+                  })
+                  .filter(Boolean);
+              })()}
             </tr>
           </thead>
           <tbody>
@@ -246,14 +314,14 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
                   <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.thickness || ''} onChange={(e) => handleInputChange(e, index, 'thickness')} /></td>
                   <td style={{...numberCellStyle, ...getCellStyle(row, 'width'), ...getTextStyle(row)}}>{row.width || ''}</td>
                   <td style={{...numberCellStyle, ...getCellStyle(row, 'height'), ...getTextStyle(row)}}>{row.height || ''}</td>
-                  <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.grid || ''} onChange={(e) => handleInputChange(e, index, 'grid')} /></td>
-                  <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.argon || ''} onChange={(e) => handleInputChange(e, index, 'argon')} /></td>
+                  {shouldDisplayGridColumn && <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.grid || ''} onChange={(e) => handleInputChange(e, index, 'grid')} /></td>}
+                  {shouldDisplayArgonColumn && <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.argon || ''} onChange={(e) => handleInputChange(e, index, 'argon')} /></td>}
                 </tr>
               ))
             ) : (
               <tr>
-                {[...Array(visibleHeaderTitles.length)].map((_, i) => {
-                  const currentTitle = visibleHeaderTitles[i];
+                {headersToRenderDetails.map((headerDetail, i) => {
+                  const currentTitle = headerDetail.title;
                   const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Width', 'Height', 'Thick'].includes(currentTitle);
                   return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
                 })}
@@ -264,8 +332,8 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
              calculatedData.length < 10 &&
               [...Array(1)].map((_, i) => (
                 <tr key={`empty-${i}`}>
-                  {[...Array(visibleHeaderTitles.length)].map((_, j) => {
-                    const currentTitle = visibleHeaderTitles[j];
+                  {headersToRenderDetails.map((headerDetail, j) => {
+                    const currentTitle = headerDetail.title;
                     const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Width', 'Height', 'Thick'].includes(currentTitle);
                     return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
                   })}
@@ -274,8 +342,8 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
             }
             {(!calculatedData || calculatedData.length === 0) &&
               <tr>
-                {[...Array(visibleHeaderTitles.length)].map((_, j) => {
-                  const currentTitle = visibleHeaderTitles[j];
+                {headersToRenderDetails.map((headerDetail, j) => {
+                  const currentTitle = headerDetail.title;
                   const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Width', 'Height', 'Thick'].includes(currentTitle);
                   return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
                 })}
