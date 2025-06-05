@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input, Button, Dropdown, Menu, Checkbox } from 'antd';
-import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import { PlusOutlined, SettingOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
@@ -20,6 +20,15 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
   const startX = useRef(0);
   const startWidth = useRef(0);
 
+  const rowColors = [
+    { name: '无颜色', value: '' },
+    { name: '浅蓝色', value: '#bae0ff' },
+    { name: '浅绿色', value: '#b7eb8f' },
+    { name: '浅黄色', value: '#fffb8f' },
+    { name: '浅红色', value: '#ffccc7' },
+    { name: '浅紫色', value: '#d3adf7' },
+  ];
+
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
       onCellChange('sashWelding', rowIndex, columnKey, e.target.value);
@@ -29,6 +38,12 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
   const handleAddRow = () => {
     if (onCellChange) {
       onCellChange('sashWelding', null, 'ADD_ROW', null);
+    }
+  };
+
+  const handleRowColorChange = (rowIndex, color) => {
+    if (onCellChange) {
+      onCellChange('sashWelding', rowIndex, 'ROW_COLOR', color);
     }
   };
 
@@ -185,13 +200,23 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
             calculatedData.map((row, rowIndex) => (
-              <tr key={rowIndex}>
+              <tr key={rowIndex} style={{ backgroundColor: row.rowColor || 'transparent' }}>
                 {headerTitles.map((title, colIndex) => {
                   if (!columnVisibility[colIndex]) return null;
+
+                  const visibleHeaders = headerTitles.filter((_, i) => columnVisibility[i]);
+                  const isLastVisibleCell = visibleHeaders[visibleHeaders.length - 1] === title;
+
                   const dataKey = dataKeys[colIndex];
                   const cellValue = row[dataKey] || '';
                   const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
-                  const currentTDStyle = isNumCol ? numberCellStyle : cellStyle;
+                  
+                  let currentTDStyle = isNumCol ? { ...numberCellStyle } : { ...cellStyle };
+                  currentTDStyle.position = 'relative';
+
+                  if (isLastVisibleCell) {
+                    currentTDStyle.overflow = 'visible';
+                  }
 
                   if (title === 'ID') {
                     return <td key={dataKey} style={currentTDStyle}>{row.ID || ''}</td>;
@@ -208,6 +233,34 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
                         value={cellValue} 
                         onChange={(e) => handleInputChange(e, rowIndex, dataKey)} 
                       />
+                      {isLastVisibleCell && (
+                        <div style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '5px', marginLeft: '10px' }}>
+                          <Dropdown
+                            overlay={
+                              <Menu onClick={({ key }) => handleRowColorChange(rowIndex, key)}>
+                                {rowColors.map(color => (
+                                  <Menu.Item key={color.value}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                      <div style={{ width: '16px', height: '16px', backgroundColor: color.value || '#fff', border: '1px solid #ccc', marginRight: '8px' }}></div>
+                                      {color.name}
+                                    </div>
+                                  </Menu.Item>
+                                ))}
+                              </Menu>
+                            }
+                            trigger={['click']}
+                          >
+                            <Button icon={<BgColorsOutlined />} size="small" type="text" />
+                          </Dropdown>
+                          <Button 
+                            icon={<DeleteOutlined />} 
+                            size="small" 
+                            type="text" 
+                            danger 
+                            onClick={() => onCellChange('sashWelding', rowIndex, 'DELETE_ROW')}
+                          />
+                        </div>
+                      )}
                     </td>
                   );
                 })}
@@ -215,38 +268,11 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
             ))
           ) : (
             <tr>
-              {headerTitles.map((title, colIndex) => {
-                if (!columnVisibility[colIndex]) return null;
-                const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
-                const currentPlaceholderStyle = isNumCol ? numberCellStyle : cellStyle;
-                return <td key={`empty-placeholder-${colIndex}`} style={currentPlaceholderStyle}></td>;
-              })}
+              <td colSpan={visibleRenderedHeaders.length} style={{ textAlign: 'center', padding: '20px' }}>
+                No Data
+              </td>
             </tr>
           )}
-          {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
-           Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
-           calculatedData.length < 10 &&
-            [...Array(1)].map((_, i) => (
-              <tr key={`empty-${i}`}>
-                {headerTitles.map((title, colIndex) => {
-                  if (!columnVisibility[colIndex]) return null;
-                  const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
-                  const currentPlaceholderStyle = isNumCol ? numberCellStyle : cellStyle;
-                  return <td key={`empty-${i}-${colIndex}`} style={currentPlaceholderStyle}></td>;
-                })}
-              </tr>
-            ))
-          }
-          {(!calculatedData || calculatedData.length === 0) &&
-            <tr>
-              {headerTitles.map((title, colIndex) => {
-                if (!columnVisibility[colIndex]) return null;
-                const isNumCol = ['W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'].includes(title);
-                const currentPlaceholderStyle = isNumCol ? numberCellStyle : cellStyle;
-                return <td key={`empty-final-${colIndex}`} style={currentPlaceholderStyle}></td>;
-              })}
-            </tr>
-          }
         </tbody>
       </table>
     </div>

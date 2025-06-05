@@ -911,6 +911,27 @@ function App() {
       return;
     }
     
+    // 处理删除行
+    if (columnKey === 'DELETE_ROW') {
+      setCalculatedData(prevData => {
+        const newData = { ...prevData };
+        const itemToDelete = newData[dataKey][rowIndex];
+        if (!itemToDelete) return prevData; // Row already gone or invalid index
+
+        const idToDelete = itemToDelete.ID;
+
+        // Iterate over all tables in calculatedData and filter out items with the matching ID
+        for (const key in newData) {
+          if (Array.isArray(newData[key])) {
+            newData[key] = newData[key].filter(item => item.ID !== idToDelete);
+          }
+        }
+        
+        return newData;
+      });
+      return;
+    }
+
     // 处理行颜色变更
     if (columnKey === 'ROW_COLOR') {
       setCalculatedData(prevData => {

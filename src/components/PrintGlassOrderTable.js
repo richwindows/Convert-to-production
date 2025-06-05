@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Input, Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Input, Button, Dropdown, Menu } from 'antd';
+import { PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
@@ -11,6 +11,15 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  const rowColors = [
+    { name: '无颜色', value: '' },
+    { name: '浅蓝色', value: '#bae0ff' },
+    { name: '浅绿色', value: '#b7eb8f' },
+    { name: '浅黄色', value: '#fffb8f' },
+    { name: '浅红色', value: '#ffccc7' },
+    { name: '浅紫色', value: '#d3adf7' },
+  ];
 
   // 添加条件样式逻辑，根据各种条件为尺寸格子添加颜色
   const getCellStyle = (row, field) => {
@@ -55,6 +64,12 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
   const handleAddRow = () => {
     if (onCellChange) {
       onCellChange('order', null, 'ADD_ROW', null);
+    }
+  };
+
+  const handleRowColorChange = (rowIndex, color) => {
+    if (onCellChange) {
+      onCellChange('order', rowIndex, 'ROW_COLOR', color);
     }
   };
 
@@ -198,138 +213,101 @@ const PrintGlassOrderTable = ({ batchNo, calculatedData, onCellChange }) => {
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
-            calculatedData.map((row, index) => (
-              <tr key={index} style={getTextStyle(row)}>
-                <td style={cellStyle}>
-                  <Input 
-                    value={row.Customer || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Customer')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <Input 
-                    value={row.Style || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Style')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={numberCellStyle}>
-                  <Input 
-                    value={row.W || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'W')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={numberCellStyle}>
-                  <Input 
-                    value={row.H || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'H')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={numberCellStyle}>
-                  <Input 
-                    value={row.FH || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'FH')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={cellStyle}>{row.ID || ''}</td>
-                <td style={cellStyle}>
-                  <Input 
-                    value={row.line || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'line')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={numberCellStyle}>
-                  <Input 
-                    value={row.Quantity || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Quantity')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <Input 
-                    value={row['Glass Type'] || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Glass Type')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <Input 
-                    value={row['Annealed/Tempered'] || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Annealed/Tempered')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={numberCellStyle}>
-                  <Input 
-                    value={row.Thickness || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Thickness')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={{...numberCellStyle, ...getCellStyle(row, 'Width')}}>
-                  <Input 
-                    value={row.Width || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Width')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, backgroundColor: 'transparent', ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={{...numberCellStyle, ...getCellStyle(row, 'Height')}}>
-                  <Input 
-                    value={row.Height || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Height')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, backgroundColor: 'transparent', ...getTextStyle(row)}}
-                  />
-                </td>
-                <td style={cellStyle}>
-                  <Input 
-                    value={row.Notes || ''} 
-                    onChange={(e) => handleInputChange(e, index, 'Notes')} 
-                    bordered={false}
-                    size="small"
-                    style={{...inputStyle, ...getTextStyle(row)}}
-                  />
-                </td>
-              </tr>
-            ))
+            calculatedData.map((row, index) => {
+              const rowStyle = {
+                ...getTextStyle(row),
+                backgroundColor: row.rowColor || 'transparent'
+              };
+              return (
+                <tr key={index} style={rowStyle}>
+                  {visibleHeaderTitles.map((title, colIndex) => {
+                    const isLastVisibleCell = colIndex === visibleHeaderTitles.length - 1;
+                    
+                    const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Thickness', 'Glass Width', 'Glass Height'].includes(title);
+                    let currentCellStyle = cellStyle;
+                    if (isNumberColumn) currentCellStyle = numberCellStyle;
+                    if (title === 'Notes') currentCellStyle = notesCellStyle;
+
+                    // Define the cell style, allowing overflow for the last cell
+                    const finalCellStyle = { ...currentCellStyle, position: 'relative' };
+                    if (isLastVisibleCell) {
+                      finalCellStyle.overflow = 'visible';
+                    }
+
+                    // Determine fieldKey and cellContent
+                    let fieldKey, cellContent;
+                    switch(title) {
+                      case 'Customer': fieldKey = 'Customer'; break;
+                      case 'Style': fieldKey = 'Style'; break;
+                      case 'W': fieldKey = 'W'; break;
+                      case 'H': fieldKey = 'H'; break;
+                      case 'FH': fieldKey = 'FH'; break;
+                      case 'ID': fieldKey = 'ID'; break;
+                      case 'line #': fieldKey = 'line'; break;
+                      case 'Quantity': fieldKey = 'quantity'; break;
+                      case 'Glass Type': fieldKey = 'Glass Type'; break;
+                      case 'Annealed/Tempered': fieldKey = 'Annealed/Tempered'; break;
+                      case 'Thickness': fieldKey = 'Thickness'; break;
+                      case 'Glass Width': fieldKey = 'Width'; break;
+                      case 'Glass Height': fieldKey = 'Height'; break;
+                      case 'Notes': fieldKey = 'Notes'; break;
+                      default: fieldKey = title;
+                    }
+                    cellContent = row[fieldKey] || '';
+
+                    // For readonly cells
+                    if (title === 'ID') {
+                      return <td key={`${title}-${index}`} style={finalCellStyle}>{cellContent}</td>;
+                    }
+
+                    return (
+                      <td key={`${title}-${index}`} style={finalCellStyle}>
+                        <Input 
+                          value={cellContent} 
+                          onChange={(e) => handleInputChange(e, index, fieldKey)} 
+                          bordered={false}
+                          size="small"
+                          style={{...inputStyle, ...getTextStyle(row)}}
+                        />
+                        {isLastVisibleCell && (
+                          <div style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '5px', marginLeft: '10px' }}>
+                            <Dropdown
+                              overlay={
+                                <Menu onClick={({ key }) => handleRowColorChange(index, key)}>
+                                  {rowColors.map(color => (
+                                    <Menu.Item key={color.value}>
+                                      <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <div style={{ width: '16px', height: '16px', backgroundColor: color.value || '#fff', border: '1px solid #ccc', marginRight: '8px' }}></div>
+                                        {color.name}
+                                      </div>
+                                    </Menu.Item>
+                                  ))}
+                                </Menu>
+                              }
+                              trigger={['click']}
+                            >
+                              <Button icon={<BgColorsOutlined />} size="small" type="text" />
+                            </Dropdown>
+                            <Button 
+                              icon={<DeleteOutlined />} 
+                              size="small" 
+                              type="text" 
+                              danger 
+                              onClick={() => onCellChange('order', index, 'DELETE_ROW')}
+                            />
+                          </div>
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })
           ) : (
             <tr>
-              {[...Array(visibleHeaderTitles.length)].map((_, i) => {
-                const currentTitle = visibleHeaderTitles[i];
-                const isNumberColumn = ['W', 'H', 'FH', 'Quantity', 'Thickness', 'Glass Width', 'Glass Height'].includes(currentTitle);
-                let tdStyle = cellStyle;
-                if (isNumberColumn) tdStyle = numberCellStyle;
-                if (currentTitle === 'Notes') tdStyle = notesCellStyle;
-                return <td key={`empty-placeholder-${i}`} style={tdStyle}></td>;
-              })}
+              <td colSpan={visibleHeaderTitles.length} style={{ textAlign: 'center', padding: '20px' }}>
+                No Data
+              </td>
             </tr>
           )}
           {/* 只在最后一行有数据时添加空行 */}

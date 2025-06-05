@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Input, Tag, Tooltip, Badge, Button } from 'antd';
-import { FileTextOutlined, TagOutlined, ScissorOutlined, PlusOutlined } from '@ant-design/icons';
+import { Input, Tag, Tooltip, Badge, Button, Dropdown, Menu } from 'antd';
+import { FileTextOutlined, TagOutlined, ScissorOutlined, PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) => {
@@ -11,6 +11,15 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
     totalItems: 0,
     totalLength: 0
   });
+
+  const rowColors = [
+    { name: '无颜色', value: '' },
+    { name: '浅蓝色', value: '#bae0ff' },
+    { name: '浅绿色', value: '#b7eb8f' },
+    { name: '浅黄色', value: '#fffb8f' },
+    { name: '浅红色', value: '#ffccc7' },
+    { name: '浅紫色', value: '#d3adf7' },
+  ];
 
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
@@ -28,6 +37,12 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
       // For now, we'll send a generic ADD_ROW and App.js will append an empty object.
       // This might need refinement if newly added rows in this specific table require more structure upfront.
       onCellChange('materialCutting', null, 'ADD_ROW', null);
+    }
+  };
+
+  const handleRowColorChange = (rowIndex, color) => {
+    if (onCellChange) {
+      onCellChange('materialCutting', rowIndex, 'ROW_COLOR', color);
     }
   };
 
@@ -78,6 +93,11 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
   const headerTitles = [
     'Batch No', 'Order No', 'Order Item', 'Material Name', 'Cutting ID', 'Pieces ID',
     'Length', 'Angles', 'Qty', 'Bin No', 'Position', 'Style', 'Frame', 'Color', 'Painting'
+  ];
+
+  const dataKeys = [
+    'batchNo', 'OrderNo', 'OrderItem', 'MaterialName', 'CuttingID', 'PiecesID', 
+    'Length', 'Angles', 'Qty', 'BinNo', 'Position', 'Style', 'Frame', 'Color', 'Painting'
   ];
 
   // 通用的单元格样式
@@ -138,6 +158,8 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
               const isNumberColumn = ['Length', 'Qty'].includes(title);
               return <th key={title} style={isNumberColumn ? numberCellStyle : cellStyle}>{title}</th>;
             })}
+            {/* Header for the actions column */}
+            <th style={cellStyle}></th>
           </tr>
         </thead>
         <tbody>
@@ -153,7 +175,7 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
                 colorSuffix = row.MaterialName.substring(lastDashIndex + 1);
               }
               return (
-                <tr key={`${row.MaterialName}_${cuttingID}_${piecesID}_${index}_${row.ID || index}`}>
+                <tr key={`${row.MaterialName}_${cuttingID}_${piecesID}_${index}_${row.ID || index}`} style={{ backgroundColor: row.rowColor || 'transparent' }}>
                   <td style={cellStyle}>{batchNo}</td>
                   <td style={cellStyle}>{row.OrderNo}</td>
                   <td style={cellStyle}>{row.OrderItem}</td>
@@ -175,41 +197,45 @@ const PrintMaterialCuttingTable = ({ batchNo, calculatedData, onCellChange }) =>
                   <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
                   <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Frame || ''} onChange={(e) => handleInputChange(e, index, 'Frame')} /></td>
                   <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
-                  <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Painting || ''} onChange={(e) => handleInputChange(e, index, 'Painting')} /></td>
+                  <td style={{...cellStyle, overflow: 'visible', position: 'relative'}}>
+                    <Input size="small" style={inputStyle} bordered={false} value={row.Painting || ''} onChange={(e) => handleInputChange(e, index, 'Painting')} />
+                    <div style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '5px', marginLeft: '10px' }}>
+                      <Dropdown
+                        overlay={
+                          <Menu onClick={({ key }) => handleRowColorChange(index, key)}>
+                            {rowColors.map(color => (
+                              <Menu.Item key={color.value}>
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                  <div style={{ width: '16px', height: '16px', backgroundColor: color.value || '#fff', border: '1px solid #ccc', marginRight: '8px' }}></div>
+                                  {color.name}
+                                </div>
+                              </Menu.Item>
+                            ))}
+                          </Menu>
+                        }
+                        trigger={['click']}
+                      >
+                        <Button icon={<BgColorsOutlined />} size="small" type="text" />
+                      </Dropdown>
+                      <Button 
+                        icon={<DeleteOutlined />} 
+                        size="small" 
+                        type="text" 
+                        danger 
+                        onClick={() => onCellChange('materialCutting', index, 'DELETE_ROW')}
+                      />
+                    </div>
+                  </td>
                 </tr>
               );
             })
           ) : (
             <tr>
-              <td style={cellStyle}>{batchNo}</td>
-              {[...Array(headerTitles.length - 1)].map((_, i) => {
-                const isNumberColumn = i === 6 || i === 8;
-                return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
-              })}
+              <td colSpan={headerTitles.length + 1} style={{ textAlign: 'center', padding: '20px' }}>
+                No Data
+              </td>
             </tr>
           )}
-          {/* 只在最后一行有数据时添加空行 */}
-          {sortedData && sortedData.length > 0 && sortedData[sortedData.length - 1] && 
-           Object.values(sortedData[sortedData.length - 1]).some(value => value) && 
-           sortedData.length < 10 &&
-            [...Array(1)].map((_, i) => (
-              <tr key={`empty-${i}`}>
-                {[...Array(headerTitles.length)].map((_, j) => {
-                  const isNumberColumn = j === 6 || j === 8;
-                  return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
-                })}
-              </tr>
-            ))
-          }
-          {/* 移除没有数据时的额外空行 */}
-          {(!sortedData || sortedData.length === 0) &&
-            <tr>
-              {[...Array(headerTitles.length)].map((_, j) => {
-                const isNumberColumn = j === 6 || j === 8;
-                return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
-              })}
-            </tr>
-          }
         </tbody>
       </table>
     </div>

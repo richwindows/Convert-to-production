@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Input, Button } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Input, Button, Dropdown, Menu } from 'antd';
+import { PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
@@ -11,6 +11,15 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  const rowColors = [
+    { name: '无颜色', value: '' },
+    { name: '浅蓝色', value: '#bae0ff' },
+    { name: '浅绿色', value: '#b7eb8f' },
+    { name: '浅黄色', value: '#fffb8f' },
+    { name: '浅红色', value: '#ffccc7' },
+    { name: '浅紫色', value: '#d3adf7' },
+  ];
 
   const handleInputChange = (e, rowIndex, columnKey) => {
     if (onCellChange) {
@@ -24,10 +33,17 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
+  const handleRowColorChange = (rowIndex, color) => {
+    if (onCellChange) {
+      onCellChange('parts', rowIndex, 'ROW_COLOR', color);
+    }
+  };
+
   const originalHeaderTitles = [
     'Batch NO.', 'ID', 'Style', '中框', '中铝', '手铝', 'Pcs', 'Track',
     'Cover--', 'Cover|', '大中', 'pcs', '大中2', 'pcs', 'Slop', 'Color'
   ];
+  const dataKeys = [ 'ID', 'Style', 'mullion', 'mullionA', 'handleA', 'quantity', 'track', 'coverH', 'coverV', 'bigMu1', 'bigMu1Q', 'bigMu2', 'bigMu2Q', 'slop', 'Color' ];
   const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
 
   // 通用的单元格样式
@@ -150,60 +166,74 @@ const PrintPartsTable = ({ batchNo, calculatedData, onCellChange }) => {
         </thead>
         <tbody>
           {calculatedData && calculatedData.length > 0 ? (
-            calculatedData.map((row, index) => (
-              <tr key={index}>
-                {/* <td style={cellStyle}>{batchNo}</td> */}
-                <td style={cellStyle}>{row.ID || ''}</td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Style || ''} onChange={(e) => handleInputChange(e, index, 'Style')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.mullion || ''} onChange={(e) => handleInputChange(e, index, 'mullion')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.mullionA || ''} onChange={(e) => handleInputChange(e, index, 'mullionA')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.handleA || ''} onChange={(e) => handleInputChange(e, index, 'handleA')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.quantity || ''} onChange={(e) => handleInputChange(e, index, 'quantity')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.track || ''} onChange={(e) => handleInputChange(e, index, 'track')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.coverH || ''} onChange={(e) => handleInputChange(e, index, 'coverH')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.coverV || ''} onChange={(e) => handleInputChange(e, index, 'coverV')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu1 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu1Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu1Q')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu2 || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2')} /></td>
-                <td style={numberCellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.bigMu2Q || ''} onChange={(e) => handleInputChange(e, index, 'bigMu2Q')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.slop || ''} onChange={(e) => handleInputChange(e, index, 'slop')} /></td>
-                <td style={cellStyle}><Input size="small" style={inputStyle} bordered={false} value={row.Color || ''} onChange={(e) => handleInputChange(e, index, 'Color')} /></td>
+            calculatedData.map((row, rowIndex) => (
+              <tr key={rowIndex} style={{ backgroundColor: row.rowColor || 'transparent' }}>
+                {visibleHeaderTitles.map((title, colIndex) => {
+                  const dataKey = dataKeys[colIndex];
+                  const cellValue = row[dataKey] || '';
+                  const isLastCell = colIndex === visibleHeaderTitles.length - 1;
+                  
+                  const isNumberColumn = title.toLowerCase().includes('pcs');
+                  let currentCellStyle = isNumberColumn ? numberCellStyle : cellStyle;
+                  const finalCellStyle = { ...currentCellStyle, position: 'relative' };
+                  
+                  if (isLastCell) {
+                    finalCellStyle.overflow = 'visible';
+                  }
+
+                  if (title === 'ID') {
+                    return <td key={dataKey} style={finalCellStyle}>{cellValue}</td>;
+                  }
+
+                  return (
+                    <td key={dataKey} style={finalCellStyle}>
+                      <Input
+                        size="small"
+                        style={inputStyle}
+                        bordered={false}
+                        value={cellValue}
+                        onChange={(e) => handleInputChange(e, rowIndex, dataKey)}
+                      />
+                      {isLastCell && (
+                        <div style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', display: 'flex', gap: '5px', marginLeft: '10px' }}>
+                          <Dropdown
+                            overlay={
+                              <Menu onClick={({ key }) => handleRowColorChange(rowIndex, key)}>
+                                {rowColors.map(color => (
+                                  <Menu.Item key={color.value}>
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                      <div style={{ width: '16px', height: '16px', backgroundColor: color.value || '#fff', border: '1px solid #ccc', marginRight: '8px' }}></div>
+                                      {color.name}
+                                    </div>
+                                  </Menu.Item>
+                                ))}
+                              </Menu>
+                            }
+                            trigger={['click']}
+                          >
+                            <Button icon={<BgColorsOutlined />} size="small" type="text" />
+                          </Dropdown>
+                          <Button 
+                            icon={<DeleteOutlined />} 
+                            size="small" 
+                            type="text" 
+                            danger 
+                            onClick={() => onCellChange('parts', rowIndex, 'DELETE_ROW')}
+                          />
+                        </div>
+                      )}
+                    </td>
+                  );
+                })}
               </tr>
             ))
           ) : (
             <tr>
-              {/* <td style={cellStyle}>{batchNo}</td> */}
-              {[...Array(visibleHeaderTitles.length)].map((_, i) => {
-                const currentTitle = visibleHeaderTitles[i];
-                const isNumberColumn = currentTitle.toLowerCase().includes('pcs');
-                return <td key={`empty-placeholder-${i}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
-              })}
+              <td colSpan={visibleHeaderTitles.length} style={{ textAlign: 'center', padding: '20px' }}>
+                No Data
+              </td>
             </tr>
           )}
-          {/* 只在最后一行有数据时添加空行 */}
-          {calculatedData && calculatedData.length > 0 && calculatedData[calculatedData.length - 1] && 
-           Object.values(calculatedData[calculatedData.length - 1]).some(value => value) && 
-           calculatedData.length < 10 &&
-            [...Array(1)].map((_, i) => (
-              <tr key={`empty-${i}`}>
-                {[...Array(visibleHeaderTitles.length)].map((_, j) => {
-                  const currentTitle = visibleHeaderTitles[j];
-                  const isNumberColumn = currentTitle.toLowerCase().includes('pcs');
-                  return <td key={`empty-${i}-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
-                })}
-              </tr>
-            ))
-          }
-          {/* 移除没有数据时的额外空行 */}
-          {(!calculatedData || calculatedData.length === 0) &&
-            <tr>
-              {[...Array(visibleHeaderTitles.length)].map((_, j) => {
-                const currentTitle = visibleHeaderTitles[j];
-                const isNumberColumn = currentTitle.toLowerCase().includes('pcs');
-                return <td key={`empty-${j}`} style={isNumberColumn ? numberCellStyle : cellStyle}></td>;
-              })}
-            </tr>
-          }
         </tbody>
       </table>
     </div>

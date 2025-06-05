@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import { Input, Button, Tooltip } from 'antd';
-import { DownloadOutlined, PlusOutlined } from '@ant-design/icons';
+import { Input, Button, Tooltip, Dropdown, Menu } from 'antd';
+import { DownloadOutlined, PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 import exportSimpleExcel from '../utils/SimpleExcelExport';
 
@@ -11,6 +11,15 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+
+  const rowColors = [
+    { name: '无颜色', value: '' },
+    { name: '浅蓝色', value: '#bae0ff' },
+    { name: '浅绿色', value: '#b7eb8f' },
+    { name: '浅黄色', value: '#fffb8f' },
+    { name: '浅红色', value: '#ffccc7' },
+    { name: '浅紫色', value: '#d3adf7' },
+  ];
 
   // Helper function to determine if a value is effectively empty or "None"
   const isEffectivelyEmptyOrNone = (value) => {
@@ -30,6 +39,12 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   const handleAddRow = () => {
     if (onCellChange) {
       onCellChange('glass', null, 'ADD_ROW', null);
+    }
+  };
+
+  const handleRowColorChange = (rowIndex, color) => {
+    if (onCellChange) {
+      onCellChange('glass', rowIndex, 'ROW_COLOR', color);
     }
   };
 

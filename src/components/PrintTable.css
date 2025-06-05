@@ -81,7 +81,6 @@
   .glass-order-table tr[style*="color"] {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
-    color-adjust: exact !important;
   }
 
   /* General body/html adjustments for printing */
@@ -91,6 +90,10 @@
     margin: 0;
     padding: 0;
     overflow: visible; /* Ensure all content is considered for printing */
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    page-break-inside: avoid !important; /* Reinforce */
+    height: auto !important; /* Added */
   }
 
   /* Hide elements not meant for printing - adjust selectors as needed */
@@ -121,6 +124,10 @@
     overflow: visible !important; /* Added */
   }
 
+  .bordered-print-table thead {
+    display: table-header-group !important; /* Makes header repeat on each page */
+  }
+
   .bordered-print-table td {
     font-size: 10pt !important; /* Optional: adjust data cell font size if needed */
     padding: 6px !important;
@@ -128,13 +135,28 @@
     height: auto !important; /* Added */
     vertical-align: top !important; /* Added */
     overflow: visible !important; /* Added */
+    -webkit-print-color-adjust: exact !important; /* Force printing of cell colors */
+    print-color-adjust: exact !important; /* Standard property for forcing color printing */
+  }
+
+  /* New general rule to ensure all text and background colors print */
+  .print-container th, .print-container td {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /*
+    New, more robust rule.
+    This targets any `td` inside a `tr` that has an inline `style` attribute containing "color".
+    This is necessary because React applies colors via inline styles.
+  */
+  .print-container tr[style*="color"] td,
+  .print-container td[style*="background-color"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Attempt to avoid breaking table rows or elements inside tables across pages */
-  table, tbody, thead, tfoot { /* Removed tr, td, th as they are handled above more specifically for .bordered-print-table */
-    page-break-inside: avoid !important;
-  }
-
   tr { /* Applying to all tr directly */
     page-break-inside: avoid !important;
     page-break-after: auto; /* Allow breaking after a row */

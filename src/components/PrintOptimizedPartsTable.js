@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Input } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 
 const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
@@ -89,6 +89,14 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
     setManualRows(prevRows => [...prevRows, newRow]);
   };
 
+  const handleClearManualRows = () => {
+    setManualRows([]);
+  };
+
+  const handleRemoveManualRow = (index) => {
+    setManualRows(prevRows => prevRows.filter((_, i) => i !== index));
+  };
+
   const handleManualInputChange = (value, manualRowIndex, columnIndex, field) => {
     setManualRows(prevRows => {
       const newRows = [...prevRows];
@@ -109,6 +117,14 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
           Batch: {batchNo}
         </div>
         <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+          <Button
+            onClick={handleClearManualRows}
+            disabled={manualRows.length === 0}
+            style={{ marginRight: '10px' }}
+            danger
+          >
+            Clear Manual Rows
+          </Button>
           <Button 
             type="primary" 
             icon={<PlusOutlined />} 
@@ -180,6 +196,14 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
         Batch: {batchNo}
       </div>
       <div style={{ marginBottom: '10px', textAlign: 'right' }}>
+        <Button
+          onClick={handleClearManualRows}
+          disabled={manualRows.length === 0}
+          style={{ marginRight: '10px' }}
+          danger
+        >
+          Clear Manual Rows
+        </Button>
         <Button 
           type="primary" 
           icon={<PlusOutlined />} 
@@ -229,6 +253,15 @@ const PrintOptimizedPartsTable = ({ batchNo, calculatedData }) => {
                   </td> 
                   <td style={numberCellStyle}>
                     <Input size="small" style={inputStyle} bordered={false} value={cellData.pcs} onChange={(e) => handleManualInputChange(e.target.value, manualRowIndex, colIndex, 'pcs')} />
+                  </td>
+                  <td style={{ ...cellStyle, border: 'none' }}>
+                    <Button 
+                      icon={<DeleteOutlined />} 
+                      size="small" 
+                      type="text" 
+                      danger 
+                      onClick={() => handleRemoveManualRow(manualRowIndex)}
+                    />
                   </td>
                 </React.Fragment>
               ))}
