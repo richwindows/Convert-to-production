@@ -80,9 +80,8 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
                 for (let i = 0; i < piecesForCurrentQty.length; i++) {
                     const pieceToConsider = piecesForCurrentQty[i];
                     const pieceLength = parseFloat(pieceToConsider.Length);
-                    const lossForThisCut = currentRawMaterialPieces.length > 0 ? cutLoss : 0;
 
-                    if (currentRawMaterialLengthUsed + lossForThisCut + pieceLength <= maxLengthForCutting) {
+                    if (currentRawMaterialLengthUsed + pieceLength + cutLoss <= maxLengthForCutting) {
                         currentRawMaterialPieces.push({
                             ...pieceToConsider,
                             'Cutting ID': materialSpecificCuttingId,
@@ -90,7 +89,7 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
                             'Pieces ID': piecesIdCounter,
                             'PiecesID': piecesIdCounter,
                         });
-                        currentRawMaterialLengthUsed += pieceLength + lossForThisCut;
+                        currentRawMaterialLengthUsed += pieceLength + cutLoss;
                         piecesIdCounter++;
                         piecesForCurrentQty.splice(i, 1); // 从待处理列表中移除
                         i--; // Adjust index due to splice
@@ -99,17 +98,18 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
 
                 if (currentRawMaterialPieces.length > 0) {
                     const totalPieceLengthInGroup = currentRawMaterialPieces.reduce((sum, p) => sum + parseFloat(p.Length), 0);
-                    const totalCutLossInGroup = currentRawMaterialPieces.length > 1 ? (currentRawMaterialPieces.length - 1) * cutLoss : 0;
+                    // 修正：cutloss应该是cut count的倍数
+                    const totalCutLossInGroup = currentRawMaterialPieces.length * cutLoss; // 这行是正确的
                     const actualLengthUsedOnRaw = totalPieceLengthInGroup + totalCutLossInGroup;
                     const remainingOnRaw = materialStandardLength - actualLengthUsedOnRaw - allowance;
-
+                    
                     currentRawMaterialPieces.forEach(p => {
                         p.actualLength = actualLengthUsedOnRaw;
                         p.RemainingLength = remainingOnRaw;
                         p.UsableRemainingLength = remainingOnRaw; 
-                        p.cutCount = currentRawMaterialPieces.length;
+                        p.cutCount = currentRawMaterialPieces.length; // cut count = 件数
                         p.CutCount = currentRawMaterialPieces.length;
-                        p.cutLoss = totalCutLossInGroup;
+                        p.cutLoss = totalCutLossInGroup; // 总cutloss = cut count * 4
                         p.CutLoss = totalCutLossInGroup;
                     });
 
@@ -119,19 +119,22 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
                     // If no pieces could be added to a new raw material (e.g., all remaining pieces are too long)
                     // Handle the first unprocessable piece by giving it its own cutting ID.
                     const unprocessablePiece = piecesForCurrentQty.shift(); // Take the first (longest) one
+                    const pieceLength = parseFloat(unprocessablePiece.Length);
+                    const actualLengthWithLoss = pieceLength + cutLoss;
+
                     allOptimizedPieces.push({
                         ...unprocessablePiece,
                         'Cutting ID': materialSpecificCuttingId,
                         'CuttingID': materialSpecificCuttingId,
                         'Pieces ID': 1,
                         'PiecesID': 1,
-                        'actualLength': parseFloat(unprocessablePiece.Length),
-                        'RemainingLength': materialStandardLength - parseFloat(unprocessablePiece.Length) - allowance,
-                        'UsableRemainingLength': materialStandardLength - parseFloat(unprocessablePiece.Length) - allowance,
+                        'actualLength': actualLengthWithLoss,
+                        'RemainingLength': materialStandardLength - actualLengthWithLoss - allowance,
+                        'UsableRemainingLength': materialStandardLength - actualLengthWithLoss - allowance,
                         'cutCount': 1,
                         'CutCount': 1,
-                        'cutLoss': 0,
-                        'CutLoss': 0,
+                        'cutLoss': cutLoss,
+                        'CutLoss': cutLoss,
                     });
                     materialSpecificCuttingId++;
                 }
@@ -147,4 +150,4 @@ const materialOptimizerUtils = {
     optimizeCuttingGroups
 };
 
-export default materialOptimizerUtils; 
+export default materialOptimizerUtils;
