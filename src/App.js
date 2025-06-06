@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Layout, Upload, Button, Input, Table, message, Space, Card, Tabs, Modal } from 'antd';
-import { UploadOutlined, PrinterOutlined, FileExcelOutlined } from '@ant-design/icons';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  Upload, Button, Table, message, Checkbox, Spin, Layout, Menu, Tabs, Card, Alert,
+  Modal, Select, Input, Form, Row, Col, Space
+} from 'antd';
+import { UploadOutlined, FileExcelOutlined, SettingOutlined, ClearOutlined, PlusOutlined, DeleteOutlined, SaveOutlined, PrinterOutlined, ExportOutlined, BarcodeOutlined, BuildOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import 'antd/dist/antd.css';
@@ -25,6 +28,8 @@ import PrintOptimizedSashTable from './components/PrintOptimizedSashTable';
 import PrintOptimizedPartsTable from './components/PrintOptimizedPartsTable';
 
 const { Header, Content, Footer } = Layout;
+const { TabPane } = Tabs;
+const { Option } = Select;
 
 const frameMapping = {
   'RT': 'Retrofit',
@@ -68,6 +73,81 @@ function App() {
     sashWelding: [],
     materialCutting: []
   });
+  const [searchText, setSearchText] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [highlightedRow, setHighlightedRow] = useState(null);
+
+  // States for search functionality
+  const [searchTerm, setSearchTerm] = useState('');
+  const [pagination, setPagination] = useState({ 
+    current: 1, 
+    pageSize: 10, 
+    showSizeChanger: true, 
+    pageSizeOptions: ['10', '20', '50', '100'],
+    showTotal: (total) => `共 ${total} 条记录`
+  });
+  const [highlightedRowKey, setHighlightedRowKey] = useState(null);
+
+  const handleTableChange = (p, filters, sorter) => {
+    setPagination(p);
+    // Clear highlight when changing page manually
+    if (highlightedRowKey) {
+      const rowIndex = allExcelData.findIndex(item => item.ID === highlightedRowKey);
+      if (rowIndex > -1) {
+        const pageOfHighlight = Math.floor(rowIndex / p.pageSize) + 1;
+        if (pageOfHighlight !== p.current) {
+          setHighlightedRowKey(null);
+        }
+      } else {
+        setHighlightedRowKey(null);
+      }
+    }
+  };
+
+  const jumpToResult = useCallback((result) => {
+    setPagination(p => ({ ...p, current: result.page }));
+    setHighlightedRowKey(result.key);
+  }, []);
+
+  useEffect(() => {
+    if (!searchTerm) {
+      setSearchResults([]);
+      setHighlightedRowKey(null);
+      return;
+    }
+
+    const results = [];
+    const lowercasedValue = searchTerm.toLowerCase();
+
+    allExcelData.forEach((row, index) => {
+      const rowKey = row.ID;
+      for (const key in row) {
+        if (Object.prototype.hasOwnProperty.call(row, key)) {
+          const cellValue = row[key];
+          if (cellValue && cellValue.toString().toLowerCase().includes(lowercasedValue)) {
+            const page = Math.floor(index / pagination.pageSize) + 1;
+            const rowIndex = (index % pagination.pageSize) + 1;
+            results.push({
+              key: rowKey,
+              page,
+              rowIndex,
+              text: `在第 ${page} 页, 第 ${rowIndex} 行找到`,
+              originalIndex: index,
+            });
+            break; 
+          }
+        }
+      }
+    });
+
+    setSearchResults(results);
+    if (results.length > 0) {
+      jumpToResult(results[0]);
+    } else {
+      setHighlightedRowKey(null);
+      message.info('未找到匹配项。');
+    }
+  }, [searchTerm, allExcelData, pagination.pageSize, jumpToResult]);
 
   // Process the Excel file
   const processExcelFile = (file) => {
@@ -1014,7 +1094,6 @@ function App() {
             const windowInfo = newCalculatedData.info.find(info => info.ID === changedGlassEntry.ID);
             if (windowInfo) {
               console.warn(`No matching order entry found for glass ID: ${changedGlassEntry.ID}, line: ${changedGlassEntry.line}. Attempting to create one.`);
-              // const calculator = new WindowCalculator(); // Temporary instance
               
               // Mock the structure WindowCalculator's writeOrderEntry might expect or produce.
               // This is a simplified version; the actual one in WindowCalculator.js might be more complex.
@@ -1473,6 +1552,37 @@ function App() {
                           )}
                         </Card>
                         
+                        <Form layout="inline" style={{ marginBottom: 16 }}>
+                          <Form.Item label="搜索">
+                            <Input.Search
+                              placeholder="在表格中搜索..."
+                              allowClear
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              onSearch={setSearchTerm}
+                              style={{ width: 240 }}
+                            />
+                          </Form.Item>
+                        </Form>
+
+                        {searchResults.length > 0 && (
+                          <Alert
+                            message={`找到 ${searchResults.length} 条结果。`}
+                            description={
+                              <div style={{maxHeight: '150px', overflowY: 'auto'}}>
+                                {searchResults.map((r, i) => (
+                                  <div key={i}>{r.text} <Button type="link" size="small" onClick={() => jumpToResult(r)}>跳转</Button></div>
+                                ))}
+                              </div>
+                            }
+                            type="success"
+                            showIcon
+                            closable
+                            onClose={() => setSearchResults([])}
+                            style={{ marginBottom: 16 }}
+                          />
+                        )}
+
                         <Table 
                           dataSource={allExcelData} 
                           columns={columns} 
@@ -1481,11 +1591,10 @@ function App() {
                           loading={!isDataLoaded && allExcelData.length === 0}
                           bordered
                           className="data-table"
-                          pagination={{ 
-                            defaultPageSize: 10, 
-                            showSizeChanger: true, 
-                            pageSizeOptions: ['10', '20', '50', '100'],
-                            showTotal: (total) => `共 ${total} 条记录`
+                          pagination={pagination}
+                          onChange={handleTableChange}
+                          rowClassName={(record) => {
+                            return record.ID === highlightedRowKey ? 'highlighted-row' : '';
                           }}
                         />
                       </>
@@ -1569,4 +1678,15 @@ function App() {
   );
 }
 
-export default App;
+const AppWrapper = () => (
+  <Layout>
+    <style>{`
+      .highlighted-row td {
+        background-color: #f6ffed !important;
+      }
+    `}</style>
+    <App />
+  </Layout>
+);
+
+export default AppWrapper;
