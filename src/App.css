@@ -447,11 +447,34 @@ td {
 
   .print-container * {
     visibility: visible !important;
-    color: inherit !important; /* Inherit color (black from .print-container) */
-    background: transparent !important; /* Avoid overriding intended backgrounds like table stripes if any */
-    box-shadow: none !important; /* Remove shadows from printed elements */
+    /* 移除强制继承颜色，让元素保持自己的颜色 */
+    /* color: inherit !important; */
+    box-shadow: none !important;
   }
-  
+
+  /* 添加更具体的规则来保护有背景色和字体颜色的元素 */
+  .print-container tr[style*="background"],
+  .print-container td[style*="background"],
+  .print-container th[style*="background"],
+  .print-container tr[style*="color"],
+  .print-container td[style*="color"],
+  .print-container th[style*="color"] {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    /* 保持原有的背景色和字体颜色 */
+  }
+
+  /* 确保只对需要的元素设置默认颜色 */
+  .print-container {
+    color: black !important; /* 只在容器级别设置默认颜色 */
+  }
+
+  /* 对于没有特殊颜色设置的普通文本元素 */
+  .print-container p,
+  .print-container span:not([style*="color"]),
+  .print-container div:not([style*="color"]) {
+    color: inherit !important;
+  }
   .header, 
   .header-content-wrapper,
   .footer,

@@ -123,11 +123,8 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   }, [calculatedData]);
 
   const shouldDisplayGridColumn = useMemo(() => {
-    if (!calculatedData || calculatedData.length === 0) {
-      return true;
-    }
-    const allGridEffectivelyEmpty = calculatedData.every(row => isEffectivelyEmptyOrNone(row.grid));
-    return !allGridEffectivelyEmpty;
+    // 始终显示Grid列，不再根据内容判断是否隐藏
+    return true;
   }, [calculatedData]);
 
   // 通用的单元格样式
@@ -329,7 +326,7 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
                   <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.thickness || ''} onChange={(e) => handleInputChange(e, index, 'thickness')} /></td>
                   <td style={{...numberCellStyle, ...getCellStyle(row, 'width'), ...getTextStyle(row)}}>{row.width || ''}</td>
                   <td style={{...numberCellStyle, ...getCellStyle(row, 'height'), ...getTextStyle(row)}}>{row.height || ''}</td>
-                  {shouldDisplayGridColumn && <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.grid || ''} onChange={(e) => handleInputChange(e, index, 'grid')} /></td>}
+                  {shouldDisplayGridColumn && <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={(row.grid && row.grid.toLowerCase() !== 'none') ? row.grid : ''} onChange={(e) => handleInputChange(e, index, 'grid')} /></td>}
                   {shouldDisplayArgonColumn && <td style={cellStyle}><Input size="small" style={{...inputStyle, ...getTextStyle(row)}} bordered={false} value={row.argon || ''} onChange={(e) => handleInputChange(e, index, 'argon')} /></td>}
                 </tr>
               ))
@@ -371,4 +368,4 @@ const PrintGlassTable = ({ batchNo, calculatedData, onCellChange }) => {
   );
 };
 
-export default PrintGlassTable; 
+export default PrintGlassTable;
