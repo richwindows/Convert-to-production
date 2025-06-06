@@ -122,6 +122,7 @@ class WindowCalculator {
   writeSashWeldingEntry(data) {
     const originalSashW_str = data.sashw;
     const originalSashH_str = data.sashh;
+    
 
     const id = data.ID; // This is the displaySequentialId
     const originalCustomer = data.Customer || ''; // Use original customer value
@@ -146,12 +147,12 @@ class WindowCalculator {
    
 
     let displaySashW_numeric, displaySashH_numeric;
-    if (originalSashW_numeric >= originalSashH_numeric) {
-      displaySashW_numeric = originalSashW_numeric;
-      displaySashH_numeric = originalSashH_numeric;
-    } else {
+    if (originalStyle.includes('X')) {
       displaySashW_numeric = originalSashH_numeric;
       displaySashH_numeric = originalSashW_numeric;
+    } else {
+      displaySashW_numeric = originalSashW_numeric;
+      displaySashH_numeric = originalSashH_numeric;
     }
 
 
@@ -170,8 +171,8 @@ class WindowCalculator {
       ID: id,
       Customer: originalCustomer, // Use original customer value directly
       Style: styleWithId,       // Style with --ID appended
-      SashW: displaySashW_numeric.toFixed(3),
-      SashH: displaySashH_numeric.toFixed(3),
+      SashW: originalSashW_str,
+      SashH: originalSashH_str,
       WeldingCutW: weldingCutW,
       WeldingCutH: weldingCutH,
       Pcs: finalPcs
