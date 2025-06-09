@@ -27,7 +27,7 @@ export const getMaterialLength = async (materialName) => {
 };
 
 /**
- * Optimizes cutting groups to minimize waste based on new logic.
+ * Optimizes cutting groups to minimize waste based on improved logic.
  * @param {Array} piecesInput - Array of pieces to optimize.
  * @param {number} materialStandardLength - The standard length of the material.
  * @returns {Array} Optimized pieces with cutting group assignments.
@@ -43,19 +43,17 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
     const piecesByMaterial = piecesInput.reduce((acc, piece) => {
         const key = piece.MaterialName;
         if (!acc[key]) acc[key] = [];
-        // Add a unique index to each piece within its original group for stable processing if needed later
-        // piece.originalPieceIndex = acc[key].length; 
-        acc[key].push({...piece}); // Store a copy to avoid modifying original input objects directly
+        acc[key].push({...piece});
         return acc;
     }, {});
 
     for (const materialName in piecesByMaterial) {
         let piecesForCurrentMaterial = piecesByMaterial[materialName];
-        let materialSpecificCuttingId = 1; // CuttingID 在同一个 MaterialName 内是连续的，从1开始
+        let materialSpecificCuttingId = 1; // 每种材料的CuttingID从1开始
 
         // 2. 在每个 MaterialName 组内，按 Qty 分组
         const piecesByQty = piecesForCurrentMaterial.reduce((acc, piece) => {
-            const key = parseInt(piece.Qty) || 1; // Ensure Qty is a number, default to 1
+            const key = parseInt(piece.Qty) || 1;
             if (!acc[key]) acc[key] = [];
             acc[key].push(piece);
             return acc;
@@ -64,87 +62,139 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
         const sortedQtys = Object.keys(piecesByQty).map(Number).sort((a, b) => a - b);
 
         for (const qty of sortedQtys) {
-            let piecesForCurrentQty = [...piecesByQty[qty]]; // Mutable copy for this Qty group
-            // 按长度降序排序，优先切割长的，有助于优化填充
+            let piecesForCurrentQty = [...piecesByQty[qty]];
+            // 按长度降序排序，优先处理长件
             piecesForCurrentQty.sort((a, b) => parseFloat(b.Length) - parseFloat(a.Length));
 
+            // 使用改进的贪心算法
             while (piecesForCurrentQty.length > 0) {
-                let currentRawMaterialPieces = [];
-                let currentRawMaterialLengthUsed = 0;
-                const allowance = 6;
-                const cutLoss = 4;
-                const maxLengthForCutting = materialStandardLength - allowance;
-                let piecesIdCounter = 1;
-
-                // 3. 贪心填充当前原材料 (尝试放入尽可能多的件)
-                for (let i = 0; i < piecesForCurrentQty.length; i++) {
-                    const pieceToConsider = piecesForCurrentQty[i];
-                    const pieceLength = parseFloat(pieceToConsider.Length);
-
-                    if (currentRawMaterialLengthUsed + pieceLength + cutLoss <= maxLengthForCutting) {
-                        currentRawMaterialPieces.push({
-                            ...pieceToConsider,
+                const group = findBestFitGroup(piecesForCurrentQty, materialStandardLength);
+                
+                if (group.length > 0) {
+                    const allowance = 6;
+                    const cutLoss = 4;
+                    let piecesIdCounter = 1;
+                    
+                    const totalPieceLengthInGroup = group.reduce((sum, p) => sum + parseFloat(p.Length), 0);
+                    const totalCutLossInGroup = group.length * cutLoss;
+                    const actualLengthUsedOnRaw = totalPieceLengthInGroup + totalCutLossInGroup;
+                    const remainingOnRaw = materialStandardLength - actualLengthUsedOnRaw - allowance;
+                    
+                    // 为组内每个件分配ID
+                    group.forEach(piece => {
+                        allOptimizedPieces.push({
+                            ...piece,
                             'Cutting ID': materialSpecificCuttingId,
                             'CuttingID': materialSpecificCuttingId,
                             'Pieces ID': piecesIdCounter,
                             'PiecesID': piecesIdCounter,
+                            actualLength: actualLengthUsedOnRaw,
+                            RemainingLength: remainingOnRaw,
+                            UsableRemainingLength: remainingOnRaw,
+                            cutCount: group.length,
+                            CutCount: group.length,
+                            cutLoss: totalCutLossInGroup,
+                            CutLoss: totalCutLossInGroup,
                         });
-                        currentRawMaterialLengthUsed += pieceLength + cutLoss;
                         piecesIdCounter++;
-                        piecesForCurrentQty.splice(i, 1); // 从待处理列表中移除
-                        i--; // Adjust index due to splice
-                    }
-                }
-
-                if (currentRawMaterialPieces.length > 0) {
-                    const totalPieceLengthInGroup = currentRawMaterialPieces.reduce((sum, p) => sum + parseFloat(p.Length), 0);
-                    // 修正：cutloss应该是cut count的倍数
-                    const totalCutLossInGroup = currentRawMaterialPieces.length * cutLoss; // 这行是正确的
-                    const actualLengthUsedOnRaw = totalPieceLengthInGroup + totalCutLossInGroup;
-                    const remainingOnRaw = materialStandardLength - actualLengthUsedOnRaw - allowance;
-                    
-                    currentRawMaterialPieces.forEach(p => {
-                        p.actualLength = actualLengthUsedOnRaw;
-                        p.RemainingLength = remainingOnRaw;
-                        p.UsableRemainingLength = remainingOnRaw; 
-                        p.cutCount = currentRawMaterialPieces.length; // cut count = 件数
-                        p.CutCount = currentRawMaterialPieces.length;
-                        p.cutLoss = totalCutLossInGroup; // 总cutloss = cut count * 4
-                        p.CutLoss = totalCutLossInGroup;
                     });
-
-                    allOptimizedPieces.push(...currentRawMaterialPieces);
-                    materialSpecificCuttingId++; // 当前原材料用完，为该材料准备下一个 CuttingID
-                } else if (piecesForCurrentQty.length > 0) {
-                    // If no pieces could be added to a new raw material (e.g., all remaining pieces are too long)
-                    // Handle the first unprocessable piece by giving it its own cutting ID.
-                    const unprocessablePiece = piecesForCurrentQty.shift(); // Take the first (longest) one
-                    const pieceLength = parseFloat(unprocessablePiece.Length);
+                    
+                    // 从待处理列表中移除已处理的件
+                    group.forEach(usedPiece => {
+                        const index = piecesForCurrentQty.findIndex(p => 
+                            p === usedPiece // 直接比较对象引用
+                        );
+                        if (index !== -1) {
+                            piecesForCurrentQty.splice(index, 1);
+                        }
+                    });
+                    
+                    materialSpecificCuttingId++; // 下一个切割组
+                } else {
+                    // 如果无法找到合适的组合，单独处理第一个件
+                    const piece = piecesForCurrentQty.shift();
+                    const allowance = 6;
+                    const cutLoss = 4;
+                    const pieceLength = parseFloat(piece.Length);
                     const actualLengthWithLoss = pieceLength + cutLoss;
-
+                    
                     allOptimizedPieces.push({
-                        ...unprocessablePiece,
+                        ...piece,
                         'Cutting ID': materialSpecificCuttingId,
                         'CuttingID': materialSpecificCuttingId,
                         'Pieces ID': 1,
                         'PiecesID': 1,
-                        'actualLength': actualLengthWithLoss,
-                        'RemainingLength': materialStandardLength - actualLengthWithLoss - allowance,
-                        'UsableRemainingLength': materialStandardLength - actualLengthWithLoss - allowance,
-                        'cutCount': 1,
-                        'CutCount': 1,
-                        'cutLoss': cutLoss,
-                        'CutLoss': cutLoss,
+                        actualLength: actualLengthWithLoss,
+                        RemainingLength: materialStandardLength - actualLengthWithLoss - allowance,
+                        UsableRemainingLength: materialStandardLength - actualLengthWithLoss - allowance,
+                        cutCount: 1,
+                        CutCount: 1,
+                        cutLoss: cutLoss,
+                        CutLoss: cutLoss,
                     });
+                    
                     materialSpecificCuttingId++;
                 }
-            } // End while (piecesForCurrentQty.length > 0)
-        } // End for (const qty of sortedQtys)
-    } // End for (const materialName in piecesByMaterial)
+            }
+        }
+    }
 
     return allOptimizedPieces;
 };
 
+/**
+ * 找到最佳拟合组合（改进的贪心算法）
+ * @param {Array} pieces - 可选择的件
+ * @param {number} materialLength - 原材料长度
+ * @returns {Array} 最佳组合
+ */
+function findBestFitGroup(pieces, materialLength) {
+    const allowance = 6;
+    const cutLoss = 4;
+    const maxUsableLength = materialLength - allowance;
+    
+    let bestGroup = [];
+    let bestUtilization = 0;
+    
+    // 尝试不同的组合策略
+    for (let startIndex = 0; startIndex < pieces.length; startIndex++) {
+        const currentGroup = [];
+        let currentLength = 0;
+        const availablePieces = [...pieces];
+        
+        // 从startIndex开始贪心选择
+        for (let i = startIndex; i < availablePieces.length; i++) {
+            const piece = availablePieces[i];
+            const pieceLength = parseFloat(piece.Length);
+            const lengthWithCut = pieceLength + cutLoss;
+            
+            if (currentLength + lengthWithCut <= maxUsableLength) {
+                currentGroup.push(piece);
+                currentLength += lengthWithCut;
+                availablePieces.splice(i, 1);
+                i--; // 调整索引
+            }
+        }
+        
+        // 计算利用率
+        const utilization = currentLength / maxUsableLength;
+        
+        // 选择利用率最高的组合
+        if (utilization > bestUtilization) {
+            bestUtilization = utilization;
+            bestGroup = currentGroup;
+        }
+        
+        // 如果利用率已经很高，提前结束
+        if (utilization > 0.95) {
+            break;
+        }
+    }
+    
+    return bestGroup;
+}
+
+// 移除复杂的动态规划函数，保持简单有效的算法
 const materialOptimizerUtils = {
     getMaterialLength,
     optimizeCuttingGroups
