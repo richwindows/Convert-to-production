@@ -71,7 +71,7 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
                 const group = findBestFitGroup(piecesForCurrentQty, materialStandardLength);
                 
                 if (group.length > 0) {
-                    const allowance = 6;
+                    const allowance = 1;
                     const cutLoss = 4;
                     let piecesIdCounter = 1;
                     
