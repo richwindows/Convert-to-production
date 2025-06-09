@@ -113,7 +113,7 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
                 } else {
                     // 如果无法找到合适的组合，单独处理第一个件
                     const piece = piecesForCurrentQty.shift();
-                    const allowance = 6;
+                    const allowance = 1;
                     const cutLoss = 4;
                     const pieceLength = parseFloat(piece.Length);
                     const actualLengthWithLoss = pieceLength + cutLoss;
