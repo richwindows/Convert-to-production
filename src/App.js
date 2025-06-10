@@ -518,6 +518,12 @@ function App() {
     const workbook = new ExcelJS.Workbook();
     const currentBatchNo = batchNo || 'N/A';
 
+    const parseNumeric = (v) => {
+      if (v === null || v === undefined || v === '') return '';
+      const num = parseFloat(v);
+      return isNaN(num) ? v : num;
+    };
+
     // Sheet definitions: name, dataKey, headers, mapFn
     const sheetDefinitions = [
       {
@@ -566,7 +572,25 @@ function App() {
         name: 'Grid',
         dataKey: 'grid',
         headers: ['ID', 'Style', 'Grid Style', 'Sash W1', 'Pcs', '一刀', 'Sash H1', 'Pcs', '一刀', 'Fixed W2', 'Pcs', '一刀', 'Fixed H2', 'Pcs', '一刀', 'Note', 'Color'],
-        mapFn: (row) => [row.ID, row.Style, row.Grid || '', row.sashW || '', row.sashWq || '', row.holeW1 || '', row.sashH || '', row.sashHq || '', row.holeH1 || '', row.fixW || '', row.fixWq || '', row.holeW2 || '', row.fixH || '', row.fixHq || '', row.holeH2 || '', row.Note || '', row.Color || '']
+        mapFn: (row) => [
+          row.ID, 
+          row.Style, 
+          row.Grid || '', 
+          parseNumeric(row.sashW), 
+          parseNumeric(row.sashWq), 
+          parseNumeric(row.holeW1), 
+          parseNumeric(row.sashH), 
+          parseNumeric(row.sashHq), 
+          parseNumeric(row.holeH1), 
+          parseNumeric(row.fixW), 
+          parseNumeric(row.fixWq), 
+          parseNumeric(row.holeW2), 
+          parseNumeric(row.fixH), 
+          parseNumeric(row.fixHq), 
+          parseNumeric(row.holeH2), 
+          row.Note || '', 
+          row.Color || ''
+        ]
       },
       {
         name: 'Glass Order',
@@ -643,10 +667,21 @@ function App() {
         dataToExport.forEach((rowDataItem, index) => {
           const rowValues = def.mapFn(rowDataItem, index);
           const dataRow = worksheet.addRow(rowValues);
-          dataRow.eachCell((cell) => {
+          dataRow.eachCell((cell, colNumber) => {
             cell.font = { name: 'Calibri', size: 12 };
             cell.border = allSideBorders;
             cell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+            if (def.name === 'Grid') {
+              const header = def.headers[colNumber - 1];
+              if (header === '一刀') {
+                cell.font = { ...cell.font, color: { argb: 'FFFF0000' } }; // Red color
+              }
+              // Check if the value is a number and not in an 'ID' or 'Pcs' column
+              if (typeof cell.value === 'number' && !['ID', 'Pcs'].includes(header)) {
+                cell.numFmt = '0.0';
+              }
+            }
           });
         });
       } else {

@@ -154,6 +154,7 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
                   style={{
                     ...(isNumberColumn ? numberCellStyle : cellStyle),
                     position: 'relative',
+                    ...(title === '一刀' && { color: 'red' })
                   }}
                 >
                   {title}
@@ -200,7 +201,7 @@ const PrintGridTable = ({ batchNo, calculatedData, onCellChange }) => {
                     <td key={dataKey} style={finalCellStyle}>
                       <Input
                         size="small"
-                        style={inputStyle}
+                        style={{ ...inputStyle, ...(title === '一刀' && { color: 'red' }) }}
                         bordered={false}
                         value={cellValue}
                         onChange={(e) => handleInputChange(e, rowIndex, dataKey)}
