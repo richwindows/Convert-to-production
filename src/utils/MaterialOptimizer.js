@@ -27,6 +27,22 @@ export const getMaterialLength = async (materialName) => {
 };
 
 /**
+ * Determines the cut loss based on material name.
+ * @param {string} materialName - The name of the material.
+ * @returns {number} The cut loss value.
+ */
+const getCutLoss = (materialName) => {
+    if (materialName.includes('HMST82-02B')) {
+        return 3.5;
+    } else if (materialName.includes('HMST82-01')) {
+        return 0.5;
+    } else if (materialName.includes('HMST82-10')) {
+        return 2;
+    }
+    return 4; // Default cut loss
+};
+
+/**
  * Optimizes cutting groups to minimize waste based on improved logic.
  * @param {Array} piecesInput - Array of pieces to optimize.
  * @param {number} materialStandardLength - The standard length of the material.
@@ -50,6 +66,7 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
     for (const materialName in piecesByMaterial) {
         let piecesForCurrentMaterial = piecesByMaterial[materialName];
         let materialSpecificCuttingId = 1; // 每种材料的CuttingID从1开始
+        const cutLoss = getCutLoss(materialName);
 
         // 2. 在每个 MaterialName 组内，按 Qty 分组
         const piecesByQty = piecesForCurrentMaterial.reduce((acc, piece) => {
@@ -68,11 +85,10 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
 
             // 使用改进的贪心算法
             while (piecesForCurrentQty.length > 0) {
-                const group = findBestFitGroup(piecesForCurrentQty, materialStandardLength);
+                const group = findBestFitGroup(piecesForCurrentQty, materialStandardLength, cutLoss);
                 
                 if (group.length > 0) {
-                    const allowance = 1;
-                    const cutLoss = 4;
+                    const allowance = 6;
                     let piecesIdCounter = 1;
                     
                     const totalPieceLengthInGroup = group.reduce((sum, p) => sum + parseFloat(p.Length), 0);
@@ -114,7 +130,6 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
                     // 如果无法找到合适的组合，单独处理第一个件
                     const piece = piecesForCurrentQty.shift();
                     const allowance = 1;
-                    const cutLoss = 4;
                     const pieceLength = parseFloat(piece.Length);
                     const actualLengthWithLoss = pieceLength + cutLoss;
                     
@@ -146,11 +161,11 @@ export const optimizeCuttingGroups = (piecesInput, materialStandardLength) => {
  * 找到最佳拟合组合（改进的贪心算法）
  * @param {Array} pieces - 可选择的件
  * @param {number} materialLength - 原材料长度
+ * @param {number} cutLoss - 切割损耗
  * @returns {Array} 最佳组合
  */
-function findBestFitGroup(pieces, materialLength) {
+function findBestFitGroup(pieces, materialLength, cutLoss) {
     const allowance = 6;
-    const cutLoss = 4;
     const maxUsableLength = materialLength - allowance;
     
     let bestGroup = [];
