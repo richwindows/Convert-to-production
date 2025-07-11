@@ -22,7 +22,7 @@ const WindowForm = ({ onAdd, onClear }) => {
   ];
 
   const colorOptions = [
-    "White", "Almond", "Paint"
+    "White", "Almond", "Black", "Paint"
   ];
 
   const glassOptions = [

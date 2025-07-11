@@ -339,7 +339,9 @@ class WindowCalculator {
         const colorLower = color.toLowerCase();
         if (!color || colorLower === "" || colorLower.includes("white") || colorLower.includes("wh")) colorSuffix = "-WH";
         else if (colorLower.includes("almond") || colorLower.includes("al")) colorSuffix = "-AL";
+        else if (colorLower.includes("black") || colorLower.includes("bl")) colorSuffix = "-BL";
         else if (colorLower.includes("painting")) colorSuffix = "-WH";
+        else if (colorLower.includes("paint")) colorSuffix = "-WH";
         const materialNameWithColor = materialInfo.name + colorSuffix;
         const materialPiece = {
           ID: id, OrderNo: id, OrderItem: 1, MaterialName: materialNameWithColor,
