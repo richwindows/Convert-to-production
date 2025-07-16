@@ -75,7 +75,7 @@ const processP_XO_P_OX = (windowData, calculator) => {
   // 以左右滑动扇宽度为XO_P_OX_P.js的sashw
   // Nailon: sashw = (w/2 - 14.5 - 15 + 1)
   // 固定扇宽度 = 总宽 - 2*滑动扇宽度 - 相关间隙
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     sashw = w / 2 - 14.5 - 15 + 1;
     sashh = h - fh - 6 - 46 - 15 - 2 - 1;
   } else {
@@ -93,7 +93,7 @@ const processP_XO_P_OX = (windowData, calculator) => {
   calculator.writeSash(id, style, String(round(sashw / 25.4)), '2', String(round(sashh / 25.4)), '1', String(round(sashh / 25.4)), '1', '', '', '', '', color);
   // 4. 写入中间固定扇（用parts或自定义方法）
   // 5. screen（左右各一）
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     screenw = roundInt(w / 2 - 75 - 15 - (2), 0)
     screenh = roundInt(h - fh - 6 - 87 - 15 - (4), 0)
   } else {
@@ -103,7 +103,7 @@ const processP_XO_P_OX = (windowData, calculator) => {
   calculator.writeScreen(customer, id, style, String(screenw), '2', String(screenh), '2', color);
 
   // 6. parts
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     mullion = round((h - fh - 6 - 36 - 15) / 25.4);
     mullionA = round((h - fh - 6 - 36 - 15) / 25.4 - 2, 1);
     handleA = round((h - fh - 6 - 46 - 15) / 25.4 / 2 + 4);
@@ -125,7 +125,7 @@ const processP_XO_P_OX = (windowData, calculator) => {
   }
 
   // 7. 玻璃尺寸 (使用VBA命名约定，区分FrameType)
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     // VBA: cmbFrame.ListIndex = 0 (Nailon)
     sashglassw = w / 2 - 77 - 15;         // For the two sliding sashes
     sashglassh = h - fh - 6 - 109 - 15 - 3 - 2; // For the two sliding sashes

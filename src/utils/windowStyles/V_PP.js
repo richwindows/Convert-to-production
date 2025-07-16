@@ -61,7 +61,7 @@ const processV_PP = (windowData, calculator) => {
   }
 
   // 2. Parts
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     coverw = round((w - 14 * 2 - 15 * 2 - 22 * 2 - 3 - 13) / 25.4);
     coverh = round((h / 2 - 6 - 14 * 2 - 15) / 25.4);
     bigmullion = round((w - 14 * 2 - 15 * 2 - 2 + 1.5) / 25.4);
@@ -80,7 +80,7 @@ const processV_PP = (windowData, calculator) => {
   }
 
   // 3. 玻璃尺寸
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     fixedglassw = w - 20.5 * 2 - 3 * 2 - 15 * 2 - 2;
     fixedglassh = h / 2 - 6 - 20.5 * 2 - 3 * 2 - 15 - 3;
   } else {

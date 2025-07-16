@@ -58,13 +58,25 @@ const processPicture = (windowData, calculator) => {
   let framew, frameh, fixedglassw, fixedglassh, fixedgridw, fixedgridh, coverw, coverh, slop;
   let FixWq, FixHq, holeW2, holeH2;
 
-  // Different calculations based on frame type
+  framew = round((w + 3 * 2) / 25.4);
+  frameh = round((h + 3 * 2) / 25.4);
+
   if (frameType === 'Nailon') {
-    // Frame calculations
-    framew = round((w + 3 * 2) / 25.4);
-    frameh = round((h + 3 * 2) / 25.4);
     calculator.writeFrame(id, style, "", "", "", "", String(framew), "2", String(frameh), "2", "", "", "", "", color);
     console.log(`框架计算 - Nailon | 框架宽: ${framew} | 框架高: ${frameh}`);
+  } else if (frameType === 'Retrofit') {
+    calculator.writeFrame(id, style, String(framew), "2", String(frameh), "2", "", "", "", "", "", "", "", "", color);
+    console.log(`框架计算 - Retrofit | 框架宽: ${framew} | 框架高: ${frameh}`);
+  } else if (frameType === 'Block' || frameType === 'Block-slop 1/2') {
+    calculator.writeFrame(id, style, "", "", "", "", "", "", "", "", String(framew), "2", String(frameh), "2", color);
+    console.log(`框架计算 - ${frameType} | 框架宽: ${framew} | 框架高: ${frameh}`);
+  } else if (frameType === 'Block-slop 1 3/4') {
+    calculator.writeFrame(id, style, String(framew), "1", "", "", "", "", "", "", String(framew), "1", String(frameh), "2", color);
+    console.log(`框架计算 - Block-slop 1 3/4 | 框架宽: ${framew} | 框架高: ${frameh}`);
+  }
+
+  // Different calculations based on frame type
+  if (frameType === 'Nailon'  && color.toLowerCase() !== 'black' ) {
     
     // Cover calculations
     coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
@@ -109,23 +121,10 @@ const processPicture = (windowData, calculator) => {
     // Process glass based on glass type
     processGlass(customer, style, width, height, id, q, glassType, fixedglassw, fixedglassh, grid, argon, calculator);
     
-  } else if (frameType === 'Retrofit' || frameType === 'Block' || 
-            frameType === 'Block-slop 1 3/4' || frameType === 'Block-slop 1/2') {
-    // Frame calculations for other frame types
-    framew = round((w + 3 * 2) / 25.4);
-    frameh = round((h + 3 * 2) / 25.4);
+  } else {
+   
     
-    // Frame calculation based on frame type
-    if (frameType === 'Retrofit') {
-      calculator.writeFrame(id, style, String(framew), "2", String(frameh), "2", "", "", "", "", "", "", "", "", color);
-      console.log(`框架计算 - Retrofit | 框架宽: ${framew} | 框架高: ${frameh}`);
-    } else if (frameType === 'Block' || frameType === 'Block-slop 1/2') {
-      calculator.writeFrame(id, style, "", "", "", "", "", "", "", "", String(framew), "2", String(frameh), "2", color);
-      console.log(`框架计算 - ${frameType} | 框架宽: ${framew} | 框架高: ${frameh}`);
-    } else if (frameType === 'Block-slop 1 3/4') {
-      calculator.writeFrame(id, style, String(framew), "1", "", "", "", "", "", "", String(framew), "1", String(frameh), "2", color);
-      console.log(`框架计算 - Block-slop 1 3/4 | 框架宽: ${framew} | 框架高: ${frameh}`);
-    }
+  
     
     // Cover calculations for other frame types
     coverw = round((w - 14 * 2 - 3 - 13) / 25.4);

@@ -70,7 +70,7 @@ const processP_PP = (windowData, calculator) => {
 
 
   // 2. Parts 尺寸
-  if (frameType === 'Nailon') { // VBA cmbFrame.ListIndex = 0
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') { // VBA cmbFrame.ListIndex = 0
     coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
     coverh = round((h - fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
     coverw2 = round((w / 2 - 6 - 14 * 2 - 15 - 3 - 13) / 25.4);
@@ -97,7 +97,7 @@ const processP_PP = (windowData, calculator) => {
   }
 
   // 3. 玻璃尺寸
-  if (frameType === 'Nailon') { // VBA cmbFrame.ListIndex = 0
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') { // VBA cmbFrame.ListIndex = 0
     fixedglassw = w - 20.5 * 2 - 3 * 2 - 15 * 2;
     fixedglassh = h - fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 2;
     fixedglass2w = w / 2 - 6 - 20.5 * 2 - 3 * 2 - 15;

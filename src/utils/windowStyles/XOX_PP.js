@@ -69,7 +69,7 @@ const processXOX_PP = (windowData, calculator) => {
   }
 
   // 2. Sash 尺寸
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     sashw = round((w / 4 - 14.5 - 15 + 1) / 25.4);
     sashh = round((h - fh - 6 - 46 - 15 - 3) / 25.4);
   } else {
@@ -86,7 +86,7 @@ const processXOX_PP = (windowData, calculator) => {
   
 
   // 3. Screen 尺寸
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     screenw = roundInt(w / 4 - 75 - 15 - 2);
     screenh = roundInt(h - fh - 6 - 87 - 15 - 4);
   } else {
@@ -96,7 +96,7 @@ const processXOX_PP = (windowData, calculator) => {
   calculator.writeScreen(customer, id, style, String(screenw), '4', String(screenh), '4', color);
 
   // 4. Parts
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     mullion = round((h - fh - 6 - 36 - 15) / 25.4);
     mullionA = round((h - fh - 6 - 36 - 15) / 25.4 - 2, 1);
     handleA = round((h - fh - 6 - 46 - 15) / 25.4 / 2 + 4);
@@ -124,7 +124,7 @@ const processXOX_PP = (windowData, calculator) => {
   }
 
   // 5. 玻璃尺寸
-  if (frameType === 'Nailon') {
+  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
     sashglassw = w / 4 - 77 - 15;
     sashglassh = h - fh - 6 - 109 - 15 - 3 - 2;
     fixedglassw = w / 2 - 41.4;
