@@ -478,6 +478,16 @@ function App() {
     setIsExportingGlassOrder(false);
   };
 
+  // Generate barcode function (same as in PrintLabelTable.js)
+  const generateBarcode = (batchNo, id) => {
+    if (!batchNo || !id) return '';
+    const parts = batchNo.split('-');
+    if (parts.length < 1) return '';
+    const datePart = parts[0].replace(/\//g, '');
+    const formattedId = String(id).padStart(2, '0');
+    return `Rich-${datePart}-${formattedId}`;
+  };
+
   // Ensure exportLabelToExcel is defined within App scope
   const exportLabelToExcel = () => {
     if (!calculatedData.label || calculatedData.label.length === 0) {
@@ -490,8 +500,11 @@ function App() {
     const currentBatchNo = batchNo || 'N/A';
     const defaultCellStyle = { font: { name: 'Calibri', sz: 12 }, border: { top: { style: 'thin', color: { rgb: "000000" } }, bottom: { style: 'thin', color: { rgb: "000000" } }, left: { style: 'thin', color: { rgb: "000000" } }, right: { style: 'thin', color: { rgb: "000000" } } }, alignment: { horizontal: "center", vertical: "center" } };
     const headerCellStyle = { ...defaultCellStyle, font: { ...defaultCellStyle.font, bold: true }, fill: { fgColor: { rgb: "FFFF00" } } };
-    const headers = ['Batch NO.', 'Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.'];
-    const dataForSheet = calculatedData.label.map(row => [currentBatchNo, row.Customer, row.ID, row.Style, row.Size, row.Frame, row.Glass, row.Grid, row.PO || row.Note || '', currentBatchNo]);
+    const headers = ['Batch NO.', 'Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.', 'Barcode'];
+    const dataForSheet = calculatedData.label.map(row => {
+      const barcode = generateBarcode(currentBatchNo, row.ID);
+      return [currentBatchNo, row.Customer, row.ID, row.Style, row.Size, row.Frame, row.Glass, row.Grid, row.PO || row.Note || '', currentBatchNo, barcode];
+    });
     const ws_data = [headers, ...dataForSheet];
     const ws = XLSX.utils.aoa_to_sheet(ws_data);
     const range = XLSX.utils.decode_range(ws['!ref']);
@@ -601,18 +614,22 @@ function App() {
       { 
         name: 'Label',
         dataKey: 'label',
-        headers: ['Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.'],
-        mapFn: (row) => [
-          row.Customer,
-          row.ID,
-          row.Style,
-          row.Size,
-          row.Frame,
-          row.Glass,
-          row.Grid,
-          row.PO || row.Note || '', 
-          currentBatchNo
-        ]
+        headers: ['Customer', 'ID', 'Style', 'Size (WxH)', 'Frame', 'Glass+Argon', 'Grid', 'P.O / Note', 'Invoice Num. Batch NO.', 'Barcode'],
+        mapFn: (row) => {
+          const barcode = generateBarcode(currentBatchNo, row.ID);
+          return [
+            row.Customer,
+            row.ID,
+            row.Style,
+            row.Size,
+            row.Frame,
+            row.Glass,
+            row.Grid,
+            row.PO || row.Note || '', 
+            currentBatchNo,
+            barcode
+          ];
+        }
       }
     ];
 
