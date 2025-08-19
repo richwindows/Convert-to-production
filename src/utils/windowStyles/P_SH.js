@@ -68,13 +68,13 @@ const processP_SH = (windowData, calculator) => {
   }
 
   // 2. Sash 尺寸
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
-    sashw = round((w - 47.4 - 15 * 2 - 2) / 25.4);
-    sashh = round(((h - fh - 6) / 2 - 17.1 - 15 + 1) / 25.4);
-  } else {
-    sashw = round((w - 47.4 - 2) / 25.4);
-    sashh = round(((h - fh - 6) / 2 - 17.1 + 1) / 25.4);
-  }
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
+  //   sashw = round((w - 47.4 - 15 * 2 - 2) / 25.4);
+  //   sashh = round(((h - fh - 6) / 2 - 17.1 - 15 + 1) / 25.4);
+  // } else {
+  sashw = round((w - 47.4 - 2) / 25.4);
+  sashh = round(((h - fh - 6) / 2 - 17.1 + 1) / 25.4);
+  // }
   calculator.writeSash(id,style, '', '', '', '', String(sashw), '1', String(sashw), '1', String(sashh), '2', '', '', '', color);
 
   let weldsashw = sashw;
@@ -82,51 +82,51 @@ const processP_SH = (windowData, calculator) => {
   calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: weldsashw, sashh: weldsashh });
 
   // 3. Screen 尺寸
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
-    screenw = roundInt(w - 87 - 15 * 2 - 4);
-    screenh = roundInt((h - fh - 6) / 2 - 75 - 15 - 5);
-  } else {
-    screenw = roundInt(w - 87 - 4);
-    screenh = roundInt((h - fh - 6) / 2 - 75 - 5);
-  }
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
+  //   screenw = roundInt(w - 87 - 15 * 2 - 4);
+  //   screenh = roundInt((h - fh - 6) / 2 - 75 - 15 - 5);
+  // } else {
+  screenw = roundInt(w - 87 - 4);
+  screenh = roundInt((h - fh - 6) / 2 - 75 - 5);
+  // }
   calculator.writeScreen(customer, id, style, String(screenh), '2', String(screenw), '2', color);
 
   // 4. Parts
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
-    mullion = round((w - 36 - 15 * 2) / 25.4);
-    mullionA = round((w - 36 + 1 - 15 * 2) / 25.4 - 2, 1);
-    handleA = round((w - 46 - 15 * 2) / 25.4 / 2 + 4);
-    coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
-    coverh = round((fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
-    bigmullion = round((w - 14 * 2 - 15 * 2 - 2 + 1.5) / 25.4);
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', '', String(coverw), String(coverh), String(bigmullion), '1', '', '', '', color);
-  } else {
-    mullion = round((w - 36) / 25.4);
-    mullionA = round((w - 36 + 1) / 25.4 - 2, 1);
-    handleA = round((w - 46) / 25.4 / 2 + 4);
-    coverw = round((w - 14 * 2 - 3) / 25.4);
-    coverh = round((fh - 6 - 14 * 2 - 22 * 2) / 25.4);
-    bigmullion = round((w - 14 * 2 - 2 + 1.5) / 25.4);
-    slop = round((w - 10) / 25.4, 1);
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', '', String(coverw), String(coverh), String(bigmullion), '1', '', '', frameType === 'Block-slop 1/2' ? String(slop) : '', color);
-  }
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
+  //   mullion = round((w - 36 - 15 * 2) / 25.4);
+  //   mullionA = round((w - 36 + 1 - 15 * 2) / 25.4 - 2, 1);
+  //   handleA = round((w - 46 - 15 * 2) / 25.4 / 2 + 4);
+  //   coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
+  //   coverh = round((fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
+  //   bigmullion = round((w - 14 * 2 - 15 * 2 - 2 + 1.5) / 25.4);
+  //   calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', '', String(coverw), String(coverh), String(bigmullion), '1', '', '', '', color);
+  // } else {
+  mullion = round((w - 36) / 25.4);
+  mullionA = round((w - 36 + 1) / 25.4 - 2, 1);
+  handleA = round((w - 46) / 25.4 / 2 + 4);
+  coverw = round((w - 14 * 2 - 3) / 25.4);
+  coverh = round((fh - 6 - 14 * 2 - 22 * 2) / 25.4);
+  bigmullion = round((w - 14 * 2 - 2 + 1.5) / 25.4);
+  slop = round((w - 10) / 25.4, 1);
+  calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', '', String(coverw), String(coverh), String(bigmullion), '1', '', '', frameType === 'Block-slop 1/2' ? String(slop) : '', color);
+  // }
 
   // 5. 玻璃尺寸
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
-    sashglassw = w - 110 - 15 * 2 - 2;
-    sashglassh = (h - fh - 6) / 2 - 79.7 - 15 - 1;
-    fixedglassw = w - 47 - 15 * 2;
-    fixedglassh = (h - fh - 6) / 2 - 44.2 - 15 - 1;
-    fixedglass2w = w - 47 - 15 * 2;
-    fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 1;
-  } else {
-    sashglassw = w - 110 - 2;
-    sashglassh = (h - fh - 6) / 2 - 79.7 - 1;
-    fixedglassw = w - 47;
-    fixedglassh = (h - fh - 6) / 2 - 44.2 - 1;
-    fixedglass2w = w - 47;
-    fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 1;
-  }
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
+  //   sashglassw = w - 110 - 15 * 2 - 2;
+  //   sashglassh = (h - fh - 6) / 2 - 79.7 - 15 - 1;
+  //   fixedglassw = w - 47 - 15 * 2;
+  //   fixedglassh = (h - fh - 6) / 2 - 44.2 - 15 - 1;
+  //   fixedglass2w = w - 47 - 15 * 2;
+  //   fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 1;
+  // } else {
+  sashglassw = w - 110 - 2;
+  sashglassh = (h - fh - 6) / 2 - 79.7 - 1;
+  fixedglassw = w - 47;
+  fixedglassh = (h - fh - 6) / 2 - 44.2 - 1;
+  fixedglass2w = w - 47;
+  fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 1;
+  // }
 
   // 6. grid 尺寸
   sashgridw = roundInt(sashglassw - 18 - 2);

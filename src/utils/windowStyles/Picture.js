@@ -76,107 +76,107 @@ const processPicture = (windowData, calculator) => {
   }
 
   // Different calculations based on frame type
-  if (frameType === 'Nailon'  && color.toLowerCase() !== 'black' ) {
+  // if (frameType === 'Nailon'  && color.toLowerCase() !== 'black' ) {
     
-    // Cover calculations
-    coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
-    coverh = round((h - 14 * 2 - 15 * 2 - 22 * 2 - 3.175) / 25.4);
-    calculator.writeParts(id, style, "", "", "", "", "", String(coverw), String(coverh), "", "", "", "", "", color);
-    console.log(`盖板计算 | 盖板宽: ${coverw} | 盖板高: ${coverh}`);
+  //   // Cover calculations
+  //   coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
+  //   coverh = round((h - 14 * 2 - 15 * 2 - 22 * 2 - 3.175) / 25.4);
+  //   calculator.writeParts(id, style, "", "", "", "", "", String(coverw), String(coverh), "", "", "", "", "", color);
+  //   console.log(`盖板计算 | 盖板宽: ${coverw} | 盖板高: ${coverh}`);
     
-    // Glass calculations
-    fixedglassw = w - 47 - 15 * 2 - 2;
-    fixedglassh = h - 47 - 15 * 2 - 2;
+  //   // Glass calculations
+  //   fixedglassw = w - 47 - 15 * 2 - 2;
+  //   fixedglassh = h - 47 - 15 * 2 - 2;
     
-    // Grid calculations
-    fixedgridw = roundInt(fixedglassw - 18 - 2);
-    fixedgridh = roundInt(fixedglassh - 18 - 2);
+  //   // Grid calculations
+  //   fixedgridw = roundInt(fixedglassw - 18 - 2);
+  //   fixedgridh = roundInt(fixedglassh - 18 - 2);
     
-    // Handle different grid types inline
-    if ( gridW > 0 && gridH > 0) {
-      FixWq = gridH - 1;
-      holeW2 = fixedgridw / gridW;
-      FixHq = gridW - 1;
-      holeH2 = fixedgridh / gridH;
+  //   // Handle different grid types inline
+  //   if ( gridW > 0 && gridH > 0) {
+  //     FixWq = gridH - 1;
+  //     holeW2 = fixedgridw / gridW;
+  //     FixHq = gridW - 1;
+  //     holeH2 = fixedgridh / gridH;
       
-      calculator.writeGrid(
-        id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
-        String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
-        String(holeH2), gridW + "W x " + gridH + " H", color
-      );
-    } else if (grid === 'Marginal') {
-      calculator.writeGrid(
-        id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
-        String(q * 2), "102", String(fixedgridh), String(q * 2),
-        "102", gridNote, color
-      );
-    } else if (grid === 'Perimeter') {
-      calculator.writeGrid(
-        id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
-        String(q * 2), "102", String(fixedgridh), String(q * 2),
-        "102", gridNote, color
-      );
-    }
+  //     calculator.writeGrid(
+  //       id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
+  //       String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
+  //       String(holeH2), gridW + "W x " + gridH + " H", color
+  //     );
+  //   } else if (grid === 'Marginal') {
+  //     calculator.writeGrid(
+  //       id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
+  //       String(q * 2), "102", String(fixedgridh), String(q * 2),
+  //       "102", gridNote, color
+  //     );
+  //   } else if (grid === 'Perimeter') {
+  //     calculator.writeGrid(
+  //       id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
+  //       String(q * 2), "102", String(fixedgridh), String(q * 2),
+  //       "102", gridNote, color
+  //     );
+  //   }
     
-    // Process glass based on glass type
-    processGlass(customer, style, width, height, id, q, glassType, fixedglassw, fixedglassh, grid, argon, calculator);
+  //   // Process glass based on glass type
+  //   processGlass(customer, style, width, height, id, q, glassType, fixedglassw, fixedglassh, grid, argon, calculator);
     
-  } else {
+  // } else {
    
     
   
     
-    // Cover calculations for other frame types
-    coverw = round((w - 14 * 2 - 3 - 13) / 25.4);
-    coverh = round((h - 14 * 2 - 22 * 2 - 3.175) / 25.4);
-    slop = round((w - 10) / 25.4, 1);
-    
-    // Parts calculations 
-    if (frameType === 'Block-slop 1/2') {
-      calculator.writeParts(id, style, "", "", "", "", "", String(coverw), String(coverh), "", "", "", "", String(slop), color);
-      console.log(`配件计算 | 盖板宽: ${coverw} | 盖板高: ${coverh} | slop: ${slop}`);
-    } else {
-      calculator.writeParts(id, style, "", "", "", "", "", String(coverw), String(coverh), "", "", "", "", "", color);
-      console.log(`配件计算 | 盖板宽: ${coverw} | 盖板高: ${coverh}`);
-    }
-    
-    // Glass calculations for other frame types
-    fixedglassw = w - 47 - 2;
-    fixedglassh = h - 47 - 2;
-    
-    // Grid calculations for other frame types
-    fixedgridw = roundInt(fixedglassw - 18 - 2);
-    fixedgridh = roundInt(fixedglassh - 18 - 2);
-    
-    // Handle different grid types inline
-    if ( gridW > 0 && gridH > 0) {
-      FixWq = gridH - 1;
-      holeW2 = fixedgridw / gridW;
-      FixHq = gridW - 1;
-      holeH2 = fixedgridh / gridH;
-      
-      calculator.writeGrid(
-        id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
-        String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
-        String(holeH2), gridW + "W x " + gridH + " H", color
-      );
-    } else if (grid === 'Marginal') {
-      calculator.writeGrid(
-        id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
-        String(q * 2), "102", String(fixedgridh), String(q * 2),
-        "102", gridNote, color
-      );
-    } else if (grid === 'Perimeter') {
-      calculator.writeGrid(
-        id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
-        String(q * 2), "102", String(fixedgridh), String(q * 2),
-        "102", gridNote, color
-      );
-    }
-    
-    // Process glass based on glass type
-    processGlass(customer, style, width, height, id, q, glassType, fixedglassw, fixedglassh, grid, argon, calculator);
+  // Cover calculations for other frame types
+  coverw = round((w - 14 * 2 - 3 - 13) / 25.4);
+  coverh = round((h - 14 * 2 - 22 * 2 - 3.175) / 25.4);
+  slop = round((w - 10) / 25.4, 1);
+  
+  // Parts calculations 
+  if (frameType === 'Block-slop 1/2') {
+    calculator.writeParts(id, style, "", "", "", "", "", String(coverw), String(coverh), "", "", "", "", String(slop), color);
+    console.log(`配件计算 | 盖板宽: ${coverw} | 盖板高: ${coverh} | slop: ${slop}`);
+  } else {
+    calculator.writeParts(id, style, "", "", "", "", "", String(coverw), String(coverh), "", "", "", "", "", color);
+    console.log(`配件计算 | 盖板宽: ${coverw} | 盖板高: ${coverh}`);
   }
+  
+  // Glass calculations for other frame types
+  fixedglassw = w - 47 - 2;
+  fixedglassh = h - 47 - 2;
+  
+  // Grid calculations for other frame types
+  fixedgridw = roundInt(fixedglassw - 18 - 2);
+  fixedgridh = roundInt(fixedglassh - 18 - 2);
+  
+  // Handle different grid types inline
+  if ( gridW > 0 && gridH > 0) {
+    FixWq = gridH - 1;
+    holeW2 = fixedgridw / gridW;
+    FixHq = gridW - 1;
+    holeH2 = fixedgridh / gridH;
+    
+    calculator.writeGrid(
+      id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
+      String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
+      String(holeH2), gridW + "W x " + gridH + " H", color
+    );
+  } else if (grid === 'Marginal') {
+    calculator.writeGrid(
+      id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
+      String(q * 2), "102", String(fixedgridh), String(q * 2),
+      "102", gridNote, color
+    );
+  } else if (grid === 'Perimeter') {
+    calculator.writeGrid(
+      id, style, grid, "", "", "", "", "", "", String(fixedgridw), 
+      String(q * 2), "102", String(fixedgridh), String(q * 2),
+      "102", gridNote, color
+    );
+  }
+  
+  // Process glass based on glass type
+  processGlass(customer, style, width, height, id, q, glassType, fixedglassw, fixedglassh, grid, argon, calculator);
+  // }
   
   console.log('===== Picture窗口处理完成 =====\n');
 };

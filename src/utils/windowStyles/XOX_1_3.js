@@ -83,152 +83,152 @@ const processXOX_1_3 = (windowData, calculator) => {
   }
 
   // Different calculations based on frame type
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') {
 
     
-    // Sash calculations for XOX-1/3 - note the use of w/3 instead of w/4
-    sashw = round((w / 3 - 14.5 - 15 + 1) / 25.4);
-    sashh = round((h - 46 - 15 * 2 - 2 - 1) / 25.4);
-    calculator.writeSash(id, style, String(sashw), "4", String(sashh), "2", String(sashh), "2", "", "", "", "", color);
-    calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
-    console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
+  //   // Sash calculations for XOX-1/3 - note the use of w/3 instead of w/4
+  //   sashw = round((w / 3 - 14.5 - 15 + 1) / 25.4);
+  //   sashh = round((h - 46 - 15 * 2 - 2 - 1) / 25.4);
+  //   calculator.writeSash(id, style, String(sashw), "4", String(sashh), "2", String(sashh), "2", "", "", "", "", color);
+  //   calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  //   console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
     
-    // Screen calculations for XOX-1/3
-    screenw = roundInt(w / 3 - 75 - 15 - 2);
-    screenh = roundInt(h - 87 - 15 * 2 - 4);
-    calculator.writeScreen(customer, id, style, String(screenw), "4", String(screenh), "4", color);
-    console.log(`纱窗计算 | 纱窗宽: ${screenw} | 纱窗高: ${screenh}`);
+  //   // Screen calculations for XOX-1/3
+  //   screenw = roundInt(w / 3 - 75 - 15 - 2);
+  //   screenh = roundInt(h - 87 - 15 * 2 - 4);
+  //   calculator.writeScreen(customer, id, style, String(screenw), "4", String(screenh), "4", color);
+  //   console.log(`纱窗计算 | 纱窗宽: ${screenw} | 纱窗高: ${screenh}`);
     
-    // Parts calculations
-    mullion = round((h - 36 - 15 * 2) / 25.4);
-    mullionA = round((h - 36 - 15 * 2) / 25.4 - 2, 1);
-    handleA = round((h - 46 - 15 * 2) / 25.4 / 2 + 4);
-    track = round((w - 14 * 2 - 15 * 2 - 3 - 20) / 25.4, 1);
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", "", "", color);
-    console.log(`配件计算 | 中梃: ${mullion} | 轨道: ${track}`);
+  //   // Parts calculations
+  //   mullion = round((h - 36 - 15 * 2) / 25.4);
+  //   mullionA = round((h - 36 - 15 * 2) / 25.4 - 2, 1);
+  //   handleA = round((h - 46 - 15 * 2) / 25.4 / 2 + 4);
+  //   track = round((w - 14 * 2 - 15 * 2 - 3 - 20) / 25.4, 1);
+  //   calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", "", "", color);
+  //   console.log(`配件计算 | 中梃: ${mullion} | 轨道: ${track}`);
     
-    // Glass calculations
-    sashglassw = w / 3 - 77 - 15;
-    sashglassh = h - 109 - 15 * 2 - 3 - 2;
-    fixedglassw = w / 3 - 41.4;
-    fixedglassh = h - 47 - 15 * 2 - 2;
+  //   // Glass calculations
+  //   sashglassw = w / 3 - 77 - 15;
+  //   sashglassh = h - 109 - 15 * 2 - 3 - 2;
+  //   fixedglassw = w / 3 - 41.4;
+  //   fixedglassh = h - 47 - 15 * 2 - 2;
     
-    // Grid calculations
-    sashgridw = roundInt(sashglassw - 18 - 2);
-    sashgridh = roundInt(sashglassh - 18 - 2);
-    fixedgridw = roundInt(fixedglassw - 18 - 2);
-    fixedgridh = roundInt(fixedglassh - 18 - 2);
+  //   // Grid calculations
+  //   sashgridw = roundInt(sashglassw - 18 - 2);
+  //   sashgridh = roundInt(sashglassh - 18 - 2);
+  //   fixedgridw = roundInt(fixedglassw - 18 - 2);
+  //   fixedgridh = roundInt(fixedglassh - 18 - 2);
     
-    if (gridW > 0 && gridH > 0) {
-      SashWq = (gridH - 1) * 2;
-      holeW1 = sashgridw / (gridW / 3);
-      SashHq = (gridW / 3 - 1) * 2;
-      holeH1 = sashgridh / gridH;
-      FixWq = gridH - 1;
-      holeW2 = fixedgridw / (gridW / 3);
-      FixHq = gridW / 3 - 1;
-      holeH2 = 32;
+  //   if (gridW > 0 && gridH > 0) {
+  //     SashWq = (gridH - 1) * 2;
+  //     holeW1 = sashgridw / (gridW / 3);
+  //     SashHq = (gridW / 3 - 1) * 2;
+  //     holeH1 = sashgridh / gridH;
+  //     FixWq = gridH - 1;
+  //     holeW2 = fixedgridw / (gridW / 3);
+  //     FixHq = gridW / 3 - 1;
+  //     holeH2 = 32;
       
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
-        String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
-        String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
-        String(holeH2), gridW + "W x " + gridH + " H", color
-      );
-    } else if (grid === 'Marginal') {
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), String(q * 4), "102",
-        String(sashgridh), String(q * 4), "70", String(fixedgridw),
-        String(q * 2), "102", String(fixedgridh), String(q * 2),
-        "102", gridNote, color
-      );
-    } else if (grid === 'Perimeter') {
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), String(q * 4), "102",
-        String(sashgridh), String(q * 2), "70", String(fixedgridw),
-        String(q * 2), "", "", "", "", gridNote, color
-      );
-    }
+  //     calculator.writeGrid(
+  //       id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
+  //       String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
+  //       String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
+  //       String(holeH2), gridW + "W x " + gridH + " H", color
+  //     );
+  //   } else if (grid === 'Marginal') {
+  //     calculator.writeGrid(
+  //       id, style, grid, String(sashgridw), String(q * 4), "102",
+  //       String(sashgridh), String(q * 4), "70", String(fixedgridw),
+  //       String(q * 2), "102", String(fixedgridh), String(q * 2),
+  //       "102", gridNote, color
+  //     );
+  //   } else if (grid === 'Perimeter') {
+  //     calculator.writeGrid(
+  //       id, style, grid, String(sashgridw), String(q * 4), "102",
+  //       String(sashgridh), String(q * 2), "70", String(fixedgridw),
+  //       String(q * 2), "", "", "", "", gridNote, color
+  //     );
+  //   }
     
-    // Process glass based on glass type
-    processGlass(customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon, calculator);
+  //   // Process glass based on glass type
+  //   processGlass(customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon, calculator);
     
-  } else {
+  // } else {
     
    
-    
-    // Sash calculations for XOX-1/3
-    sashw = round((w / 3 - 14.5 + 1) / 25.4);
-    sashh = round((h - 46 - 2 - 1) / 25.4);
-    calculator.writeSash(id, style, String(sashw), "4", String(sashh), "2", String(sashh), "2", "", "", "", "", color);
-    calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
-    console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
-    
-    // Screen calculations
-    screenw = roundInt(w / 3 - 75 - 2);
-    screenh = roundInt(h - 87 - 4);
-    calculator.writeScreen(customer, id, style, String(screenw), "4", String(screenh), "4", color);
-    console.log(`纱窗计算 | 纱窗宽: ${screenw} | 纱窗高: ${screenh}`);
-    
-    // Parts calculations
-    mullion = round((h - 36) / 25.4);
-    mullionA = round((h - 36) / 25.4 - 2, 1);
-    handleA = round((h - 46) / 25.4 / 2 + 4);
-    track = round((w - 14 * 2 - 3 - 20) / 25.4, 1);
-    slop = round((w - 10) / 25.4, 1);
-    
-    if (frameType === 'Block-slop 1/2') {
-      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", String(slop), color);
-    } else {
-      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", "", color);
-    }
-    
-    // Glass calculations for other frame types
-    sashglassw = w / 3 - 77;
-    sashglassh = h - 109 - 3 - 2;
-    fixedglassw = w / 3 - 41.4;
-    fixedglassh = h - 47 - 2;
-    
-    // Grid calculations for other frame types
-    sashgridw = roundInt(sashglassw - 18 - 2);
-    sashgridh = roundInt(sashglassh - 18 - 2);
-    fixedgridw = roundInt(fixedglassw - 18 - 2);
-    fixedgridh = roundInt(fixedglassh - 18 - 2);
-    
-    if (gridW > 0 && gridH > 0) {
-      SashWq = (gridH - 1) * 2;
-      holeW1 = sashgridw / (gridW / 3);
-      SashHq = (gridW / 3 - 1) * 2;
-      holeH1 = sashgridh / gridH;
-      FixWq = gridH - 1;
-      holeW2 = fixedgridw / (gridW / 3);
-      FixHq = gridW / 3 - 1;
-      holeH2 = 32;
-      
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
-        String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
-        String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
-        String(holeH2), gridW + "W x " + gridH + " H", color
-      );
-    } else if (grid === 'Marginal') {
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), String(q * 4), "102",
-        String(sashgridh), String(q * 4), "70", String(fixedgridw),
-        String(q * 2), "102", String(fixedgridh), String(q * 2),
-        "102", gridNote, color
-      );
-    } else if (grid === 'Perimeter') {
-      calculator.writeGrid(
-        id, style, grid, String(sashgridw), String(q * 4), "102",
-        String(sashgridh), String(q * 2), "70", String(fixedgridw),
-        String(q * 2), "", "", "", "", gridNote, color
-      );
-    }
-    
-    // Process glass based on glass type
-    processGlass(customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon, calculator);
+  
+  // Sash calculations for XOX-1/3
+  sashw = round((w / 3 - 14.5 + 1) / 25.4);
+  sashh = round((h - 46 - 2 - 1) / 25.4);
+  calculator.writeSash(id, style, String(sashw), "4", String(sashh), "2", String(sashh), "2", "", "", "", "", color);
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
+  
+  // Screen calculations
+  screenw = roundInt(w / 3 - 75 - 2);
+  screenh = roundInt(h - 87 - 4);
+  calculator.writeScreen(customer, id, style, String(screenw), "4", String(screenh), "4", color);
+  console.log(`纱窗计算 | 纱窗宽: ${screenw} | 纱窗高: ${screenh}`);
+  
+  // Parts calculations
+  mullion = round((h - 36) / 25.4);
+  mullionA = round((h - 36) / 25.4 - 2, 1);
+  handleA = round((h - 46) / 25.4 / 2 + 4);
+  track = round((w - 14 * 2 - 3 - 20) / 25.4, 1);
+  slop = round((w - 10) / 25.4, 1);
+  
+  if (frameType === 'Block-slop 1/2') {
+    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", String(slop), color);
+  } else {
+    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", "", color);
   }
+  
+  // Glass calculations for other frame types
+  sashglassw = w / 3 - 77;
+  sashglassh = h - 109 - 3 - 2;
+  fixedglassw = w / 3 - 41.4;
+  fixedglassh = h - 47 - 2;
+  
+  // Grid calculations for other frame types
+  sashgridw = roundInt(sashglassw - 18 - 2);
+  sashgridh = roundInt(sashglassh - 18 - 2);
+  fixedgridw = roundInt(fixedglassw - 18 - 2);
+  fixedgridh = roundInt(fixedglassh - 18 - 2);
+  
+  if (gridW > 0 && gridH > 0) {
+    SashWq = (gridH - 1) * 2;
+    holeW1 = sashgridw / (gridW / 3);
+    SashHq = (gridW / 3 - 1) * 2;
+    holeH1 = sashgridh / gridH;
+    FixWq = gridH - 1;
+    holeW2 = fixedgridw / (gridW / 3);
+    FixHq = gridW / 3 - 1;
+    holeH2 = 32;
+    
+    calculator.writeGrid(
+      id, style, grid, String(sashgridw), String(SashWq), String(holeW1),
+      String(sashgridh), String(SashHq), String(holeH1), String(fixedgridw),
+      String(FixWq), String(holeW2), String(fixedgridh), String(FixHq),
+      String(holeH2), gridW + "W x " + gridH + " H", color
+    );
+  } else if (grid === 'Marginal') {
+    calculator.writeGrid(
+      id, style, grid, String(sashgridw), String(q * 4), "102",
+      String(sashgridh), String(q * 4), "70", String(fixedgridw),
+      String(q * 2), "102", String(fixedgridh), String(q * 2),
+      "102", gridNote, color
+    );
+  } else if (grid === 'Perimeter') {
+    calculator.writeGrid(
+      id, style, grid, String(sashgridw), String(q * 4), "102",
+      String(sashgridh), String(q * 2), "70", String(fixedgridw),
+      String(q * 2), "", "", "", "", gridNote, color
+    );
+  }
+  
+  // Process glass based on glass type
+  processGlass(customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon, calculator);
+  // }
   
   console.log('===== XOX-1/3窗口处理完成 =====\n');
 };

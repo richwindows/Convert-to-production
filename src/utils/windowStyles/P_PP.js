@@ -70,44 +70,44 @@ const processP_PP = (windowData, calculator) => {
 
 
   // 2. Parts 尺寸
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') { // VBA cmbFrame.ListIndex = 0
-    coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
-    coverh = round((h - fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
-    coverw2 = round((w / 2 - 6 - 14 * 2 - 15 - 3 - 13) / 25.4);
-    coverh2 = round((fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
-    bigmullion = round((w - 14 * 2 - 15 * 2 - 2 + 1.5) / 25.4);
-    bigmullion2 = round((fh - 6 - 14 * 2 - 15 + 1.5) / 25.4); // VBA adds 1.5, current JS adds 1.5
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') { // VBA cmbFrame.ListIndex = 0
+  //   coverw = round((w - 14 * 2 - 15 * 2 - 3 - 13) / 25.4);
+  //   coverh = round((h - fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
+  //   coverw2 = round((w / 2 - 6 - 14 * 2 - 15 - 3 - 13) / 25.4);
+  //   coverh2 = round((fh - 6 - 14 * 2 - 15 - 22 * 2) / 25.4);
+  //   bigmullion = round((w - 14 * 2 - 15 * 2 - 2 + 1.5) / 25.4);
+  //   bigmullion2 = round((fh - 6 - 14 * 2 - 15 + 1.5) / 25.4); // VBA adds 1.5, current JS adds 1.5
+  //   calculator.writeParts(id, style, '', '', '', '', '', `${coverw}x2`, `${coverh}x2`, String(bigmullion), '1', String(bigmullion2), '1', '', color);
+  //   calculator.writeParts(id, style, '', '', '', '', '', `${coverw2}x2`, `${coverh2}x2`, '', '', '', '', '', color);
+  // } else { // VBA cmbFrame.ListIndex = 1, 2, 3, 4
+  coverw = round((w - 14 * 2 - 3 - 13) / 25.4);
+  coverh = round((h - fh - 6 - 14 * 2 - 22 * 2) / 25.4);
+  coverw2 = round((w / 2 - 6 - 14 * 2 - 3 - 13) / 25.4);
+  coverh2 = round((fh - 6 - 14 * 2 - 22 * 2) / 25.4);
+  bigmullion = round((w - 14 * 2 - 2 + 1.5) / 25.4);
+  bigmullion2 = round((fh - 6 - 14 * 2 + 1.5) / 25.4); // VBA adds 1.5, current JS adds 1.5
+  slop = round((w - 10) / 25.4, 1);
+  if (frameType === 'Block-slop 1/2') { // VBA cmbFrame.ListIndex = 4
+    calculator.writeParts(id, style, '', '', '', '', '', `${coverw}x2`, `${coverh}x2`, String(bigmullion), '1', String(bigmullion2), '1', String(slop), color);
+    calculator.writeParts(id, style, '', '', '', '', '', `${coverw2}x2`, `${coverh2}x2`, '', '', '', '', '', color);
+  } else { // VBA cmbFrame.ListIndex = 1, 2, 3
     calculator.writeParts(id, style, '', '', '', '', '', `${coverw}x2`, `${coverh}x2`, String(bigmullion), '1', String(bigmullion2), '1', '', color);
     calculator.writeParts(id, style, '', '', '', '', '', `${coverw2}x2`, `${coverh2}x2`, '', '', '', '', '', color);
-  } else { // VBA cmbFrame.ListIndex = 1, 2, 3, 4
-    coverw = round((w - 14 * 2 - 3 - 13) / 25.4);
-    coverh = round((h - fh - 6 - 14 * 2 - 22 * 2) / 25.4);
-    coverw2 = round((w / 2 - 6 - 14 * 2 - 3 - 13) / 25.4);
-    coverh2 = round((fh - 6 - 14 * 2 - 22 * 2) / 25.4);
-    bigmullion = round((w - 14 * 2 - 2 + 1.5) / 25.4);
-    bigmullion2 = round((fh - 6 - 14 * 2 + 1.5) / 25.4); // VBA adds 1.5, current JS adds 1.5
-    slop = round((w - 10) / 25.4, 1);
-    if (frameType === 'Block-slop 1/2') { // VBA cmbFrame.ListIndex = 4
-      calculator.writeParts(id, style, '', '', '', '', '', `${coverw}x2`, `${coverh}x2`, String(bigmullion), '1', String(bigmullion2), '1', String(slop), color);
-      calculator.writeParts(id, style, '', '', '', '', '', `${coverw2}x2`, `${coverh2}x2`, '', '', '', '', '', color);
-    } else { // VBA cmbFrame.ListIndex = 1, 2, 3
-      calculator.writeParts(id, style, '', '', '', '', '', `${coverw}x2`, `${coverh}x2`, String(bigmullion), '1', String(bigmullion2), '1', '', color);
-      calculator.writeParts(id, style, '', '', '', '', '', `${coverw2}x2`, `${coverh2}x2`, '', '', '', '', '', color);
-    }
   }
+  // }
 
   // 3. 玻璃尺寸
-  if (frameType === 'Nailon' && color.toLowerCase() !== 'black') { // VBA cmbFrame.ListIndex = 0
-    fixedglassw = w - 20.5 * 2 - 3 * 2 - 15 * 2;
-    fixedglassh = h - fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 2;
-    fixedglass2w = w / 2 - 6 - 20.5 * 2 - 3 * 2 - 15;
-    fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 2;
-  } else { // VBA cmbFrame.ListIndex = 1, 2, 3, 4
-    fixedglassw = w - 20.5 * 2 - 3 * 2;
-    fixedglassh = h - fh - 6 - 20.5 * 2 - 3 * 2 - 2;
-    fixedglass2w = w / 2 - 6 - 20.5 * 2 - 3 * 2;
-    fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 2;
-  }
+  // if (frameType === 'Nailon' && color.toLowerCase() !== 'black') { // VBA cmbFrame.ListIndex = 0
+  //   fixedglassw = w - 20.5 * 2 - 3 * 2 - 15 * 2;
+  //   fixedglassh = h - fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 2;
+  //   fixedglass2w = w / 2 - 6 - 20.5 * 2 - 3 * 2 - 15;
+  //   fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 15 - 2;
+  // } else { // VBA cmbFrame.ListIndex = 1, 2, 3, 4
+  fixedglassw = w - 20.5 * 2 - 3 * 2;
+  fixedglassh = h - fh - 6 - 20.5 * 2 - 3 * 2 - 2;
+  fixedglass2w = w / 2 - 6 - 20.5 * 2 - 3 * 2;
+  fixedglass2h = fh - 6 - 20.5 * 2 - 3 * 2 - 2;
+  // }
 
   // 4. grid 尺寸
   fixedgridw = roundInt(fixedglassw - 18 - 2);
