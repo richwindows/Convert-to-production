@@ -3,6 +3,7 @@ import { Input, Button, Dropdown, Menu } from 'antd';
 import { PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
 import { formatSize } from '../utils/formattingUtils';
+import { generateBarcode } from '../utils/barcodeUtils';
 
 const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
 
@@ -37,15 +38,7 @@ const PrintLabelTable = ({ batchNo, calculatedData, onCellChange }) => {
     }
   };
 
-  const generateBarcode = (batchNo, id) => {
-    if (!batchNo || !id) return '';
-    const parts = batchNo.split('-');
-    if (parts.length < 1) return ''; // Basic check, adjust if batchNo format is strict
-    // Simplified barcode generation for example, adjust to your exact needs
-    const datePart = parts[0].replace(/\//g, ''); // Assuming first part is date-like
-    const formattedId = String(id).padStart(2, '0');
-    return `Rich-${datePart}-${formattedId}`;
-  };
+
 
   const headerTitles = [
     'Customer', 'ID', 'Style', 'Size', 'Frame', 'Glass+Argon', 'Grid', 'P.O', 'Invoice Num. Order Date', 'Barcode'

@@ -26,6 +26,7 @@ import PrintMaterialCuttingTable from './components/PrintMaterialCuttingTable';
 import PrintOptimizedFrameTable from './components/PrintOptimizedFrameTable';
 import PrintOptimizedSashTable from './components/PrintOptimizedSashTable';
 import PrintOptimizedPartsTable from './components/PrintOptimizedPartsTable';
+import { generateBarcode } from './utils/barcodeUtils';
 
 const { Header, Content, Footer } = Layout;
 const { TabPane } = Tabs;
@@ -478,15 +479,7 @@ function App() {
     setIsExportingGlassOrder(false);
   };
 
-  // Generate barcode function (same as in PrintLabelTable.js)
-  const generateBarcode = (batchNo, id) => {
-    if (!batchNo || !id) return '';
-    const parts = batchNo.split('-');
-    if (parts.length < 1) return '';
-    const datePart = parts[0].replace(/\//g, '');
-    const formattedId = String(id).padStart(2, '0');
-    return `Rich-${datePart}-${formattedId}`;
-  };
+
 
   // Ensure exportLabelToExcel is defined within App scope
   const exportLabelToExcel = () => {
