@@ -1583,18 +1583,16 @@ function App() {
                         >
                           从数据库获取Batch Number
                         </Button>
-
+                        <Button 
+                          onClick={generateDetailedDataAndNotify} 
+                          disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
+                          loading={isProcessing}
+                          type="primary" 
+                          size="large"
+                        >
+                          {isProcessing ? '处理中...' : '处理选中行'}
+                        </Button>
                       </Space>
-                      <Button 
-                        onClick={generateDetailedDataAndNotify} 
-                        disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
-                        loading={isProcessing}
-                        type="primary" 
-                        size="large"
-                        style={{ marginTop: '12px' }}
-                      >
-                        {isProcessing ? '处理中...' : '处理选中行'}
-                      </Button>
                       {isDataLoaded && calculatedData.info.length > 0 && (
                         <Button 
                           onClick={handlePrintView}
