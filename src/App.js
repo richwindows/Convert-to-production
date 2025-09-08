@@ -3,7 +3,7 @@ import {
   Upload, Button, Table, message, Checkbox, Spin, Layout, Menu, Tabs, Card, Alert,
   Modal, Select, Input, Form, Row, Col, Space
 } from 'antd';
-import { UploadOutlined, FileExcelOutlined, SettingOutlined, ClearOutlined, PlusOutlined, DeleteOutlined, SaveOutlined, PrinterOutlined, ExportOutlined, BarcodeOutlined, BuildOutlined } from '@ant-design/icons';
+import { UploadOutlined, FileExcelOutlined, SettingOutlined, ClearOutlined, PlusOutlined, DeleteOutlined, SaveOutlined, PrinterOutlined, ExportOutlined, BarcodeOutlined, BuildOutlined, DatabaseOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import * as ExcelJS from 'exceljs';
 import 'antd/dist/antd.css';
@@ -27,6 +27,8 @@ import PrintOptimizedFrameTable from './components/PrintOptimizedFrameTable';
 import PrintOptimizedSashTable from './components/PrintOptimizedSashTable';
 import PrintOptimizedPartsTable from './components/PrintOptimizedPartsTable';
 import { generateBarcode } from './utils/barcodeUtils';
+import { fetchInvoiceData, transformInvoiceDataToWindowData, fetchOrderItemsWithBatch } from './services/supabaseService';
+import { convertToDecimal } from './utils/numberUtils';
 
 const { Header, Content, Footer } = Layout;
 const { TabPane } = Tabs;
@@ -77,6 +79,13 @@ function App() {
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [highlightedRow, setHighlightedRow] = useState(null);
+  
+  // Supabase相关状态
+  const [invoiceId, setInvoiceId] = useState('');
+  const [isLoadingInvoice, setIsLoadingInvoice] = useState(false);
+  const [invoiceModal, setInvoiceModal] = useState(false);
+  
+
 
   // States for search functionality
   const [searchTerm, setSearchTerm] = useState('');
@@ -285,9 +294,9 @@ function App() {
             Customer: item.Customer || '',
             ID: (item.ID || excelRowNumber).toString(),
             Style: item.Style || '',
-            W: item.W || '',
-            H: item.H || '',
-            FH: fhValue, // Validated FH
+            W: convertToDecimal(item.W || ''),
+            H: convertToDecimal(item.H || ''),
+            FH: convertToDecimal(fhValue), // Validated and converted FH
             Frame: mappedFrame, // Validated and mapped Frame
             Glass: glassStringForFurtherProcessing, // Use the processed glass string
             Argon: item.Argon || '',
@@ -1221,9 +1230,9 @@ function App() {
       Customer: windowDataFromForm.Customer || '',
       ID: newId,
       Style: windowDataFromForm.Style || '',
-      W: windowDataFromForm.W || '',
-      H: windowDataFromForm.H || '',
-      FH: windowDataFromForm.FH || '',
+      W: convertToDecimal(windowDataFromForm.W || ''),
+      H: convertToDecimal(windowDataFromForm.H || ''),
+      FH: convertToDecimal(windowDataFromForm.FH || ''),
       Frame: windowDataFromForm.Frame || '', 
       Glass: glassStringForFurtherProcessing, // Use processed glass string
       Argon: windowDataFromForm.Argon || '',
@@ -1260,6 +1269,87 @@ function App() {
     setIsDataLoaded(true); // allExcelData has content
     message.info('New window added to the preview table. Please select rows and process to update detailed data.');
   };
+
+  // 处理从Supabase获取batch number数据
+  const handleLoadInvoiceData = async () => {
+    if (!invoiceId || invoiceId.trim() === '') {
+      message.error('请输入Batch Number');
+      return;
+    }
+
+    setIsLoadingInvoice(true);
+    message.loading({ content: '正在从数据库获取Batch Number数据...', key: 'loading-invoice' });
+
+    try {
+      // 从Supabase获取数据
+      const result = await fetchInvoiceData(invoiceId.trim());
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      // 转换数据格式
+      const transformedData = transformInvoiceDataToWindowData(result.data);
+      
+      if (!transformedData || transformedData.length === 0) {
+        throw new Error('Batch Number数据为空或格式不正确');
+      }
+
+      // 获取当前最大ID
+      const currentMaxId = allExcelData.length > 0 
+        ? Math.max(...allExcelData.map(item => parseInt(item.ID) || 0))
+        : 0;
+
+      // 为新数据分配连续ID
+      const dataWithNewIds = transformedData.map((item, index) => ({
+        ...item,
+        ID: (currentMaxId + index + 1).toString()
+      }));
+
+      // 创建文件信息对象
+      const fileId = Date.now().toString() + '_batch_' + invoiceId;
+      const now = new Date();
+      const uploadTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      
+      const fileInfo = {
+        id: fileId,
+        name: `Batch-${invoiceId}`,
+        uploadTime: uploadTime,
+        data: dataWithNewIds,
+        rowCount: dataWithNewIds.length
+      };
+
+      // 更新文件列表和合并数据
+      setUploadedFiles(prevFiles => [...prevFiles, fileInfo]);
+      setAllExcelData(prevData => [...prevData, ...dataWithNewIds]);
+      setSelectedRowKeys([]); // Clear selections
+
+      // Reset all calculated data
+      setCalculatedData({ 
+        info: [], frame: [], sash: [], glass: [], screen: [], parts: [], grid: [], order: [], label: [], sashWelding: [], materialCutting: []
+      });
+
+      setIsDataLoaded(true);
+      setInvoiceModal(false);
+      setInvoiceId('');
+      
+      message.success({ 
+        content: `成功加载Batch Number ${invoiceId}，共${dataWithNewIds.length}条窗户数据`, 
+        key: 'loading-invoice' 
+      });
+
+    } catch (error) {
+      console.error('加载Batch Number数据失败:', error);
+      message.error({ 
+        content: `加载Batch Number数据失败: ${error.message}`, 
+        key: 'loading-invoice' 
+      });
+    } finally {
+       setIsLoadingInvoice(false);
+     }
+   };
+
+
 
   // 渲染打印选择的表格
   const renderPrintTable = () => {
@@ -1482,15 +1572,26 @@ function App() {
                 >
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div className="upload-section">
-                      <Upload beforeUpload={processExcelFile} showUploadList={false}>
-                        <Button icon={<UploadOutlined />} size="large">上传 Excel 文件</Button>
-                      </Upload>
+                      <Space size="middle">
+                        <Upload beforeUpload={processExcelFile} showUploadList={false}>
+                          <Button icon={<UploadOutlined />} size="large">上传 Excel 文件</Button>
+                        </Upload>
+                        <Button 
+                          icon={<DatabaseOutlined />} 
+                          size="large"
+                          onClick={() => setInvoiceModal(true)}
+                        >
+                          从数据库获取Batch Number
+                        </Button>
+
+                      </Space>
                       <Button 
                         onClick={generateDetailedDataAndNotify} 
                         disabled={!isDataLoaded || selectedRowKeys.length === 0 || isProcessing}
                         loading={isProcessing}
                         type="primary" 
                         size="large"
+                        style={{ marginTop: '12px' }}
                       >
                         {isProcessing ? '处理中...' : '处理选中行'}
                       </Button>
@@ -1701,6 +1802,40 @@ function App() {
         >
           <WindowForm onAdd={handleAddWindow} onClear={() => setWindowFormModal(false)} />
         </Modal>
+        
+        <Modal
+          title={<span style={{ fontSize: '16px', fontWeight: '600' }}>从Supabase数据库获取Batch Number数据</span>}
+          open={invoiceModal}
+          onCancel={() => {
+            setInvoiceModal(false);
+            setInvoiceId('');
+          }}
+          onOk={handleLoadInvoiceData}
+          confirmLoading={isLoadingInvoice}
+          okText="获取数据"
+          cancelText="取消"
+          width={500}
+          centered
+        >
+          <Form layout="vertical">
+            <Form.Item 
+              label="Batch Number" 
+              required
+              help="请输入要获取的Batch Number"
+            >
+              <Input
+                placeholder="请输入Batch Number"
+                value={invoiceId}
+                onChange={(e) => setInvoiceId(e.target.value)}
+                onPressEnter={handleLoadInvoiceData}
+                disabled={isLoadingInvoice}
+              />
+            </Form.Item>
+          </Form>
+        </Modal>
+        
+
+        
         {showMappingTool && (
           <div style={{ marginTop: '20px' }}>
             <DataMappingTest />

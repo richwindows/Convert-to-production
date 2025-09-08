@@ -1,5 +1,6 @@
 import React from 'react';
 import { Form, Input, Select, Button, Row, Col, InputNumber } from 'antd';
+import { convertToDecimal } from '../utils/numberUtils';
 import './PrintTable.css';
 
 const { Option } = Select;
@@ -65,30 +66,20 @@ const WindowForm = ({ onAdd, onClear }) => {
     }
     // --- End BTP and Glass merging ---
 
-    // --- FH Validation before submitting ---
+    // --- FH Validation and Conversion before submitting ---
     let fhValue = values.FH;
-    if (fhValue != null && typeof fhValue === 'string') {
-      fhValue = fhValue.trim();
-      if (fhValue === '') {
-        values.FH = ''; // Normalize to empty string
-      } else if (/[a-zA-Z]/.test(fhValue)) {
-        form.setFields([{ name: 'FH', errors: ['FH cannot contain letters.'] }]);
+    if (fhValue != null && fhValue !== '') {
+      const convertedFH = convertToDecimal(fhValue);
+      if (convertedFH === fhValue.toString() && isNaN(parseFloat(convertedFH))) {
+        // If conversion failed (returned original non-numeric value)
+        form.setFields([{ name: 'FH', errors: ['FH must be a valid number or fraction (e.g., 14.5, 14 1/2, 1/2).'] }]);
         return;
-      } else {
-        const parsedNum = parseFloat(fhValue);
-        if (isFinite(parsedNum)) {
-          values.FH = parsedNum; // Convert to number if valid numeric string
-        } else {
-          form.setFields([{ name: 'FH', errors: ['FH must be a valid number.'] }]);
-          return;
-        }
       }
-    } else if (fhValue != null && typeof fhValue !== 'number'){
-        // If it's not null, not a string, and not a number, it's an unexpected type.
-        form.setFields([{ name: 'FH', errors: ['FH has an invalid type.'] }]);
-        return;
+      values.FH = convertedFH;
+    } else {
+      values.FH = '';
     }
-    // --- End FH Validation ---
+    // --- End FH Validation and Conversion ---
 
     if (onAdd) {
       onAdd(values);
@@ -133,12 +124,12 @@ const WindowForm = ({ onAdd, onClear }) => {
         <Row gutter={16}>
           <Col span={8}>
             <Form.Item label="Width" name="W">
-              <InputNumber style={{ width: '100%' }} />
+              <Input placeholder="e.g., 14.5, 14 1/2, 1/2" />
             </Form.Item>
           </Col>
           <Col span={8}>
             <Form.Item label="Height" name="H">
-              <InputNumber style={{ width: '100%' }} />
+              <Input placeholder="e.g., 53.5, 53 1/2, 1/2" />
             </Form.Item>
           </Col>
           <Col span={8}>
