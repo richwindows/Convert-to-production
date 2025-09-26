@@ -360,6 +360,7 @@ class WindowCalculator {
     });
 
     // Process Sash Materials if sashData is provided
+    console.log("sashData:", sashData);
     if (sashData) {
       const sashMaterialMap = {
         '82-03-H': { name: 'HMST82-03', position: 'TOP+BOT', angles: 'V' }, 
@@ -376,6 +377,12 @@ class WindowCalculator {
           else if (key.includes('82-05')) sashType = 'Handle';
           else if (key.includes('82-04')) sashType = 'SH-Frame';
           
+          // Special handling for 82-05 position based on style
+          let position = materialInfo.position;
+          if (key === '82-05' && style.toLowerCase().includes('sh')) {
+            position = 'TOP+BOT';
+          }
+          
           let colorSuffix = "";
           const colorLower = color.toLowerCase();
           if (!color || colorLower === "" || colorLower.includes("white") || colorLower.includes("wh")) colorSuffix = "-WH";
@@ -388,11 +395,11 @@ class WindowCalculator {
           const materialPiece = {
             ID: id, OrderNo: id, OrderItem: 1, MaterialName: materialNameWithColor,
             Length: sashData[key], Angles: materialInfo.angles, Qty: sashData[`${key}-Pcs`],
-            BinNo: id, Position: materialInfo.position, Style: style, Frame: sashType,
+            BinNo: id, Position: position, Style: style, Frame: sashType,
             Color: color, Painting: colorLower.includes("painting") ? "Yes" : ""
           };
           this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
-          this.log(`收集Sash材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${sashData[key]}`);
+          this.log(`收集Sash材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${sashData[key]}, Position: ${position}`);
         }
       });
     }
