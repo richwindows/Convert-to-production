@@ -251,6 +251,9 @@ class WindowCalculator {
     return this.data;
   }
 
+
+// 移除意外的console.log语句
+
   // Write info data
   writeInfo(data) {
     let glassValue = data.Glass || '';
@@ -302,8 +305,8 @@ class WindowCalculator {
     
     this.data.frame.push(frameRow);
     
-    // Process material cutting data based on frame data
-    this.processRawMaterialPieces(frameRow);
+    // Note: Frame material processing is now handled in writeSash to avoid duplication
+    // this.processRawMaterialPieces(frameRow);
     
     // 增强日志信息
     let frameType = "";
@@ -318,11 +321,13 @@ class WindowCalculator {
     if (blockH || blockV) this.log(`  Block数据 - 水平: ${blockH || '无'} (${blockHQ || '0'}件), 垂直: ${blockV || '无'} (${blockVQ || '0'}件)`);
   }
 
-  // New method to ONLY collect raw pieces from frameData
-  processRawMaterialPieces(frameData) {
+  // New method to ONLY collect raw pieces from frameData and sashData
+  processRawMaterialPieces(frameData, sashData = null) {
     const id = frameData.ID;
     const style = frameData.Style;
     const color = frameData.Color || '';
+    
+    // Process Frame Materials
     const frameMaterialMap = {
       '82-01-H': { name: 'HMST82-01', position: 'TOP+BOT', angles: 'V' }, '82-01-V': { name: 'HMST82-01', position: 'LEFT+RIGHT', angles: 'V' },
       '82-02B-H': { name: 'HMST82-02B', position: 'TOP+BOT', angles: 'V' }, '82-02B-V': { name: 'HMST82-02B', position: 'LEFT+RIGHT', angles: 'V' },
@@ -350,9 +355,47 @@ class WindowCalculator {
           Color: color, Painting: colorLower.includes("painting") ? "Yes" : ""
         };
         this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
-        this.log(`收集材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}`);
+        this.log(`收集Frame材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}`);
       }
     });
+
+    // Process Sash Materials if sashData is provided
+    if (sashData) {
+      const sashMaterialMap = {
+        '82-03-H': { name: 'HMST82-03', position: 'TOP+BOT', angles: 'V' }, 
+        '82-03-V': { name: 'HMST82-03', position: 'LEFT+RIGHT', angles: 'V' },
+        '82-05': { name: 'HMST82-05', position: 'LEFT+RIGHT', angles: 'V' },
+        '82-04-H': { name: 'HMST82-04', position: 'TOP+BOT', angles: 'V' }, 
+        '82-04-V': { name: 'HMST82-04', position: 'LEFT+RIGHT', angles: 'V' }
+      };
+      
+      Object.entries(sashMaterialMap).forEach(([key, materialInfo]) => {
+        if (sashData[key] && sashData[key] !== '' && sashData[`${key}-Pcs`] && sashData[`${key}-Pcs`] !== '') {
+          let sashType = '';
+          if (key.includes('82-03')) sashType = 'Slider';
+          else if (key.includes('82-05')) sashType = 'Handle';
+          else if (key.includes('82-04')) sashType = 'SH-Frame';
+          
+          let colorSuffix = "";
+          const colorLower = color.toLowerCase();
+          if (!color || colorLower === "" || colorLower.includes("white") || colorLower.includes("wh")) colorSuffix = "-WH";
+          else if (colorLower.includes("almond") || colorLower.includes("al")) colorSuffix = "-AL";
+          else if (colorLower.includes("black") || colorLower.includes("bl")) colorSuffix = "-BL";
+          else if (colorLower.includes("painting")) colorSuffix = "-WH";
+          else if (colorLower.includes("paint")) colorSuffix = "-WH";
+          
+          const materialNameWithColor = materialInfo.name + colorSuffix;
+          const materialPiece = {
+            ID: id, OrderNo: id, OrderItem: 1, MaterialName: materialNameWithColor,
+            Length: sashData[key], Angles: materialInfo.angles, Qty: sashData[`${key}-Pcs`],
+            BinNo: id, Position: materialInfo.position, Style: style, Frame: sashType,
+            Color: color, Painting: colorLower.includes("painting") ? "Yes" : ""
+          };
+          this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
+          this.log(`收集Sash材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${sashData[key]}`);
+        }
+      });
+    }
   }
   
   // Asynchronously optimize material pieces and update data - THIS FUNCTION IS NOW REMOVED / OBSOLETE
@@ -501,6 +544,13 @@ class WindowCalculator {
     };
     
     this.data.sash.push(sashRow);
+    
+    // Process material cutting data based on sash data
+    const frameRow = this.data.frame.find(frame => frame.ID === id);
+    if (frameRow) {
+      this.processRawMaterialPieces(frameRow, sashRow);
+    }
+    
     this.log(`写入窗扇数据 - ID: ${id}, 82-03-H: ${sliderH}, 82-05: ${handle}`);
   }
 
@@ -683,5 +733,6 @@ class WindowCalculator {
     this.log(`写入标签数据 - ID: ${labelRow.ID}, 尺寸: ${labelRow.Size}, 玻璃: ${labelRow.Glass}`);
   }
 }
+
 
 export default WindowCalculator;
