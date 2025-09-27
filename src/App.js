@@ -62,7 +62,7 @@ function App() {
   const [isExportingDecaCutting, setIsExportingDecaCutting] = useState(false);
   const [isExportingGlassOrder, setIsExportingGlassOrder] = useState(false);
   const [isExportingLabel, setIsExportingLabel] = useState(false);
-  const [customStartId, setCustomStartId] = useState(1);
+
   const [calculatedData, setCalculatedData] = useState({
     info: [],
     frame: [],
@@ -159,6 +159,36 @@ function App() {
     }
   }, [searchTerm, allExcelData, pagination.pageSize, jumpToResult]);
 
+  // Function to parse filename and determine starting ID
+  const parseFilenameForStartingId = (filename) => {
+    // Remove file extension
+    const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
+    
+    // Look for pattern with hyphens: xxxxxxxx-XX-xx where XX is the sequence number
+    const match = nameWithoutExt.match(/-(\d{2})-/);
+    
+    if (match) {
+      const sequenceNumber = parseInt(match[1], 10);
+      
+      // Map sequence numbers to starting IDs
+      switch (sequenceNumber) {
+        case 1:
+          return 1;
+        case 2:
+          return 20;
+        case 3:
+          return 40;
+        default:
+          // For other sequence numbers, use a formula: (sequenceNumber - 1) * 20 + 1
+          return (sequenceNumber - 1) * 20 + 1;
+      }
+    }
+    
+    // If no pattern found, default to 1
+    console.warn(`No sequence pattern found in filename: ${filename}. Using default starting ID: 1`);
+    return 1;
+  };
+
   // Process the Excel file
   const processExcelFile = (file) => {
     const reader = new FileReader();
@@ -174,10 +204,9 @@ function App() {
       const extractableColors = ['white', 'almond']; // lowercase for matching
       const validFrameTypes = Object.values(frameMapping);
       
-      // 获取当前最大ID
-      const currentMaxId = allExcelData.length > 0 
-        ? Math.max(...allExcelData.map(item => parseInt(item.ID) || 0))
-        : 0;
+      // Get starting ID based on filename
+      const startingId = parseFilenameForStartingId(file.name);
+      console.log(`File: ${file.name}, Starting ID: ${startingId}`);
 
       json.forEach((item, index) => {
         const excelRowNumber = index + 2;
@@ -309,10 +338,10 @@ function App() {
         }
       });
 
-      // 为新数据分配连续的ID
+      // 为新数据分配基于文件名的ID
       const successfullyProcessedDataWithNewIds = successfullyProcessedData.map((item, index) => ({
         ...item,
-        ID: (currentMaxId + index + 1).toString() // 确保ID连续
+        ID: (startingId + index).toString() // 使用基于文件名的起始ID
       }));
       
       // 创建文件信息对象
@@ -364,13 +393,8 @@ function App() {
       dataIndex: 'ID',
       key: 'id',
       render: (text, record) => {
-        const recordIdStr = record.ID.toString();
-        const selectionIndex = selectedRowKeys.indexOf(recordIdStr);
-        if (selectionIndex !== -1) {
-          return selectionIndex + 1; // Display 1-based selection order
-        } else {
-          return '-'; // Display '-' if not selected
-        }
+        // Display the actual assigned ID from the filename-based logic
+        return text;
       }
     },
     { title: 'Customer', dataIndex: 'Customer', key: 'customer' },
@@ -967,7 +991,8 @@ function App() {
     calculator.resetData(); // Reset before processing a new batch of selected rows
 
     selectedData.forEach((windowData, index) => {
-      const sequentialId = index + customStartId; // 使用自定义起始ID
+      // Use the actual ID from the Excel data (which includes filename-based assignment)
+      const actualId = windowData.ID;
 
       let mappedFrameType = windowData.Frame || '';
       if (mappedFrameType in frameMapping) {
@@ -976,7 +1001,7 @@ function App() {
 
       const windowDataForCalc = {
         ...windowData, 
-        ID: sequentialId,      
+        ID: actualId,      // Use the actual ID from Excel data
         Frame: mappedFrameType, 
         BatchNO: batchNo,
         bottomtempered: windowData.bottomtempered, // Pass the extracted value
@@ -1497,17 +1522,6 @@ function App() {
         <div className="header-content-wrapper">
           <div className="logo">Production Converter</div>
           <Space size="middle">
-            <Input
-              placeholder="ID起始值"
-              type="number"
-              value={customStartId}
-              onChange={(e) => {
-                const value = e.target.value === '' ? 0 : parseInt(e.target.value);
-                setCustomStartId(value);
-              }}
-              style={{ width: 150 }}
-              prefix={<span style={{ color: 'var(--text-secondary)' }}>起始ID:</span>}
-            />
             <Input 
               placeholder="Enter Batch NO." 
               value={batchNo} 
