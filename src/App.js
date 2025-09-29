@@ -175,9 +175,9 @@ function App() {
         case 1:
           return 1;
         case 2:
-          return 20;
+          return 21;
         case 3:
-          return 40;
+          return 41;
         default:
           // For other sequence numbers, use a formula: (sequenceNumber - 1) * 20 + 1
           return (sequenceNumber - 1) * 20 + 1;
