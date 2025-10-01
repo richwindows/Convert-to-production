@@ -75,7 +75,7 @@ const processXOX_PPP = (windowData, calculator) => {
   //   sashw = round((w / 4 - 14.5 - 15 + 1) / 25.4);
   //   sashh = round((h - fh - 6 - 46 - 15 - 3) / 25.4);
   // } else {
-  sashw = round((w / 4 - 14.5 + 1) / 25.4);
+  sashw = round((w / 4 - 14.5 + 1) / 25.4 + 0.125);
   sashh = round((h - fh - 6 - 46 - 3) / 25.4);
   // }
   calculator.writeSash(id, style, String(sashw), '4', String(sashh), '2', String(sashh), '2', '', '', '', '', color);
@@ -333,4 +333,4 @@ const processXOX_PPP = (windowData, calculator) => {
   console.log('===== XOX-PPP 四联窗（滑动+固定+下部双固定）处理完成 =====\n');
 };
 
-export { processXOX_PPP }; 
+export { processXOX_PPP };

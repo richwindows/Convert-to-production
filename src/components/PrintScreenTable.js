@@ -2,29 +2,17 @@ import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Input, Button, Dropdown, Menu } from 'antd';
 import { PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icons';
 import './PrintTable.css';
-import ScreenOptimizer from '../utils/ScreenOptimizer';
 
 const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
-  const initialWidths = [100, 60, 80, 100, 50, 100, 50, 70, 80]; // Added width for cutting ID column
+  const initialWidths = [100, 60, 80, 100, 50, 100, 50, 70, 80]; // Column widths
   const [columnWidths, setColumnWidths] = useState(initialWidths);
   const tableRef = useRef(null);
   const currentlyResizingColumnIndex = useRef(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
 
-  // Automatically optimize data when calculatedData changes
-  const optimizedData = React.useMemo(() => {
-    if (calculatedData && calculatedData.length > 0) {
-      const optimized = ScreenOptimizer.optimizeScreenCutting(calculatedData);
-      // Sort by cutting ID
-      return optimized.sort((a, b) => {
-        const aId = a.cuttingId || 999999;
-        const bId = b.cuttingId || 999999;
-        return aId - bId;
-      });
-    }
-    return calculatedData || [];
-  }, [calculatedData]);
+  // Use original data without optimization
+  const displayData = calculatedData || [];
 
   const rowColors = [
     { name: '无颜色', value: '' },
@@ -54,13 +42,10 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
   };
 
   const originalHeaderTitles = [
-    'Batch NO.', 'Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color', 'Cutting ID'
+    'Batch NO.', 'Customer', 'ID', 'Style', 'Screen', 'pcs', 'Screen T', 'pcs', 'Color'
   ];
-  const dataKeys = [ 'Customer', 'ID', 'Style', 'screenSize', 'screenPcs', 'screenT', 'screenTPcs', 'Color', 'cuttingId'];
+  const dataKeys = [ 'Customer', 'ID', 'Style', 'screenSize', 'screenPcs', 'screenT', 'screenTPcs', 'Color'];
   const visibleHeaderTitles = originalHeaderTitles.filter(title => title !== 'Batch NO.');
-
-  // Display optimized data
-  const displayData = optimizedData;
 
   // 通用的单元格样式
   const cellStyle = {
@@ -135,26 +120,7 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
       </div>
       <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
-          {optimizedData && optimizedData.length > 0 && (
-            <div style={{ fontSize: '12px', color: '#666' }}>
-              <div>
-                Materials: {ScreenOptimizer.calculateOptimizationSummary(optimizedData).totalMaterials} | 
-                Efficiency: {ScreenOptimizer.calculateOptimizationSummary(optimizedData).averageEfficiency} | 
-                Material Length: 5900mm
-              </div>
-              <div style={{ marginTop: '5px' }}>
-                <strong>Waste per Material:</strong>
-                {(() => {
-                  const cuttingPlan = ScreenOptimizer.generateCuttingPlan(optimizedData);
-                  return cuttingPlan.map(material => (
-                    <span key={material.cuttingId} style={{ marginLeft: '10px' }}>
-                      Material {material.cuttingId}: {material.wasteLength.toFixed(0)}mm
-                    </span>
-                  ));
-                })()}
-              </div>
-            </div>
-          )}
+          {/* Optimization summary removed - displaying original data only */}
         </div>
         <Button 
           type="primary" 
@@ -221,22 +187,6 @@ const PrintScreenTable = ({ batchNo, calculatedData, onCellChange }) => {
 
                   if (title === 'ID') {
                     return <td key={dataKey} style={finalCellStyle}>{cellValue}</td>;
-                  }
-
-                  // Handle Cutting ID column - display only, not editable
-                  if (title === 'Cutting ID') {
-                    const cuttingIdStyle = {
-                      ...finalCellStyle,
-                      backgroundColor: cellValue ? '#f0f8ff' : 'transparent',
-                      color: cellValue ? '#1890ff' : '#999',
-                      fontWeight: cellValue ? 'bold' : 'normal',
-                      textAlign: 'center'
-                    };
-                    return (
-                      <td key={dataKey} style={cuttingIdStyle}>
-                        {cellValue || '-'}
-                      </td>
-                    );
                   }
 
                   return (

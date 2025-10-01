@@ -72,7 +72,7 @@ const processP_SH = (windowData, calculator) => {
   //   sashw = round((w - 47.4 - 15 * 2 - 2) / 25.4);
   //   sashh = round(((h - fh - 6) / 2 - 17.1 - 15 + 1) / 25.4);
   // } else {
-  sashw = round((w - 47.4 - 2) / 25.4);
+  sashw = round((w - 47.4 - 2) / 25.4 + 0.125);
   sashh = round(((h - fh - 6) / 2 - 17.1 + 1) / 25.4);
   // }
   calculator.writeSash(id,style, '', '', '', '', String(sashw), '1', String(sashw), '1', String(sashh), '2', '', '', '', color);
@@ -362,4 +362,4 @@ const processP_SH = (windowData, calculator) => {
   console.log('===== P-SH 上方固定+下部单悬+下方固定窗处理完成 =====\n');
 };
 
-export { processP_SH }; 
+export { processP_SH };

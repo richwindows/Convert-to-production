@@ -167,6 +167,12 @@ class WindowCalculator {
       weldingCutH = (((displaySashH_numeric * 25.4) - 6) / 25.4).toFixed(2);
     }
 
+    // Calculate width in 1/8 inches
+    let widthInEighths = '';
+    if (displaySashW_numeric > 0) {
+      widthInEighths = (displaySashW_numeric * 8).toFixed(0); // Convert to 1/8 inches
+    }
+
     const weldingEntry = {
       ID: id,
       Customer: originalCustomer, // Use original customer value directly
@@ -175,6 +181,7 @@ class WindowCalculator {
       SashH: originalSashH_str,
       WeldingCutW: weldingCutW,
       WeldingCutH: weldingCutH,
+      WidthInEighths: widthInEighths,
       Pcs: finalPcs
     };
     this.data.sashWelding.push(weldingEntry);
@@ -534,8 +541,14 @@ class WindowCalculator {
 
   // Write sash data
   writeSash(id, style, sliderH, sliderHQ, sliderV, sliderVQ, handle, handleQ, shH, shHQ, shV, shVQ, color) {
-    const sashRow = {
-      ID: id, // This is the sequential display ID
+    // Calculate width in 1/8 inches from sliderH (which represents width)
+    let widthInEighths = '';
+    if (sliderH && parseFloat(sliderH) > 0) {
+      widthInEighths = (parseFloat(sliderH) * 8).toFixed(0);
+    }
+
+    const sashEntry = {
+      ID: id,
       Style: style,
       '82-03-H': sliderH,
       '82-03-H-Pcs': sliderHQ,
@@ -547,15 +560,16 @@ class WindowCalculator {
       '82-04-H-Pcs': shHQ,
       '82-04-V': shV,
       '82-04-V-Pcs': shVQ,
+      WidthInEighths: widthInEighths,
       Color: color
     };
-    
-    this.data.sash.push(sashRow);
+    this.data.sash.push(sashEntry);
+    this.log(`写入窗扇数据 - ID: ${id}, Style: ${style}, 滑轨 H: ${sliderH} (${sliderHQ}), V: ${sliderV} (${sliderVQ}), 手柄: ${handle} (${handleQ}), 窗扇 H: ${shH} (${shHQ}), V: ${shV} (${shVQ}), Width in 1/8": ${widthInEighths}, Color: ${color}`);
     
     // Process material cutting data based on sash data
     const frameRow = this.data.frame.find(frame => frame.ID === id);
     if (frameRow) {
-      this.processRawMaterialPieces(frameRow, sashRow);
+      this.processRawMaterialPieces(frameRow, sashEntry);
     }
     
     this.log(`写入窗扇数据 - ID: ${id}, 82-03-H: ${sliderH}, 82-05: ${handle}`);

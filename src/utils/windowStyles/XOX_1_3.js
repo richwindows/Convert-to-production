@@ -158,7 +158,7 @@ const processXOX_1_3 = (windowData, calculator) => {
    
   
   // Sash calculations for XOX-1/3
-  sashw = round((w / 3 - 14.5 + 1) / 25.4);
+  sashw = round((w / 3 - 14.5 + 1) / 25.4 + 0.125);
   sashh = round((h - 46 - 2 - 1) / 25.4);
   calculator.writeSash(id, style, String(sashw), "4", String(sashh), "2", String(sashh), "2", "", "", "", "", color);
   calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
@@ -428,4 +428,4 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
   }
 };
 
-export { processXOX_1_3 }; 
+export { processXOX_1_3 };
