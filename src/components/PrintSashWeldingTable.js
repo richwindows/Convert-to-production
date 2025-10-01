@@ -6,7 +6,7 @@ import './PrintTable.css';
 const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
   const headerTitles = ['Customer', 'ID', 'Style', 'W', 'H', 'Sashw', 'Sashh', 'Pcs', 'No.'];
   const initialFullWidths = [100, 60, 80, 60, 60, 70, 70, 50, 50]; 
-  const dataKeys = ['Customer', 'ID', 'Style', 'SashW', 'SashH', 'WeldingCutW', 'WeldingCutH', 'Pcs', 'calculatedNo']; // Correct mapping: W->SashW, H->SashH, Sashw->WeldingCutW, Sashh->WeldingCutH
+  const dataKeys = ['Customer', 'ID', 'Style', 'SashW', 'SashH', 'WeldingCutW', 'WeldingCutH', 'Pcs', 'calculatedNo']; // 'calculatedNo' for rowIndex + 1
 
   const [columnVisibility, setColumnVisibility] = useState(() => headerTitles.map(() => true));
   const [columnWidths, setColumnWidths] = useState(() => initialFullWidths.filter((_, index) => columnVisibility[index]));
@@ -279,4 +279,4 @@ const PrintSashWeldingTable = ({ batchNo, calculatedData, onCellChange }) => {
   );
 };
 
-export default PrintSashWeldingTable;
+export default PrintSashWeldingTable; 

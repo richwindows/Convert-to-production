@@ -4,7 +4,7 @@ import { PlusOutlined, DeleteOutlined, BgColorsOutlined } from '@ant-design/icon
 import './PrintTable.css';
 
 const PrintSashTable = ({ batchNo, calculatedData, onCellChange }) => {
-  const initialWidths = [60, 80, 70, 50, 70, 50, 70, 50, 70, 50, 70, 50, 60, 70]; 
+  const initialWidths = [60, 80, 70, 50, 70, 50, 70, 50, 70, 50, 70, 50, 70]; 
   const [columnWidths, setColumnWidths] = useState(initialWidths);
   const tableRef = useRef(null);
   const currentlyResizingColumnIndex = useRef(null);
@@ -44,7 +44,7 @@ const PrintSashTable = ({ batchNo, calculatedData, onCellChange }) => {
     '82-03--', 'Pcs', '82-03 |', 'Pcs',
     '82-05', 'Pcs',
     '82-04--', 'Pcs', '82-04|', 'Pcs',
-    'W', 'Color'
+    'Color'
   ];
 
   const dataKeys = [
@@ -52,7 +52,7 @@ const PrintSashTable = ({ batchNo, calculatedData, onCellChange }) => {
     '82-03-H', '82-03-H-Pcs', '82-03-V', '82-03-V-Pcs',
     '82-05', '82-05-Pcs',
     '82-04-H', '82-04-H-Pcs', '82-04-V', '82-04-V-Pcs',
-    'WidthInEighths', 'Color'
+    'Color'
   ];
 
   // 通用的单元格样式
@@ -234,4 +234,4 @@ const PrintSashTable = ({ batchNo, calculatedData, onCellChange }) => {
   );
 };
 
-export default PrintSashTable;
+export default PrintSashTable; 

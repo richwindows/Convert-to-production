@@ -35,6 +35,9 @@ class WindowCalculator {
     
     // Store optimized materials by material type - No longer used directly for storing final state
     // this.optimizedMaterials = {}; 
+    
+    this.frameOnlyWindows = []; // Track all frame-only windows
+    this.processedWindowIds = new Set(); // Track which windows have been processed for material cutting
   }
 
   resetData() { // New method to explicitly reset
@@ -312,8 +315,8 @@ class WindowCalculator {
     
     this.data.frame.push(frameRow);
     
-    // Note: Frame material processing is now handled in writeSash to avoid duplication
-    // this.processRawMaterialPieces(frameRow);
+    // Store all frame rows as potential frame-only windows
+    this.frameOnlyWindows.push(frameRow);
     
     // 增强日志信息
     let frameType = "";
@@ -342,7 +345,17 @@ class WindowCalculator {
     };
     
     Object.entries(frameMaterialMap).forEach(([key, materialInfo]) => {
-      if (frameData[key] && frameData[key] !== '' && frameData[`${key}-Pcs`] && frameData[`${key}-Pcs`] !== '') {
+      const lengthValue = frameData[key];
+      const pcsValue = frameData[`${key}-Pcs`];
+      
+      // Debug logging to see what values we're getting
+      this.log(`检查Frame材料 ${key}: 长度=${lengthValue}, 数量=${pcsValue}, 类型=${typeof lengthValue}, 类型=${typeof pcsValue}`);
+      
+      // More lenient condition - check for non-zero numeric values
+      const hasValidLength = lengthValue && lengthValue !== '' && lengthValue !== '0' && parseFloat(lengthValue) > 0;
+      const hasValidPcs = pcsValue && pcsValue !== '' && pcsValue !== '0' && parseInt(pcsValue) > 0;
+      
+      if (hasValidLength && hasValidPcs) {
         let frameType = '';
         if (key.includes('82-01')) frameType = 'Block-stop';
         else if (key.includes('82-02B')) frameType = 'Retrofit';
@@ -363,6 +376,8 @@ class WindowCalculator {
         };
         this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
         this.log(`收集Frame材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}`);
+      } else {
+        this.log(`跳过Frame材料 ${key}: 长度有效=${hasValidLength}, 数量有效=${hasValidPcs}`);
       }
     });
 
@@ -417,6 +432,18 @@ class WindowCalculator {
 
   // New method to finalize material cutting after all windows are processed
   async finalizeMaterialCutting() {
+    // Process all frame-only windows (windows that have frame data but no sash data)
+    const frameOnlyWindows = this.frameOnlyWindows.filter(frameRow => 
+      !this.processedWindowIds.has(frameRow.ID)
+    );
+    
+    this.log(`Found ${frameOnlyWindows.length} frame-only windows to process for material cutting`);
+    
+    frameOnlyWindows.forEach(frameRow => {
+      this.log(`Processing frame-only window: ID ${frameRow.ID}, Style: ${frameRow.Style}`);
+      this.processRawMaterialPieces(frameRow, null);
+    });
+    
     this.log("Starting material cutting finalization...");
     if (this.data.materialCutting.length === 0) {
       this.log("No raw material pieces to optimize.");
@@ -570,6 +597,8 @@ class WindowCalculator {
     const frameRow = this.data.frame.find(frame => frame.ID === id);
     if (frameRow) {
       this.processRawMaterialPieces(frameRow, sashEntry);
+      // Mark this window as processed for material cutting
+      this.processedWindowIds.add(id);
     }
     
     this.log(`写入窗扇数据 - ID: ${id}, 82-03-H: ${sliderH}, 82-05: ${handle}`);
