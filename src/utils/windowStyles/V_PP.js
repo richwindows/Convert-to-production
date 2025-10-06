@@ -1,5 +1,5 @@
 // V_PP.js - Calculations for V-PP (上下双固定)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 const round = (num) => Math.round(num * 1000) / 1000;
 const roundInt = (num) => Math.round(num);

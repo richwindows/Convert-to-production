@@ -1,5 +1,5 @@
 // P_SH.js - Calculations for P-SH (上方固定+下部单悬+下方固定)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 const round = (num) => Math.round(num * 1000) / 1000;
 const roundInt = (num) => Math.round(num);

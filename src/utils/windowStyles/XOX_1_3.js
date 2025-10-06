@@ -3,7 +3,7 @@
  */
 
 // Import DataMapper to use glassMap
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 // Helper functions for rounding
 const round = (num) => Math.round(num * 1000) / 1000;
@@ -240,18 +240,21 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
   const widthStr = String(width);
   const heightStr = String(height);
   
+  console.log(`🔍 [GLASS DEBUG] processGlass called for XOX_1_3 with:`, {
+    customer, style, width, height, id, q, glassType, sashglassw, sashglassh, fixedglassw, fixedglassh, grid, argon
+  });
+  
   console.log(`玻璃类型处理: ${glassType}`);
   
   // 映射玻璃类型到标准格式
   const standardGlassType = glassMap[glassType] || glassType;
-  console.log(`玻璃类型映射: ${glassType} → ${standardGlassType}`);
+  console.log(`🔍 [GLASS DEBUG] 玻璃类型映射: ${glassType} → ${standardGlassType}`);
   
   // Clear/Clear
   if (standardGlassType === 'cl/cl') {
+    console.log(`🔍 [GLASS DEBUG] Processing cl/cl glass type`);
     calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 4 * q, "clear", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 2 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
-    
-  
     
     console.log(`写入玻璃数据: cl/cl | ID: ${id}`);
     console.log(`  移动扇: clear ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${4*q}件)`);
@@ -259,12 +262,11 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
   }
   // Clear/Lowe2
   else if (standardGlassType === 'cl/le2') {
+    console.log(`🔍 [GLASS DEBUG] Processing cl/le2 glass type`);
     calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--01", 2 * q, "lowe2", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "lowe2", "", fixedglassw, fixedglassh, grid, argon);
-    
-   
     
     console.log(`写入玻璃数据: cl/le2 | ID: ${id}`);
     console.log(`  移动扇: clear+lowe2 ${roundInt(sashglassw)}x${roundInt(sashglassh)}mm (${2*q}件)`);
@@ -272,6 +274,7 @@ const processGlass = (customer, style, width, height, id, q, glassType, sashglas
   }
   // Clear/Lowe3
   else if (standardGlassType === 'cl/le3') {
+    console.log(`🔍 [GLASS DEBUG] Processing cl/le3 glass type`);
     calculator.writeGlass(customer, style, widthStr, heightStr, "", id, id + "--01", 2 * q, "clear", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--01", 2 * q, "lowe3", "", sashglassw, sashglassh, grid, argon);
     calculator.writeGlass("", "", "", "", "", id, id + "--02", 1 * q, "clear", "", fixedglassw, fixedglassh, grid, argon);

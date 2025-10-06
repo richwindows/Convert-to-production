@@ -1,5 +1,5 @@
 // P_XO_P_OX.js - Calculations for P XO/POX (三联窗：滑动+固定+滑动)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 const round = (num) => Math.round(num * 1000) / 1000;
 const roundInt = (num) => Math.round(num);

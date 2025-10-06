@@ -1,5 +1,5 @@
 // IGU.js - Calculations for IGU (中空玻璃单元)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 
 /**

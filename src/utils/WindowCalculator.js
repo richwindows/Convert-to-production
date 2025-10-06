@@ -3,10 +3,10 @@
  * This mimics the VBA calculation logic from the original application
  */
 
-import * as windowStyles from './windowStyles';
-import { getMaterialLength, optimizeCuttingGroups } from './MaterialOptimizer';
-import { getMappedStyle } from './DataMapper'; // 导入样式映射函数
-import { formatSize } from './formattingUtils'; // Import the new utility
+import * as windowStyles from './windowStyles/index.js';
+import { getMaterialLength, optimizeCuttingGroups } from './MaterialOptimizer.js';
+import { getMappedStyle } from './DataMapper.js'; // 导入样式映射函数
+import { formatSize } from './formattingUtils.js'; // Import the new utility
 
 // Round a number to 3 decimal places
 const round = (num) => Math.round(num * 1000) / 1000;
@@ -48,6 +48,16 @@ class WindowCalculator {
     };
     // this.optimizedMaterials = {}; // No longer needed
     this.log("Calculator data reset.");
+  }
+
+  // Method to get current results
+  getResults() {
+    return this.data;
+  }
+
+  // Method to clear results (alias for resetData)
+  clearResults() {
+    this.resetData();
   }
 
   // 日志函数
@@ -219,14 +229,25 @@ class WindowCalculator {
     // Process based on style
     const style = windowData.Style || '';
     
-    // 使用DataMapper中的样式映射
-    const mappedStyle = getMappedStyle(style);
-    const funcName = `process${mappedStyle}`;
-    const processFunc = windowStyles[funcName];
-    if (processFunc) {
-      processFunc(windowData, this);
+    // Check if the style is already in the correct format (from DataMapper)
+    // If it matches a function name pattern, use it directly; otherwise, map it
+    const funcName = `process${style}`;
+    let processFunc = windowStyles[funcName];
+    
+    if (!processFunc) {
+      // Style needs mapping - use DataMapper mapping
+      const mappedStyle = getMappedStyle(style);
+      const mappedFuncName = `process${mappedStyle}`;
+      processFunc = windowStyles[mappedFuncName];
+      
+      if (processFunc) {
+        processFunc(windowData, this);
+      } else {
+        this.log(`错误：未知样式: ${style}，映射后: ${mappedStyle}，无法处理。请检查输入数据或添加对应的处理函数。`);
+      }
     } else {
-      this.log(`错误：未知样式: ${style}，映射后: ${mappedStyle}，无法处理。请检查输入数据或添加对应的处理函数。`);
+      // Style is already in correct format, use directly
+      processFunc(windowData, this);
     }
     
     // 验证每个表中的数据是否都包含正确的ID
@@ -337,6 +358,8 @@ class WindowCalculator {
     const style = frameData.Style;
     const color = frameData.Color || '';
     
+
+    
     // Process Frame Materials
     const frameMaterialMap = {
       '82-01-H': { name: 'HMST82-01', position: 'TOP+BOT', angles: 'V' }, '82-01-V': { name: 'HMST82-01', position: 'LEFT+RIGHT', angles: 'V' },
@@ -344,18 +367,24 @@ class WindowCalculator {
       '82-10-H': { name: 'HMST82-10', position: 'TOP+BOT', angles: 'V' }, '82-10-V': { name: 'HMST82-10', position: 'LEFT+RIGHT', angles: 'V' }
     };
     
+
+    
+    let processedPiecesCount = 0;
+    let skippedPiecesCount = 0;
+    
     Object.entries(frameMaterialMap).forEach(([key, materialInfo]) => {
       const lengthValue = frameData[key];
       const pcsValue = frameData[`${key}-Pcs`];
       
-      // Debug logging to see what values we're getting
-      this.log(`检查Frame材料 ${key}: 长度=${lengthValue}, 数量=${pcsValue}, 类型=${typeof lengthValue}, 类型=${typeof pcsValue}`);
-      
       // More lenient condition - check for non-zero numeric values
-      const hasValidLength = lengthValue && lengthValue !== '' && lengthValue !== '0' && parseFloat(lengthValue) > 0;
-      const hasValidPcs = pcsValue && pcsValue !== '' && pcsValue !== '0' && parseInt(pcsValue) > 0;
+      // Handle empty strings, null, undefined, and zero values
+      const hasValidLength = lengthValue !== null && lengthValue !== undefined && 
+                            lengthValue !== "" && !isNaN(lengthValue) && parseFloat(lengthValue) > 0;
+      const hasValidPcs = pcsValue !== null && pcsValue !== undefined && 
+                         pcsValue !== "" && !isNaN(pcsValue) && parseInt(pcsValue) > 0;
       
       if (hasValidLength && hasValidPcs) {
+        processedPiecesCount++;
         let frameType = '';
         if (key.includes('82-01')) frameType = 'Block-stop';
         else if (key.includes('82-02B')) frameType = 'Retrofit';
@@ -377,9 +406,12 @@ class WindowCalculator {
         this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
         this.log(`收集Frame材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}`);
       } else {
+        skippedPiecesCount++;
         this.log(`跳过Frame材料 ${key}: 长度有效=${hasValidLength}, 数量有效=${hasValidPcs}`);
       }
     });
+
+    this.log(`Frame处理完成 - ID: ${id}, 处理了 ${processedPiecesCount} 个材料片段, 跳过了 ${skippedPiecesCount} 个`)
 
     // Process Sash Materials if sashData is provided
     console.log("sashData:", sashData);
@@ -483,8 +515,8 @@ class WindowCalculator {
     Customer: info.Customer    // 添加Customer字段
     };
     } else {
-    this.log(`Warning: No info found in lookup for piece with ID ${piece.ID}. Frame type may be missing.`);
-    return piece; // Return original piece if no lookup match (should ideally not happen)
+      this.log(`Warning: No info found in lookup for piece with ID ${piece.ID}. Frame type may be missing.`);
+      return piece; // Return original piece if no lookup match (should ideally not happen)
     }
     });
     
@@ -500,6 +532,8 @@ class WindowCalculator {
       return acc;
     }, {});
 
+
+
     this.log(`材料按名称分组: ${Object.keys(piecesByMaterial).length} 种材料`);
 
     const optimizedMaterialCuttingData = [];
@@ -511,7 +545,7 @@ class WindowCalculator {
 
         try {
           // Fetch the standard length for this material
-          const materialStandardLength = await getMaterialLength(materialName);
+          const materialStandardLength = this.getMaterialStandardLength(materialName);
           this.log(`获取到材料 ${materialName} 的标准长度: ${materialStandardLength}`);
 
           if (typeof materialStandardLength !== 'number' || materialStandardLength <= 0) {
@@ -563,7 +597,7 @@ class WindowCalculator {
     this.log('材料切割数据最终化完成。');
     this.log(`最终材料切割数据条目数: ${this.data.materialCutting.length}`);
     // Log the final optimized data to the console for inspection
-    console.log('Finalized materialCutting data in WindowCalculator:', JSON.stringify(this.data.materialCutting, null, 2));
+    this.log("Material cutting finalization completed successfully");
   }
 
   // Write sash data
@@ -606,7 +640,12 @@ class WindowCalculator {
 
   // Write glass data
   writeGlass(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, grid, argon, overrideThickness) {
+    console.log(`🔍 [GLASS DEBUG] writeGlass called with:`, {
+      customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, grid, argon, overrideThickness
+    });
+    
     const { type: finalGlassString } = this.standardizeGlassType(rawGlassType);
+    console.log(`🔍 [GLASS DEBUG] Standardized glass type: ${rawGlassType} → ${finalGlassString}`);
     
     const glassArea = parseFloat(width) / 25.4 * parseFloat(height) / 25.4 / 144;
     let calculatedThickness = '';
@@ -616,8 +655,10 @@ class WindowCalculator {
       if (glassArea <= 21) calculatedThickness = '3';
       else if (glassArea > 21 && glassArea <= 26) calculatedThickness = '3.9';
       else if (glassArea > 26 && glassArea <= 46) calculatedThickness = '4.7';
+      console.log(`🔍 [GLASS DEBUG] Calculated thickness from area ${glassArea.toFixed(2)}: ${calculatedThickness}`);
     } else {
       calculatedThickness = String(overrideThickness);
+      console.log(`🔍 [GLASS DEBUG] Using override thickness: ${calculatedThickness}`);
     }
     
     const glassRow = {
@@ -642,16 +683,25 @@ class WindowCalculator {
       glassRow.tmprd = "T";
       // 添加Tmprd字段（首字母大写），确保在表格中正确显示
       glassRow.Tmprd = "T";
+      console.log(`🔍 [GLASS DEBUG] Added tempered marking: T`);
     }
     
+    console.log(`🔍 [GLASS DEBUG] Created glass row:`, glassRow);
+    console.log(`🔍 [GLASS DEBUG] Current glass array length before push: ${this.data.glass.length}`);
+    
     this.data.glass.push(glassRow);
+    
+    console.log(`✅ [GLASS SUCCESS] Glass row added successfully! New array length: ${this.data.glass.length}`);
     this.log(`写入玻璃数据 - ID: ${id}, 行: ${line}, 类型: ${finalGlassString}, 尺寸: ${roundInt(width)}x${roundInt(height)}, 厚度: ${calculatedThickness}${incomingAorT === "T" ? ", 钢化标记: T" : ""}`);
     
     // 检查面积来决定是否需要添加到订单
     const needsOrder = (glassArea > 21 && glassArea <= 26) || (glassArea > 26 && glassArea <= 46);
     if (needsOrder) {
+      console.log(`🔍 [GLASS DEBUG] Glass area ${glassArea.toFixed(2)} requires order entry`);
       // 传递钢化状态到writeOrder方法
       this.writeOrder(customer, style, w, h, fh, id, line, quantity, rawGlassType, incomingAorT, width, height, calculatedThickness); 
+    } else {
+      console.log(`🔍 [GLASS DEBUG] Glass area ${glassArea.toFixed(2)} does not require order entry`);
     }
   }
 

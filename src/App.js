@@ -863,7 +863,7 @@ function App() {
       csvRows.push(headers);
       
       // 添加数据行
-      calculatedData.materialCutting.forEach(item => {
+      calculatedData.materialCutting.forEach((item, index) => {
         const rowValues = [
           currentBatchNo,
           item.OrderNo || item.ID || '',
@@ -895,6 +895,7 @@ function App() {
           item.Note || '',
           item.Customer || ''
         ];
+        
         csvRows.push(rowValues);
       });
       
@@ -1014,6 +1015,14 @@ function App() {
     await calculator.finalizeMaterialCutting();
 
     const allCalculatedData = calculator.getAllData();
+    console.log("🔍 [GLASS DEBUG] Final calculated data from calculator:");
+    console.log("🔍 [GLASS DEBUG] Glass data length:", allCalculatedData.glass ? allCalculatedData.glass.length : 0);
+    if (allCalculatedData.glass && allCalculatedData.glass.length > 0) {
+      console.log("🔍 [GLASS DEBUG] First 3 glass entries:", allCalculatedData.glass.slice(0, 3));
+    } else {
+      console.log("⚠️ [GLASS WARNING] No glass data found in calculator results!");
+    }
+    
     const finalInfoData = allCalculatedData.info || [];
     
     // Sash Welding Data is now directly from the calculator
@@ -1428,7 +1437,14 @@ function App() {
         );
         break;
       case 'glass':
-        console.log("正在渲染glass表格，数据:", calculatedData.glass);
+        console.log("🔍 [GLASS DEBUG] 正在渲染glass表格");
+        console.log("🔍 [GLASS DEBUG] calculatedData.glass数据:", calculatedData.glass);
+        console.log("🔍 [GLASS DEBUG] calculatedData.glass长度:", calculatedData.glass ? calculatedData.glass.length : 0);
+        if (calculatedData.glass && calculatedData.glass.length > 0) {
+          console.log("🔍 [GLASS DEBUG] 前5个glass条目:", calculatedData.glass.slice(0, 5));
+        } else {
+          console.log("⚠️ [GLASS WARNING] 没有glass数据可显示!");
+        }
         tableToRender = <PrintGlassTable batchNo={batchNo} calculatedData={calculatedData.glass} onCellChange={handlePrintTableCellChange} />;
         break;
       case 'screen':

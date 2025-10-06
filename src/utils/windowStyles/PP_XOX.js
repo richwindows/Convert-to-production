@@ -1,5 +1,5 @@
 // PP_XOX.js - Calculations for PP-XOX (三联窗：固定+滑动+下部固定)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 const round = (num) => Math.round(num * 1000) / 1000;
 const roundInt = (num) => Math.round(num);

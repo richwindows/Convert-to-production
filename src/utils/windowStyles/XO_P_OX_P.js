@@ -4,7 +4,7 @@
  */
 
 // Import DataMapper to use glassMap
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 // Helper functions for rounding
 const round = (num) => Math.round(num * 1000) / 1000;

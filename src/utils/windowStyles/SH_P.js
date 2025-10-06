@@ -1,5 +1,5 @@
 // SH_P.js - Calculations for SH-P (单悬+下方固定)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 const round = (num) => Math.round(num * 1000) / 1000;
 const roundInt = (num) => Math.round(num);

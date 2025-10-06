@@ -1,5 +1,5 @@
 // XOX_PPP.js - Calculations for XOX-PPP (四联窗：滑动+固定+下部双固定)
-import { glassMap } from '../DataMapper';
+import { glassMap } from '../DataMapper.js';
 
 const round = (num) => Math.round(num * 1000) / 1000;
 const roundInt = (num) => Math.round(num);
