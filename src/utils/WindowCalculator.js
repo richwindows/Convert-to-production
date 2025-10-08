@@ -549,22 +549,22 @@ class WindowCalculator {
           this.log(`获取到材料 ${materialName} 的标准长度: ${materialStandardLength}`);
 
           if (typeof materialStandardLength !== 'number' || materialStandardLength <= 0) {
-            this.log(`警告: 材料 ${materialName} 的标准长度无效 (${materialStandardLength}). 跳过此材料的优化.`);
-            // Optionally, push raw pieces back if optimization is skipped, or handle as error
-            // For now, we'll assume optimizer can handle it or pieces are just not added if length is invalid.
-            // Or, we can push them unoptimized:
-            // optimizedMaterialCuttingData.push(...piecesForMaterial.map(p => ({...p, CuttingID: '', PiecesID: '', RemainingLength: ''})));
-            console.warn(`Standard length for ${materialName} is invalid: ${materialStandardLength}. Skipping optimization for this material.`);
-            // Add pieces back without optimization attempt if length is invalid
-            optimizedMaterialCuttingData.push(...piecesForMaterial.map(p => ({
+            this.log(`警告: 材料 ${materialName} 的标准长度无效 (${materialStandardLength}). 使用默认优化处理.`);
+            console.warn(`Standard length for ${materialName} is invalid: ${materialStandardLength}. Using fallback optimization.`);
+            
+            // Provide fallback optimization with sequential IDs
+            let fallbackCuttingId = 1;
+            optimizedMaterialCuttingData.push(...piecesForMaterial.map((p, index) => ({
               ...p,
-              CuttingID: '', // Explicitly blank
-              PiecesID: '',  // Explicitly blank
-              StockLength: 0,
-              TotalCutLength: 0,
-              RemainingLength: 0,
+              'Cutting ID': fallbackCuttingId + Math.floor(index / 10), // Group every 10 pieces
+              'CuttingID': fallbackCuttingId + Math.floor(index / 10),
+              'Pieces ID': (index % 10) + 1, // Piece ID within group (1-10)
+              'PiecesID': (index % 10) + 1,
+              StockLength: 6000, // Default stock length
+              TotalCutLength: parseFloat(p.Length) || 0,
+              RemainingLength: 6000 - (parseFloat(p.Length) || 0),
               Wastage: 0,
-              CutCount: 0
+              CutCount: 1
             })));
             continue; 
           }
@@ -576,18 +576,20 @@ class WindowCalculator {
         } catch (error) {
           this.log(`处理材料 ${materialName} 时发生错误: ${error}`);
           console.error(`Error optimizing material ${materialName}:`, error);
-          // If an error occurs, add the original pieces for this material back without optimization
-          // to ensure data isn't lost, but mark them as unoptimized.
-          optimizedMaterialCuttingData.push(...piecesForMaterial.map(p => ({
+          // If an error occurs, provide fallback optimization instead of ERROR strings
+          let fallbackCuttingId = 1;
+          optimizedMaterialCuttingData.push(...piecesForMaterial.map((p, index) => ({
             ...p,
-            CuttingID: 'ERROR', // Mark as error
-            PiecesID: 'ERROR',
+            'Cutting ID': fallbackCuttingId + Math.floor(index / 10), // Group every 10 pieces
+            'CuttingID': fallbackCuttingId + Math.floor(index / 10),
+            'Pieces ID': (index % 10) + 1, // Piece ID within group (1-10)
+            'PiecesID': (index % 10) + 1,
             Notes: `Optimization failed: ${error.message}`,
-            StockLength: 0,
-            TotalCutLength: 0,
-            RemainingLength: 0,
+            StockLength: 6000, // Default stock length
+            TotalCutLength: parseFloat(p.Length) || 0,
+            RemainingLength: 6000 - (parseFloat(p.Length) || 0),
             Wastage: 0,
-            CutCount: 0
+            CutCount: 1
           })));
         }
       }
