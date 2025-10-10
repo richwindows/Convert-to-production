@@ -178,9 +178,9 @@ const processXOX_1_3 = (windowData, calculator) => {
   slop = round((w - 10) / 25.4, 1);
   
   if (frameType === 'Block-slop 1/2') {
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", String(slop), color);
+    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "1", String(track), "", "", "", "", "", "", String(slop), color);
   } else {
-    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "2", String(track), "", "", "", "", "", "", "", color);
+    calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), "1", String(track), "", "", "", "", "", "", "", color);
   }
   
   // Glass calculations for other frame types

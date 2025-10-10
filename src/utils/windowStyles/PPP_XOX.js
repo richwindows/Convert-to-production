@@ -117,9 +117,9 @@ const processPPP_XOX = (windowData, calculator) => {
     bigmullion2 = round((fh - 6 - 14 * 2 - 2 + 1.5) / 25.4);
     slop = round((w - 10) / 25.4, 1);
     if (frameType === 'Block-slop 1/2') {
-      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '2', String(track), String(coverw), String(coverh), String(bigmullion), '1', String(bigmullion2), '2', String(slop), color);
+      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw), String(coverh), String(bigmullion), '1', String(bigmullion2), '2', String(slop), color);
     } else {
-      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '2', String(track), String(coverw), String(coverh), String(bigmullion), '1', String(bigmullion2), '2', '', color);
+      calculator.writeParts(id, style, String(mullion), String(mullionA), String(handleA), '1', String(track), String(coverw), String(coverh), String(bigmullion), '1', String(bigmullion2), '2', '', color);
     }
   // }
 
