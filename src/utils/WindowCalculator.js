@@ -214,7 +214,7 @@ class WindowCalculator {
     // Write label info
     this.writeLabel(windowData);
 
-    console.log('windowData', windowData);
+
     
     // Process based on style
     const style = windowData.Style || '';
@@ -337,6 +337,9 @@ class WindowCalculator {
     const style = frameData.Style;
     const color = frameData.Color || '';
     
+    // Debug logging for color processing
+    this.log(`[DEBUG] processRawMaterialPieces - ID: ${id}, Color from frameData: '${color}', Type: ${typeof color}`);
+    
     // Process Frame Materials
     const frameMaterialMap = {
       '82-01-H': { name: 'HMST82-01', position: 'TOP+BOT', angles: 'V' }, '82-01-V': { name: 'HMST82-01', position: 'LEFT+RIGHT', angles: 'V' },
@@ -362,11 +365,13 @@ class WindowCalculator {
         else if (key.includes('82-10')) frameType = 'Nailon';
         let colorSuffix = "";
         const colorLower = color.toLowerCase();
+        this.log(`[DEBUG] Color processing - Original: '${color}', Lowercase: '${colorLower}'`);
         if (!color || colorLower === "" || colorLower.includes("white") || colorLower.includes("wh")) colorSuffix = "-WH";
         else if (colorLower.includes("almond") || colorLower.includes("al")) colorSuffix = "-AL";
         else if (colorLower.includes("black") || colorLower.includes("bl")) colorSuffix = "-BL";
         else if (colorLower.includes("painting")) colorSuffix = "-WH";
         else if (colorLower.includes("paint")) colorSuffix = "-WH";
+        this.log(`[DEBUG] Color suffix determined: '${colorSuffix}'`);
         const materialNameWithColor = materialInfo.name + colorSuffix;
         const materialPiece = {
           ID: id, OrderNo: id, OrderItem: 1, MaterialName: materialNameWithColor,
@@ -375,14 +380,14 @@ class WindowCalculator {
           Color: color, Painting: colorLower.includes("painting") ? "Yes" : ""
         };
         this.data.materialCutting.push(materialPiece); // Add raw piece to be optimized later
-        this.log(`收集Frame材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}`);
+        this.log(`收集Frame材料片段 (待优化) - ID: ${id}, 材料: ${materialNameWithColor}, 长度: ${frameData[key]}, 原始颜色: '${color}'`);
       } else {
         this.log(`跳过Frame材料 ${key}: 长度有效=${hasValidLength}, 数量有效=${hasValidPcs}`);
       }
     });
 
     // Process Sash Materials if sashData is provided
-    console.log("sashData:", sashData);
+
     if (sashData) {
       const sashMaterialMap = {
         '82-03-H': { name: 'HMST82-03', position: 'TOP+BOT', angles: 'V' }, 
@@ -563,7 +568,7 @@ class WindowCalculator {
     this.log('材料切割数据最终化完成。');
     this.log(`最终材料切割数据条目数: ${this.data.materialCutting.length}`);
     // Log the final optimized data to the console for inspection
-    console.log('Finalized materialCutting data in WindowCalculator:', JSON.stringify(this.data.materialCutting, null, 2));
+
   }
 
   // Write sash data

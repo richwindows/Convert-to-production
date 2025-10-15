@@ -68,7 +68,7 @@ const processXOX = (windowData, calculator) => {
     calculator.writeFrame(id, style, "", "", "", "", String(framew), "2", String(frameh), "2", "", "", "", "", color);
     console.log(`框架计算 - Nailon | 框架宽: ${framew} | 框架高: ${frameh}`);
   } else if (frameType === 'Retrofit') {
-    calculator.writeFrame(id, style, String(framew), "2", String(frameh), "2", "", "", "", "", "", "", "", "", "", color);
+    calculator.writeFrame(id, style, String(framew), "2", String(frameh), "2", "", "", "", "", "", "", "", "", color);
     console.log(`框架计算 - Retrofit | 框架宽: ${framew} | 框架高: ${frameh}`);
   } else if (frameType === 'Block' || frameType === 'Block-slop 1/2') {
     calculator.writeFrame(id, style, "", "", "", "", "", "", "", "", String(framew), "2", String(frameh), "2", color);
