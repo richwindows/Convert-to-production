@@ -33,7 +33,7 @@ export const getMaterialLength = async (materialName) => {
  */
 const getCutLoss = (materialName) => {
     if (materialName.includes('HMST82-02B')) {
-        return 3.5;
+        return 3.7;
     } else if (materialName.includes('HMST82-01')) {
         return 0.5;
     } else if (materialName.includes('HMST82-10')) {
