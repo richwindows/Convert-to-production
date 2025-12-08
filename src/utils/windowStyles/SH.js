@@ -166,7 +166,7 @@ const processSH = (windowData, calculator) => {
   // } else { 
     
   // Sash calculations for other frame types
-  sashw = round((w - 47.4 - 2) / 25.4 + 0.125);
+  sashw = round((w - 47.4 - 2) / 25.4);
   sashh = round((h / 2 - 17.1) / 25.4);
   calculator.writeSash(id, style, "", "", "", "", String(sashw), "1", String(sashw), "1", String(sashh), "2", color);
   console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);

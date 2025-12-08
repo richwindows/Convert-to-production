@@ -73,7 +73,7 @@ const processPP_XOX = (windowData, calculator) => {
   //   sashw = round((w / 4 - 14.5 - 15 + 1) / 25.4);
   //   sashh = round((h - fh - 6 - 46 - 15 - 3) / 25.4);
   // } else {
-  sashw = round((w / 4 - 14.5 + 1) / 25.4 + 0.125);
+  sashw = round((w / 4 - 14.5 + 1) / 25.4);
   sashh = round((h - fh - 6 - 46 - 3) / 25.4);
   // }
   calculator.writeSash(id, style, String(sashw), '4', String(sashh), '2', String(sashh), '2', '', '', '', '', color);

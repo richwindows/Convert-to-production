@@ -74,7 +74,7 @@ const processSH_P = (windowData, calculator) => {
   //   sashw = round((w - 47.4 - 15 * 2 - 2) / 25.4);
   //   sashh = round(((h - fh) / 2 - 6 - 17.1 + 1) / 25.4);
   // } else {
-  sashw = round((w - 47.4 - 2) / 25.4 + 0.125);
+  sashw = round((w - 47.4 - 2) / 25.4);
   sashh = round(((h - fh) / 2 - 6 - 17.1 + 1) / 25.4);
   // }
   calculator.writeSash(id,style, '', '', '', '', String(sashw), '1', String(sashw), '1', String(sashh), '2', '', '', '', color);
