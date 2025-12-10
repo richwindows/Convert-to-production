@@ -328,7 +328,7 @@ const processXO_PP_OX_PP = (windowData, calculator) => {
   }
 
   // 添加Sash Welding计算，如果需要
-  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw + 0.125, sashh: sashh });
 
   console.log('===== XO-PP/OX-PP 滑动+固定+下方双固定窗处理完成 =====\n');
 };

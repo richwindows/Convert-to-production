@@ -93,7 +93,7 @@ const processXO_OX = (windowData, calculator) => {
   sashh = round((h - 46 - 2 - 1) / 25.4);
   calculator.writeSash(id, style, String(sashw), "2", String(sashh), "1", String(sashh), "1", "", "", "", "", color);
   console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
-  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw + 0.125, sashh: sashh });
   
   screenw = roundInt(w / 2 - 75 - 2);
   screenh = roundInt(h - 87 - 4);

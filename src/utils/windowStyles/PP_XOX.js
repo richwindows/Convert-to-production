@@ -164,7 +164,7 @@ const processPP_XOX = (windowData, calculator) => {
   console.log(`玻璃类型映射: ${glassType} → ${standardGlassType} for PP_XOX`);
 
   // 8.1 Sash Welding Entry
-  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw + 0.125, sashh: sashh });
 
   const bottomTemp = isTopBottomTempered ? 'T' : ''; // This variable is defined just above the selection.
 

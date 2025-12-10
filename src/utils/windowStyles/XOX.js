@@ -161,7 +161,7 @@ const processXOX = (windowData, calculator) => {
   sashw = round((w / 4 - 14.5 + 1) / 25.4);
   sashh = round((h - 46 - 2 - 1) / 25.4);
   calculator.writeSash(id, style, String(sashw), "4", String(sashh), "2", String(sashh), "2", "", "", "", "", color);
-  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw + 0.125, sashh: sashh });
   console.log(`窗扇计算 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
   
   // Screen calculations

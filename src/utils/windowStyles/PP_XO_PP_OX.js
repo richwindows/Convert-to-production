@@ -315,7 +315,7 @@ const processPP_XO_PP_OX = (windowData, calculator) => {
   }
 
   // Add Sash Welding Entry
-  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw + 0.125, sashh: sashh });
 
   console.log('===== PP-XO/PP-OX 上部双固定+滑动+下部双固定窗处理完成 =====\n');
 };
