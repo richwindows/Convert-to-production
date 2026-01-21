@@ -701,19 +701,30 @@ class WindowCalculator {
 
   // Write screen data
   writeScreen(customer, id, style, screenH, screenHQ, screenV, screenVQ, color) {
+    // Apply -8mm adjustment for black color screens
+    let adjustedScreenH = screenH;
+    let adjustedScreenV = screenV;
+    
+    if (color && color.toLowerCase() === 'black') {
+      // Subtract 8mm from both dimensions for black screens
+      adjustedScreenH = String(parseFloat(screenH) - 8);
+      adjustedScreenV = String(parseFloat(screenV) - 8);
+      this.log(`黑色纱窗调整: ${screenH} -> ${adjustedScreenH}, ${screenV} -> ${adjustedScreenV}`);
+    }
+    
     const screenRow = {
       Customer: customer,
       ID: id, // This is the sequential display ID
       Style: style,
-      screenSize: screenH,
+      screenSize: adjustedScreenH,
       screenPcs: screenHQ,
-      screenT: screenV,
+      screenT: adjustedScreenV,
       screenTPcs: screenVQ,
       Color: color
     };
     
     this.data.screen.push(screenRow);
-    this.log(`写入纱窗数据 - ID: ${id}, 尺寸: ${screenH}, 数量: ${screenHQ}, 颜色: ${color}`);
+    this.log(`写入纱窗数据 - ID: ${id}, 尺寸: ${adjustedScreenH}, 数量: ${screenHQ}, 颜色: ${color}`);
   }
 
   // Write parts data
