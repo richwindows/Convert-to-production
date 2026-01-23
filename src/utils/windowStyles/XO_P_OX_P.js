@@ -297,7 +297,7 @@ const processXO_P_OX_P = (windowData, calculator) => {
               grid, argon, isBottomTempered, calculator);
   // }
 
-  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw + 0.125, sashh: sashh });
+  calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: sashw, sashh: sashh });
   
   console.log('===== XO-P/OX-P窗口处理完成 =====\n');
 };

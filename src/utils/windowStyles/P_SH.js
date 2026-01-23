@@ -77,7 +77,7 @@ const processP_SH = (windowData, calculator) => {
   // }
   calculator.writeSash(id,style, '', '', '', '', String(sashw), '1', String(sashw), '1', String(sashh), '2', '', '', '', color);
 
-  let weldsashw = sashw + 0.125;
+  let weldsashw = sashw;
   let weldsashh = sashh;
   calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: weldsashw, sashh: weldsashh });
 

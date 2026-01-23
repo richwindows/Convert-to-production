@@ -80,7 +80,7 @@ const processXOX_PPP = (windowData, calculator) => {
   // }
   calculator.writeSash(id, style, String(sashw), '4', String(sashh), '2', String(sashh), '2', '', '', '', '', color);
 
-  const welderwidth = sashw + 0.125;
+  const welderwidth = sashw;
   const welderheight = sashh;
 
   calculator.writeSashWeldingEntry({ ID: id, Customer: customer, Style: style, sashw: welderwidth, sashh: welderheight });

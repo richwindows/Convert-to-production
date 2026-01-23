@@ -176,7 +176,7 @@ const processSH = (windowData, calculator) => {
     ID: id,
     Customer: customer,
     Style: style,
-    sashw: String(sashw + 0.125),
+    sashw: String(sashw),
     sashh: String(sashh)
   });
   console.log(`窗扇焊接数据 | 窗扇宽: ${sashw} | 窗扇高: ${sashh}`);
